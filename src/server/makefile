@@ -8,7 +8,7 @@ BIN_DIR=../../bin/
 OBJDIR=../../obj/
 
 $(BIN_DIR)server : $(OBJ_DIR)server.o $(OBJ_DIR)clienthandler.o
-	$(CC) $(CLFAGS) $(LIBS) -o server server.o clienthandler.o 
+	$(CC)  -o server server.o clienthandler.o -I$(INC_DIR)  $(LIBS)
 
 $(OBJ_DIR)server.o : server.c $(INC_DIR)/$(DEPS)
 	$(CC) $(CFLAGS) $(LIBS)  server.c
