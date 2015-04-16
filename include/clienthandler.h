@@ -29,7 +29,8 @@ void *write_to_client(void *args); //writeloop, takes a struct containing a json
 char* ReadClientMessage(int socket);
 void WriteServerMessage(SerializedMessage_t *message, int socket);
 void *handle( void *args ); //main handle loop, a thread will read continously from the appropriate socket specified in args until there is a message and then act accordingly.
- 
+extern clients_t clients_arr[]; 
+
 
 #ifndef CLIENTHANDLER  
 #define CLIENTHANDLER

@@ -1,4 +1,5 @@
 #include "clienthandler.h"
+#include "server.h"
 #include <pthread.h>
 #include <json-c/json.h>
 #include <stdio.h>
@@ -14,9 +15,23 @@ int add_Client(){
   
 }
 
-int remove_Client(){
-  
-  
+int find_index_of_client(clients_t *client){
+  int i =0;
+  for(i=0; i<THREAD_COUNT; i++){
+    if(clients_arr[i].socket==client->socket){
+      break;
+    }
+  }
+  return i;
+}
+
+
+int remove_Client(clients_t *client){
+  int index=0;
+  index = find_index_of_client(client);
+  printf("index is : %d\n", index);
+  //push_index_of_client(index);
+  return 1;
 }
 
 void *handle( void *args ){
@@ -25,32 +40,33 @@ void *handle( void *args ){
   char* messagepointer;
   json_tokener *json_tok;
   json_object *recieved_obj;
+  json_object *recv_json_cmd, *recv_json_message;
   printf("started handling\n");
   fflush(stdout);
-  messagepointer=ReadClientMessage(client->socket);
-  if((recieved_obj = json_tokener_parse(messagepointer))!=NULL){
-    /*TODO handle recieved json   */
-    
-    printf("recieved json:  %s\n", messagepointer);
-    fflush(stdout);
-    SerializableMessage_t response= {client, "server response"}; 
-    pthread_t id;
-    printf("creating writethread\n");
-    pthread_create(&id, NULL, &write_to_client, &response); //create writethread  
-    pthread_join(id,NULL );
-    
-    free(messagepointer); 
-  }
-  else{
-    #if DEBUG
-    printf("p is :%p \n recieved not json:  %s", messagepointer,messagepointer);
-    fflush(stdout); 
-    #endif
-    free(messagepointer); 
-  
-  }
-  int retval = 1;
-  pthread_exit(&retval);
+  while( (messagepointer=ReadClientMessage(client->socket))!=NULL){
+      if((recieved_obj = json_tokener_parse(messagepointer))!=NULL){
+	
+	printf("recieved json:  %s\n", messagepointer);
+	fflush(stdout);
+	if(json_object_object_get_ex(recieved_obj, "cmd", &recv_json_cmd)){
+	  if(strcmp("exit", json_object_get_string(recv_json_cmd))){
+	    remove_Client(client);  
+	    pthread_exit(0);
+	  }
+	  else if(strcmp("msg", json_object_get_string(recv_json_cmd))){
+	    	SerializableMessage_t response= {client, "server response"}; 
+		pthread_t id;
+		printf("creating writethread\n");
+		pthread_create(&id, NULL, &write_to_client, &response); //create writethread  
+		pthread_join(id,NULL );
+		free(messagepointer); 
+	  }
+	}		
+      }
+    }
+    remove_Client(client);
+    int retval = 1;
+    pthread_exit(&retval);
 
 
 }
@@ -93,11 +109,13 @@ void *write_to_client(void *args){
 char* ReadClientMessage( int socket){
   int tmp_buf=0;
   char* p;
-  read(socket, &tmp_buf, sizeof(int)); 
-  p = (char *) malloc(tmp_buf+1);
-  read(socket, p, tmp_buf);
-  fflush(stdout);
-  return p;
+  if( read(socket, &tmp_buf, sizeof(int))<-1){ 
+    p = (char *) malloc(tmp_buf+1);
+    read(socket, p, tmp_buf);
+    
+    return p;
+  }
+  return NULL;
 }
 
  void WriteServerMessage( SerializedMessage_t *message, int socket){
