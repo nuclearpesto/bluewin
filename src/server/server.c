@@ -15,18 +15,20 @@
 #include <syslog.h>
 #include <pwd.h>
 #include <pthread.h>
+#include "misc.h"
 #include "clienthandler.h"
 #include "server.h"
-
-clients_t clients_arr[THREAD_COUNT];
+clients_t clientsArr[THREAD_COUNT];
 int count;
+stack availableClientNr;
+pthread_mutex_t clientsStackMutex;
+pthread_t threadIds[THREAD_COUNT];
+  
 int main(int argc, char **argv){
   int listensocket, acceptsocket, port, t;
   struct sockaddr_in local, remote;
-  pthread_t thread_ids[THREAD_COUNT];
-stack available_client_nr;
     int i;
-
+   
   if(argc<2){
     printf("usage: server [port]");
     exit(1);
@@ -38,12 +40,13 @@ stack available_client_nr;
     exit(1);
   }
 
-    createstack(&available_client_nr, THREAD_COUNT);
-    for(i=THREAD_COUNT;i>=0;i--)
-    {
-        push(&available_client_nr, i);
-    }
+  createstack(&availableClientNr, THREAD_COUNT);
+  fill_int_stack(&availableClientNr, THREAD_COUNT);
+  
+  pthread_mutex_init(&clientsStackMutex, NULL);
 
+
+  
   local.sin_family = AF_INET;
   local.sin_port = htons(port);
   local.sin_addr.s_addr=htonl(INADDR_ANY);
@@ -62,8 +65,7 @@ stack available_client_nr;
     if((acceptsocket=accept(listensocket,(struct sockaddr *)&remote, &t))==-1){
       perror("accept");
     }
-    clients_t *c=  create_client(acceptsocket, &available_client_nr);
-    pthread_create(&thread_ids[count], NULL, &handle, c);
+    add_Client(acceptsocket, &availableClientNr);
     printf("created thread");
     fflush(stdout);
   }
@@ -72,44 +74,3 @@ stack available_client_nr;
 }
 
 
-clients_t* create_client(int socket, stack *available_client_nr){
-    int count = pop(available_client_nr);
-  clients_arr[count].inet_addr = 0;
-  clients_arr[count].socket = socket;
-
-  return &clients_arr[count];
-}
-
-
-void createstack(stack *s,int capacity)
-{
-    s->current_place = (int *)malloc(sizeof(int )*capacity);
-    s->capacity = capacity;
-    s->size = 0;
-}
-
-int push(stack *s, int nr)
-{
-
-    if(s->size == s->capacity)
-    {
-        printf("Stack overflow");
-        return 1;
-    }
-    *(s->current_place) = nr;
-    s->size++;
-    s->current_place++;
-    return 0;
-}
-
-int pop(stack *s)
-{
-    if(s->size == 0)
-    {
-        return -1;
-    }
-    int nr = *(s->current_place);
-    s->size--;
-    s->current_place--;
-    return nr;
-}

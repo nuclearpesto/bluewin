@@ -1,24 +1,29 @@
-#include "clienthandler.h"
-#include "server.h"
 #include <pthread.h>
 #include <json-c/json.h>
 #include <stdio.h>
 #include <string.h>
-pthread_mutex_t clientArrayMutex = PTHREAD_MUTEX_INITIALIZER;
-
+#include "misc.h"
+#include "server.h"
+#include "clienthandler.h"
 int init_clientHandler( ){
   
 }
 
-int add_Client(){
-  
+void add_Client(int socket, stack *s){
+
+  pthread_mutex_lock(&clientsStackMutex);
+  int count = pop(s);
+  clientsArr[count].inet_addr = 0;
+  clientsArr[count].socket = socket;
+  pthread_create(&threadIds[count], NULL, &handle, &clientsArr[count]);
+  pthread_mutex_unlock(&clientsStackMutex);
   
 }
 
 int find_index_of_client(clients_t *client){
   int i =0;
   for(i=0; i<THREAD_COUNT; i++){
-    if(clients_arr[i].socket==client->socket){
+    if(clientsArr[i].socket==client->socket){
       break;
     }
   }
@@ -30,7 +35,9 @@ int remove_Client(clients_t *client){
   int index=0;
   index = find_index_of_client(client);
   printf("index is : %d\n", index);
-  //push_index_of_client(index);
+  pthread_mutex_lock(&clientsStackMutex);
+  push(&availableClientNr, index);
+  pthread_mutex_unlock(&clientsStackMutex);
   return 1;
 }
 
@@ -43,7 +50,7 @@ void *handle( void *args ){
   json_object *recv_json_cmd, *recv_json_message;
   printf("started handling\n");
   fflush(stdout);
-  while( (messagepointer=ReadClientMessage(client->socket))!=NULL){
+  while( (messagepointer=read_client_message(client->socket))!=NULL){
       if((recieved_obj = json_tokener_parse(messagepointer))!=NULL){
 	
 	printf("recieved json:  %s\n", messagepointer);
@@ -100,13 +107,13 @@ void *write_to_client(void *args){
   sermes.size= sizeof(sermes.jsonstring);
   
   
-  WriteServerMessage(&sermes, p->client->socket);
+  write_server_message(&sermes, p->client->socket);
   pthread_exit(&val);
 
 }
 
 
-char* ReadClientMessage( int socket){
+char* read_client_message( int socket){
   int tmp_buf=0;
   char* p;
   if( read(socket, &tmp_buf, sizeof(int))<-1){ 
@@ -118,7 +125,7 @@ char* ReadClientMessage( int socket){
   return NULL;
 }
 
- void WriteServerMessage( SerializedMessage_t *message, int socket){
+ void write_server_message( SerializedMessage_t *message, int socket){
 
   write(socket, &(message->size), sizeof(int));
   write(socket, message->jsonstring, message->size);

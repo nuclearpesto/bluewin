@@ -22,15 +22,17 @@ struct SerializedMessage{
 };typedef struct SerializedMessage SerializedMessage_t;
 
 int init_clientHandler(); // shall be run once uppon a thread entering handle
-int add_Client(); //unused
-int remove_Client(); //shall be called on exit recieve form client
+void add_Client(int socket, stack *s); 
+int remove_Client(); //pushes disconnected client index on to free space stack
 void *write_to_client(void *args); //writeloop, takes a struct containing a jsonstring and the length of that string plus controll options. then writes to specific client
 
-char* ReadClientMessage(int socket);
-void WriteServerMessage(SerializedMessage_t *message, int socket);
+char* read_client_message(int socket);
+void write_server_message(SerializedMessage_t *message, int socket);
 void *handle( void *args ); //main handle loop, a thread will read continously from the appropriate socket specified in args until there is a message and then act accordingly.
-extern clients_t clients_arr[]; 
-
+extern clients_t clientsArr[]; 
+extern stack availableClientNr;
+extern pthread_mutex_t clientsStackMutex;
+extern pthread_t threadIds [];
 
 #ifndef CLIENTHANDLER  
 #define CLIENTHANDLER
