@@ -64,10 +64,18 @@ int main(int argc, char *argv[])
     user_input(msg.message);
     string = serialize(msg);
     write_to_server(s, string, strlen(string));
-    read_from_server(s, response);
-    free(response);
-    }
+    if(string == "exit"){
+        exit(0);
+        }
+   /* else if(string == "file"){
 
+
+        }*/
+    else{
+        read_from_server(s, response);
+        free(response);
+        }
+    }
 }
 
 
@@ -102,12 +110,25 @@ void user_input(char* msg){
 }
 
 char* serialize(Message_s msg){
+    char str1[10];
+    int ret;
     json_object *obj;
     json_object *string;
     char *json_string;
     obj = json_object_new_object();
-    string = json_object_new_string(msg.message);
-    json_object_object_add(obj, "message", string);
-    json_string = json_object_to_json_string(obj);
+    strcpy(str1, "exit");
+    ret = strcmp(msg.message, str1);
+    if(ret = 0){
+        string = json_object_new_string(msg.message);
+        json_object_object_add(obj, "cmd", string);
+        json_string = json_object_to_json_string(obj);
+        }
+    else{
+        string = json_object_new_string(msg.message);
+        json_object_object_add(obj, "message", string);
+        string = json_object_new_string("msg");
+        json_object_object_add(obj, "cmd", string);
+        json_string = json_object_to_json_string(obj);
+        }
     return json_string;
 }
