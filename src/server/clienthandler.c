@@ -34,7 +34,8 @@ int find_index_of_client(clients_t *client){
 int remove_Client(clients_t *client){
   int index=0;
   index = find_index_of_client(client);
-  printf("index is : %d\n", index);
+  
+  printf("removing client with index : %d\n", index);
   close(client->socket);
   pthread_mutex_lock(&clientsStackMutex);
   
@@ -55,24 +56,29 @@ void *handle( void *args ){
 	printf("recieved json:  %s\n", messagepointer);
 	fflush(stdout);
 	if(json_object_object_get_ex(recieved_obj, "cmd", &recv_json_cmd)){
-	  if(strcmp("exit", json_object_get_string(recv_json_cmd))){
+	  if(strcmp("exit", json_object_get_string(recv_json_cmd))==0){
+	    
 	    remove_Client(client);  
 	    pthread_exit(0);
 	  }
-	  else if(strcmp("msg", json_object_get_string(recv_json_cmd))){
-	    	SerializableMessage_t response= {client, "server response"}; 
-		pthread_t id;
-		printf("creating writethread\n");
-		pthread_create(&id, NULL, &write_to_client, &response); //create writethread  
-		pthread_join(id,NULL );
-		free(messagepointer); 
+	  else if(strcmp("msg", json_object_get_string(recv_json_cmd)) == 0){
+	    if(json_object_object_get_ex(recieved_obj, "message", &recv_json_cmd)){
+	      SerializableMessage_t response;
+	      response.client = client;
+	      strcpy(response.message, json_object_get_string(recv_json_cmd));
+	      pthread_t id;
+	      printf("creating writethread\n");
+	      pthread_create(&id, NULL, &write_to_client, &response); //create writethread  
+	      pthread_join(id,NULL );
+	      free(messagepointer);
+	    }
 	  }
 	}	
       }
-    }
-    remove_Client(client);
-    int retval = 1;
-    pthread_exit(&retval);
+  }
+  remove_Client(client);
+  int retval = 1;
+  pthread_exit(&retval);
 }
 
 void *write_to_client(void *args){
@@ -101,7 +107,7 @@ void *write_to_client(void *args){
   printf("jsonstr size %d\ncontains %s", sizeof(json_string), json_string);
   SerializedMessage_t sermes;
   strcpy (sermes.jsonstring, json_string);
-  sermes.size= sizeof(sermes.jsonstring);
+  sermes.size= strlen(sermes.jsonstring)+1;
   
   
   write_server_message(&sermes, p->client->socket);
@@ -113,13 +119,13 @@ void *write_to_client(void *args){
 char* read_client_message( int socket){
   int tmp_buf=0;
   char* p;
-  if( read(socket, &tmp_buf, sizeof(int))==-1){ 
+  if( read(socket, &tmp_buf, sizeof(int))>-1){ 
     p = (char *) malloc(tmp_buf+1);
     read(socket, p, tmp_buf);
     
     return p;
   }
-  printf("returning null");
+  printf("returning null\n");
   fflush(stdout);
   return NULL;
 }

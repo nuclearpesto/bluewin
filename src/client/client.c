@@ -12,6 +12,8 @@
 #define EXIT_FROM_CLIENT "[CMD]_EXIT_FROM_CLIENT"
 
 void clear_str(char str[], int size);
+void write_to_server(int socket, char s[], int strlen);
+void read_from_server(int socket, char *response);
 
 int main(int argc, char *argv[])
 {
@@ -45,23 +47,17 @@ int main(int argc, char *argv[])
   
   printf("Connected.\n");
   fflush(stdout);
-  char string[] = {"{\"message\":\"hello\"}"};
-  char *response, c;
+  char string[] = {"{\"cmd\":\"msg\", \"message\":\"hello\"}"};
+  char *response;
   int size = sizeof(string);
+  char c;
   
   while(1){
-    scanf(&c);
-    printf("writing %d bytes", sizeof(string));
-    fflush(stdout);
-    write(s, &size, sizeof(int));
-    write(s, string, sizeof(string));
-    read(s, &size, sizeof(int));
-    response=malloc(size+1);
-    read(s,response, size );
-    printf("read response : %s\n",response);
-    free(response);
-  }
-  
+    scanf("%c" , &c);
+    write_to_server(s, string, strlen(string));
+    read_from_server(s, response);
+    }
+
 }
 
 
@@ -72,4 +68,29 @@ void clear_str(char str[], int size){
     str[i]=0;
   }
   return;
+}
+
+void write_to_server(int socket, char s[], int len){
+    int temp = strlen(s);
+    write(socket, &temp, sizeof(int));
+    write(socket, s, temp);
+}
+
+void read_from_server(int socket, char *r){
+
+    int temp=0;
+    char test[100];
+    read(socket, &temp, sizeof(int));
+    printf("%d bytes to read\n ", temp);
+    if((r= calloc(temp+1, sizeof(char)))==NULL){
+      printf("out of memory\n");
+    }
+    printf("r pointer is %p \n", r);
+    fflush(stdout);
+    read(socket, r, temp);
+    *( r+temp)='\0';
+    printf("read response : %s\n",r);
+    fflush(stdout);
+    free(r);
+
 }
