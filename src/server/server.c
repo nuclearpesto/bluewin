@@ -23,6 +23,9 @@ int count;
 stack availableClientNr;
 pthread_mutex_t clientsStackMutex;
 pthread_t threadIds[THREAD_COUNT];
+pthread_mutex_t allocationMutex;
+clients_t  clientList = {NULL, NULL, 0, 0,"", 0};
+
   
 int main(int argc, char **argv){
   int listensocket, acceptsocket, port, t;
@@ -65,7 +68,7 @@ int main(int argc, char **argv){
     if((acceptsocket=accept(listensocket,(struct sockaddr *)&remote, &t))==-1){
       perror("accept");
     }
-    add_Client(acceptsocket, &availableClientNr);
+    add_Client(acceptsocket);
     printf("created thread");
     fflush(stdout);
   }
