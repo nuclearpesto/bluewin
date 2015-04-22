@@ -46,18 +46,21 @@ int main(int argc, char *argv[])
   printf("Connected.\n");
   fflush(stdout);
   char string[] = {"{\"message\":\"hello\"}"};
-  char *response;
+  char *response, c;
   int size = sizeof(string);
-  printf("writing %d bytes", sizeof(string));
-  fflush(stdout);
-  write(s, &size, sizeof(int));
-  write(s, string, sizeof(string));
-  read(s, &size, sizeof(int));
-  response=malloc(size+1);
-  read(s,response, size );
-  printf("read response : %s\n",response);
-  free(response);
   
+  while(1){
+    scanf(&c);
+    printf("writing %d bytes", sizeof(string));
+    fflush(stdout);
+    write(s, &size, sizeof(int));
+    write(s, string, sizeof(string));
+    read(s, &size, sizeof(int));
+    response=malloc(size+1);
+    read(s,response, size );
+    printf("read response : %s\n",response);
+    free(response);
+  }
   
 }
 
