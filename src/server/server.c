@@ -5,14 +5,7 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <errno.h>
 #include <string.h>
-#include <signal.h>
-#include <sys/stat.h>
-#include <sys/fcntl.h>
-#include <syslog.h>
 #include <pwd.h>
 #include <pthread.h>
 #include "misc.h"
@@ -69,7 +62,7 @@ int main(int argc, char **argv){
       perror("accept");
     }
     add_Client(acceptsocket);
-    printf("created thread");
+    printf("created thread\n");
     fflush(stdout);
   }
 

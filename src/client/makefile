@@ -1,2 +1,2 @@
 all:
-	gcc client.c -o client
+	gcc client.c -o client -ljson-c

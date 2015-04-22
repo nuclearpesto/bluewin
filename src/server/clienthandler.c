@@ -36,7 +36,7 @@ void add_Client(int socket){
   p->prev = prev;
   pthread_mutex_unlock(&clientsStackMutex);
   pthread_create(&(p->thread_id), NULL, handle, p);
-  
+  printf("created thread with threadid %d", p->thread_id);
 }
 
 clients_t *find_last_client(clients_t *client){
@@ -58,6 +58,7 @@ clients_t *find_first_client(clients_t *client){
 int remove_Client(clients_t *client){
   clients_t *prev, *next;
   int done = 0;
+  printf("removing client with threadid %d\n", client->thread_id);
   pthread_mutex_lock(&clientsStackMutex);
   prev = client->prev;
   next = client->next;
@@ -91,7 +92,7 @@ void *handle( void *args ){
 	printf("recieved json:  %s\n", messagepointer);
 	fflush(stdout);
 	if(json_object_object_get_ex(recieved_obj, "cmd", &recv_json_cmd)){
-	  if(strcmp("exit", json_object_get_string(recv_json_cmd))==0){
+	  if(strcmp("exit\n", json_object_get_string(recv_json_cmd))==0){
 	    
 	    remove_Client(client);  
 	    pthread_exit(0);
@@ -139,7 +140,7 @@ void *write_to_client(void *args){
 		   
   int val = 1;
   
-  printf("jsonstr size %d\ncontains %s", sizeof(json_string), json_string);
+  printf("jsonstr size %d\ncontains %s\n", sizeof(json_string), json_string);
   SerializedMessage_t sermes;
   strcpy (sermes.jsonstring, json_string);
   sermes.size= strlen(sermes.jsonstring)+1;
@@ -154,7 +155,7 @@ void *write_to_client(void *args){
 char* read_client_message( int socket){
   int tmp_buf=0;
   char* p;
-  printf("reading");
+  printf("reading\n");
   fflush(stdout);
   if( read(socket, &tmp_buf, sizeof(int))>0){ 
     p = (char *) malloc(tmp_buf+1);
