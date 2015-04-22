@@ -10,7 +10,7 @@ int init_clientHandler( ){
 }
 
 void add_Client(int socket, stack *s){
-
+  
   pthread_mutex_lock(&clientsStackMutex);
   int count = pop(s);
   clientsArr[count].inet_addr = 0;
@@ -35,10 +35,9 @@ int remove_Client(clients_t *client){
   int index=0;
   index = find_index_of_client(client);
   printf("index is : %d\n", index);
+  close(client->socket);
   pthread_mutex_lock(&clientsStackMutex);
-  push(&availableClientNr, index);
-  pthread_mutex_unlock(&clientsStackMutex);
-  return 1;
+  
 }
 
 void *handle( void *args ){
@@ -68,14 +67,12 @@ void *handle( void *args ){
 		pthread_join(id,NULL );
 		free(messagepointer); 
 	  }
-	}		
+	}	
       }
     }
     remove_Client(client);
     int retval = 1;
     pthread_exit(&retval);
-
-
 }
 
 void *write_to_client(void *args){
@@ -116,12 +113,14 @@ void *write_to_client(void *args){
 char* read_client_message( int socket){
   int tmp_buf=0;
   char* p;
-  if( read(socket, &tmp_buf, sizeof(int))<-1){ 
+  if( read(socket, &tmp_buf, sizeof(int))==-1){ 
     p = (char *) malloc(tmp_buf+1);
     read(socket, p, tmp_buf);
     
     return p;
   }
+  printf("returning null");
+  fflush(stdout);
   return NULL;
 }
 
