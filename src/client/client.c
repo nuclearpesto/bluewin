@@ -12,6 +12,8 @@
 #define EXIT_FROM_CLIENT "[CMD]_EXIT_FROM_CLIENT"
 
 void clear_str(char str[], int size);
+void write_to_server(int socket, char s[], int strlen);
+void read_from_server(int socket, char *response);
 
 int main(int argc, char *argv[])
 {
@@ -20,10 +22,10 @@ int main(int argc, char *argv[])
     printf("too few args , specify inetaddr and port as args");
     exit(1);
   }
-  
+
   int s, t, len, i, e=0, port=atoi(argv[2]);
   /* char inet_adr[16]=argv[1]; */
-  
+
   struct sockaddr_in remote;
   char str[READ_BUF_SIZE]={0};
   char r[READ_BUF_SIZE]={0};
@@ -32,9 +34,9 @@ int main(int argc, char *argv[])
     perror("socket");
     exit(1);
   }
-  
+
   printf("Trying to connect...\n");
-  
+
   remote.sin_family = AF_INET;
   remote.sin_port=htons(port);
   remote.sin_addr.s_addr=inet_addr(argv[1]);
@@ -42,23 +44,20 @@ int main(int argc, char *argv[])
     perror("connect");
     exit(1);
   }
-  
+
   printf("Connected.\n");
   fflush(stdout);
-  char string[] = {"{\"message\":\"hello\"}"};
+  char string[] = {"{\"msg\":\"msg\"}"};
   char *response;
   int size = sizeof(string);
-  printf("writing %d bytes", sizeof(string));
-  fflush(stdout);
-  write(s, &size, sizeof(int));
-  write(s, string, sizeof(string));
-  read(s, &size, sizeof(int));
-  response=malloc(size+1);
-  read(s,response, size );
-  printf("read response : %s\n",response);
-  free(response);
-  
-  
+
+
+  while(1){
+    write_to_server(s, string, strlen(string));
+    read_from_server(s, response);
+    free(response);
+    }
+
 }
 
 
@@ -69,4 +68,20 @@ void clear_str(char str[], int size){
     str[i]=0;
   }
   return;
+}
+
+void write_to_server(int socket, char s[], int len){
+    int temp = strlen(s);
+    write(socket, &temp, sizeof(int));
+    write(socket, s, temp);
+}
+
+void read_from_server(int socket, char *response){
+
+    int temp;
+    read(socket, &temp, sizeof(int));
+    response= (char *)malloc(temp+1);
+    read(socket,response, temp );
+    printf("read response : %s\n",*response);
+
 }
