@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     user_input(msg.message);
     string = serialize(msg);
     write_to_server(s, string, strlen(string));
-    if(string == "exit\n"){
+    if(msg.message == "exit\n"){
         exit(0);
         }
    /* else if(string == "file"){

@@ -34,11 +34,12 @@ int find_index_of_client(clients_t *client){
 int remove_Client(clients_t *client){
   int index=0;
   index = find_index_of_client(client);
+  pthread_mutex_lock(&clientsStackMutex);
   
   printf("removing client with index : %d\n", index);
   close(client->socket);
-  pthread_mutex_lock(&clientsStackMutex);
   
+  pthread_mutex_unlock(&clientsStackMutex); 
 }
 
 void *handle( void *args ){
@@ -56,7 +57,7 @@ void *handle( void *args ){
 	printf("recieved json:  %s\n", messagepointer);
 	fflush(stdout);
 	if(json_object_object_get_ex(recieved_obj, "cmd", &recv_json_cmd)){
-	  if(strcmp("exit", json_object_get_string(recv_json_cmd))==0){
+	  if(strcmp("exit\n", json_object_get_string(recv_json_cmd))==0){
 	    
 	    remove_Client(client);  
 	    pthread_exit(0);
