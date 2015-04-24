@@ -9,72 +9,36 @@ int init_clientHandler( ){
   
 }
 
-void * new_list_item(unsigned int size){
-  void *p;
-  printf("allocating new client\n");
-  fflush(stdout);
-  pthread_mutex_lock(&allocationMutex);
-  p= malloc(size);
-  pthread_mutex_unlock(&allocationMutex);
-  return p;
-}
-
-void add_Client(int socket){
+void add_Client(int socket, stack *s){
   
-  clients_t *p = (clients_t *)new_list_item(sizeof(clients_t));
-  printf("allocated new client\n");
-  fflush(stdout);
-  p->next = NULL;
-  p->socket = socket;
-  p->inet_addr = 0;
-  p->thread_id = 0;
-  printf("initialized clientt\n");
-  fflush(stdout);
   pthread_mutex_lock(&clientsStackMutex);
-  clients_t *prev = find_last_client(&clientList);
-  prev->next = p;
-  p->prev = prev;
+  int count = pop(s);
+  clientsArr[count].inet_addr = 0;
+  clientsArr[count].socket = socket;
+  pthread_create(&threadIds[count], NULL, &handle, &clientsArr[count]);
   pthread_mutex_unlock(&clientsStackMutex);
-  pthread_create(&(p->thread_id), NULL, handle, p);
-  printf("created thread with threadid %d", p->thread_id);
+  
 }
 
-clients_t *find_last_client(clients_t *client){
-  clients_t *current = client;
-  while(current->next!=NULL){
-    current = current->next;
+int find_index_of_client(clients_t *client){
+  int i =0;
+  for(i=0; i<THREAD_COUNT; i++){
+    if(clientsArr[i].socket==client->socket){
+      break;
+    }
   }
-  return current;
+  return i;
 }
 
-clients_t *find_first_client(clients_t *client){
-  clients_t * current = client;
-  while(current->prev!=NULL){
-    current = current->prev;
-  }
-  return current;
-}
 
 int remove_Client(clients_t *client){
-  clients_t *prev, *next;
-  int done = 0;
-  printf("removing client with threadid %d\n", client->thread_id);
+  int index=0;
+  index = find_index_of_client(client);
+  
+  printf("removing client with index : %d\n", index);
+  close(client->socket);
   pthread_mutex_lock(&clientsStackMutex);
-  prev = client->prev;
-  next = client->next;
-  prev->next = next;
-  pthread_mutex_unlock(&clientsStackMutex);
-  while(!done){
-    pthread_mutex_lock(&allocationMutex);
-    if( pthread_mutex_trylock(&(client->mutex))==0){
-      done=1;
-    }
-    else{
-      pthread_mutex_unlock(&allocationMutex);
-    }
-  }
-  free(client);
-  pthread_mutex_unlock(&allocationMutex);
+  
 }
 
 void *handle( void *args ){
@@ -92,7 +56,7 @@ void *handle( void *args ){
 	printf("recieved json:  %s\n", messagepointer);
 	fflush(stdout);
 	if(json_object_object_get_ex(recieved_obj, "cmd", &recv_json_cmd)){
-	  if(strcmp("exit\n", json_object_get_string(recv_json_cmd))==0){
+	  if(strcmp("exit", json_object_get_string(recv_json_cmd))==0){
 	    
 	    remove_Client(client);  
 	    pthread_exit(0);
@@ -140,7 +104,7 @@ void *write_to_client(void *args){
 		   
   int val = 1;
   
-  printf("jsonstr size %d\ncontains %s\n", sizeof(json_string), json_string);
+  printf("jsonstr size %d\ncontains %s", sizeof(json_string), json_string);
   SerializedMessage_t sermes;
   strcpy (sermes.jsonstring, json_string);
   sermes.size= strlen(sermes.jsonstring)+1;
@@ -155,7 +119,7 @@ void *write_to_client(void *args){
 char* read_client_message( int socket){
   int tmp_buf=0;
   char* p;
-  printf("reading\n");
+  printf("reading");
   fflush(stdout);
   if( read(socket, &tmp_buf, sizeof(int))>0){ 
     p = (char *) malloc(tmp_buf+1);
