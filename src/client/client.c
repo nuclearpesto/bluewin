@@ -19,9 +19,10 @@ struct Message{
 
 void clear_str(char str[], int size);
 void write_to_server(int socket, char s[], int strlen);
-void read_from_server(int socket, char *response);
+char* read_from_server(int socket, char *response);
 void user_input(char* msg);
 char* serialize(Message_s msg);
+void message_printer(char *response);
 
 int main(int argc, char *argv[])
 {
@@ -73,7 +74,8 @@ int main(int argc, char *argv[])
         }*/
     else{
         read_from_server(s, response);
-        //free(response);
+        message_printer(string);
+        free(response);
         }
     }
 
@@ -94,19 +96,19 @@ void write_to_server(int socket, char *s, int len){
     write(socket, s, len);
 }
 
-void read_from_server(int socket, char *response){
+char* read_from_server(int socket, char *response){
 
     int temp;
     read(socket, &temp, sizeof(int));
     response= (char *)malloc(temp+1);
     read(socket,response, temp );
     printf("read response : %s\n",response);
-
+    return response;
 }
 
 void user_input(char* msg){
     fgets(msg, 254, stdin);
-    printf("%s", msg);
+    //printf("%s", msg);
 
 }
 
@@ -133,3 +135,16 @@ char* serialize(Message_s msg){
         }
     return json_string;
 }
+
+void message_printer(char *response){
+    json_tokener *json_tok;
+    json_object *rec_obj;
+    json_object *rec_message;
+    char string_resp[1000];
+    rec_obj = json_tokener_parse(response);
+    if(json_object_object_get_ex(rec_obj, "message", &rec_message)){
+        strcpy(string_resp, json_object_get_string(rec_message));
+        printf("%s", string_resp);
+    }
+}
+
