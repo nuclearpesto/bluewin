@@ -1,4 +1,5 @@
-#include <pthread.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_net.h>
 #include <string.h>
 #include "misc.h"
 #include "server.h"
@@ -7,29 +8,46 @@
 
 
 void add_room(char *roomName){
-  pthread_mutex_lock(&roomsStackMutex);
+  SDL_LockMutex(roomsStackMutex);
   int count = pop(&availableRoomNr);
   strcpy(roomsArr[count].name, roomName);
   roomsArr[count].nrOfCurrentConns = 0;
-  pthread_mutex_unlock(&roomsStackMutex);
+  SDL_UnlockMutex(roomsStackMutex);
 
 }
 void delete_room(char *roomName){
   int index=0;
   
-  pthread_mutex_lock(&roomsStackMutex);
+  SDL_LockMutex(roomsStackMutex);
   index = find_index_of_room(roomName, THREAD_COUNT);
   strcpy('\0',roomsArr[index].name );
   push(&availableRoomNr, index);
-  pthread_mutex_unlock(&roomsStackMutex); 
+  SDL_UnlockMutex(roomsStackMutex); 
 }
 
 void join_room(char *roomName, clients_t * client ){
   int index = find_index_of_room(roomName,THREAD_COUNT);
-  pthread_mutex_lock(&roomsStackMutex);
+  SDL_LockMutex(roomsStackMutex);
   roomsArr[index].connected[roomsArr[index].nrOfCurrentConns] =client; 
   roomsArr[index].nrOfCurrentConns++;
-  pthread_mutex_unlock(&roomsStackMutex);
+  SDL_UnlockMutex(roomsStackMutex);
+}
+void leave_room(char*roomName, clients_t * client){
+  int index = find_index_of_room(roomName,THREAD_COUNT);
+   int i, found=0;
+  SDL_LockMutex(roomsStackMutex);
+   for(i=0; i<roomsArr[index].nrOfCurrentConns; i++){
+	if(client ==roomsArr[index].connected[i]){
+		found = 1;
+	}
+	if(found){
+		roomsArr[index].connected[i]=roomsArr[index].connected[i+1];
+	}
+		
+   }
+  roomsArr[index].nrOfCurrentConns--;
+  SDL_UnlockMutex(roomsStackMutex);
+	
 }
 
 int find_index_of_room(char *roomName, int arrLen){

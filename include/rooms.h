@@ -11,12 +11,13 @@ struct Room{
 
 
 
-extern pthread_mutex_t roomsStackMutex;
+extern SDL_mutex *roomsStackMutex;
 extern room_t roomsArr[];
 extern stack availableRoomNr; 
 void add_room(char *roomName);
 void delete_room(char *roomName);
 void join_room(char *roomName, clients_t * client );
 int find_index_of_room(char *roomName, int arrLen);
+void leave_room(char*roomName, clients_t * client);
 
 #endif

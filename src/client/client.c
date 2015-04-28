@@ -4,13 +4,11 @@
 #include <string.h>
 //#include <json-c/json.h>
 #include <jansson.h>
-
-#define SOCK_PATH "/tmp/shdsocket"
-#define READ_BUF_SIZE 10000
-#define ENT "\nENDOFTRANS\n\0"
-#define EXIT_FROM_CLIENT "[CMD]_EXIT_FROM_CLIENT"
-
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_thread.h>
 #include <SDL2/SDL_net.h>
+
+#define READ_BUF_SIZE 1000
 
 struct Message{
   char message[255];
@@ -23,7 +21,7 @@ char* read_from_server(TCPsocket socket, char *response);
 void user_input(char* msg);
 char* serialize(Message_s msg);
 void message_printer(char *response);
-
+int readThread (void * p);
 
 
 int main(int argc, char *argv[])
@@ -62,28 +60,35 @@ if(!(sd = SDLNet_TCP_Open(&ip))){
   printf("Connected.\n");
   fflush(stdout);
   char *string;
-  char *response;
   int size = sizeof(string);
     Message_s msg;
-
+	SDL_CreateThread(readThread, "reader", &sd);
+	
   while(1){
     user_input(msg.message);
-    string = serialize(msg);
-    write_to_server(sd, string, strlen(string));
     if(msg.message == "exit\n"){
-        exit(0);
-        }
-    /*else if(string == "file"){
-
-
-        }*/
-    else{
-        read_from_server(sd, response);
-        message_printer(string);
-        free(response);
-        }
+			exit(0);
+		}
+	string = serialize(msg);
+	
+	//printf("%s\n", string);
+    write_to_server(sd, string, strlen(string));
     }
 
+}
+
+
+int readThread (void * p){
+	TCPsocket *sd = (TCPsocket *) p;	
+	char *response;
+	char *string;
+	while(1){
+			string =read_from_server(*sd, response);
+			message_printer(string);
+			//printf("gonna free");
+			free(string);
+			//printf("freed\n");
+   }
 }
 
 
@@ -107,7 +112,7 @@ char* read_from_server(TCPsocket socket, char *response){
     SDLNet_TCP_Recv(socket, &temp, sizeof(int));
     response = (char *)malloc(temp+1);
     SDLNet_TCP_Recv(socket,response, temp );
-    printf("read response : %s\n",response);
+    //printf("read response : %s\n",response);
     return response;
 }
 
@@ -138,6 +143,9 @@ char* serialize(Message_s msg){
         json_object_set_new(obj, "message", string);
         string = json_string("msg");
         json_object_set_new(obj, "cmd", string);
+        string = json_string("default");
+        json_object_set_new(obj, "room", string);
+
         json_s = json_dumps(obj, 0);
         }
     return json_s;
@@ -147,10 +155,10 @@ void message_printer(char *response){
     json_t *rec_obj;
     json_t *rec_message;
     char string_resp[1000];
-    rec_obj = json_loads(response, 0, NULL);
+    if((rec_obj = json_loads(response, 0, NULL))!=NULL);
     if((rec_message = json_object_get(rec_obj, "message"))!= NULL){
         strcpy(string_resp, json_string_value(rec_message));
-        printf("%s", string_resp);
+        printf("from server : %s", string_resp);
     }
 }
 
