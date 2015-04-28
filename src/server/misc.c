@@ -19,6 +19,8 @@ int push(stack *s, int nr)
         printf("Stack overflow");
         return 1;
     }
+    
+    //printf("pushing %d to stack\n", nr);
     *(s->current_place) = nr;
     s->size++;
     s->current_place++;
@@ -31,9 +33,10 @@ int pop(stack *s)
     {
         return -1;
     }
-    int nr = *(s->current_place);
     s->size--;
     s->current_place--;
+    int nr = *(s->current_place);
+    printf("popping %d from stack\n", nr);
     return nr;
 }
 void fill_int_stack(stack *s, int size){

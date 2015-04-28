@@ -120,6 +120,7 @@ void user_input(char* msg){
 char* serialize(Message_s msg){
     char str1[10];
     int ret;
+
     json_t *obj;
     json_t *string;
     char *json_s;
@@ -132,6 +133,7 @@ char* serialize(Message_s msg){
         json_s = json_dumps(obj, 0);
         }
     else{
+
         string = json_string(msg.message);
         json_object_set_new(obj, "message", string);
         string = json_string("msg");

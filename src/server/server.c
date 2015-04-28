@@ -11,10 +11,11 @@
 #include "misc.h"
 #include "clienthandler.h"
 #include "server.h"
+#include "rooms.h"
 clients_t clientsArr[THREAD_COUNT];
-int count;
-stack availableClientNr;
-pthread_mutex_t clientsStackMutex;
+room_t roomsArr[THREAD_COUNT];
+stack availableClientNr, availableRoomNr;
+pthread_mutex_t clientsStackMutex, roomsStackMutex;
 pthread_t threadIds[THREAD_COUNT];
   
 int main(int argc, char **argv){
@@ -34,12 +35,20 @@ int main(int argc, char **argv){
   }
 
   createstack(&availableClientNr, THREAD_COUNT);
+  createstack(&availableRoomNr, THREAD_COUNT);
+  printf("created stacks\n");
+  fflush(stdout);
   fill_int_stack(&availableClientNr, THREAD_COUNT);
-  
+  fill_int_stack(&availableRoomNr, THREAD_COUNT);
+  printf("filled stacks\n");
+  fflush(stdout);
   pthread_mutex_init(&clientsStackMutex, NULL);
-
-
-  
+  pthread_mutex_init(&roomsStackMutex, NULL);
+  printf("initialized mutexes\n");
+  fflush(stdout);
+  add_room("default");
+  printf("created default room\n");
+  fflush(stdout);
   local.sin_family = AF_INET;
   local.sin_port = htons(port);
   local.sin_addr.s_addr=htonl(INADDR_ANY);
@@ -58,11 +67,15 @@ int main(int argc, char **argv){
     if((acceptsocket=accept(listensocket,(struct sockaddr *)&remote, &t))==-1){
       perror("accept");
     }
-    add_Client(acceptsocket, &availableClientNr);
-    printf("created thread");
+    else{
+    printf("adding a client\n");
     fflush(stdout);
-  }
+    add_Client(acceptsocket, &availableClientNr);
+    printf("created thread\n");
+    fflush(stdout);
 
+    }
+  }
 
 }
 
