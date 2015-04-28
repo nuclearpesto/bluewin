@@ -7,8 +7,8 @@ DEPS=*.h
 BIN_DIR=../../bin/
 OBJDIR=../../obj/
 
-$(BIN_DIR)server : $(OBJ_DIR)server.o $(OBJ_DIR)clienthandler.o $(OBJ)misc.o
-	$(CC)  -o server server.o clienthandler.o misc.o -I$(INC_DIR)  $(LIBS)
+$(BIN_DIR)server : $(OBJ_DIR)server.o $(OBJ_DIR)clienthandler.o $(OBJ)misc.o $(OBJ)rooms.o  
+	$(CC)  -o server server.o clienthandler.o misc.o rooms.o -I$(INC_DIR)  $(LIBS)
 
 $(OBJ_DIR)server.o : server.c $(INC_DIR)/$(DEPS)
 	$(CC) $(CFLAGS) $(LIBS)  server.c
@@ -19,6 +19,10 @@ $(OBJ_DIR)clienthandler.o : clienthandler.c  $(INC_DIR)/$(DEPS)
 
 $(OBJ_DIR)misc.o : misc.c  $(INC_DIR)/$(DEPS)
 	$(CC) $(CFLAGS) $(LIBS) misc.c 
+
+
+$(OBJ_DIR)rooms.o : rooms.c  $(INC_DIR)/$(DEPS)
+	$(CC) $(CFLAGS) $(LIBS) rooms.c 
 
 clean:
 	rm *o server

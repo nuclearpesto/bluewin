@@ -115,6 +115,7 @@ char* serialize(Message_s msg){
     int ret;
     json_object *obj;
     json_object *string;
+    json_object *room;
     char *json_string;
     obj = json_object_new_object();
     strcpy(str1, "exit\n");
@@ -127,9 +128,15 @@ char* serialize(Message_s msg){
     else{
         string = json_object_new_string(msg.message);
         json_object_object_add(obj, "message", string);
-        string = json_object_new_string("msg");
-        json_object_object_add(obj, "cmd", string);
-        json_string = json_object_to_json_string(obj);
+
+	string = json_object_new_string("default");
+	json_object_object_add(obj, "room", string);
+
+	string = json_object_new_string("msg");
+
+	json_object_object_add(obj, "cmd", string);
+
+	json_string = json_object_to_json_string(obj);
         }
     return json_string;
 }

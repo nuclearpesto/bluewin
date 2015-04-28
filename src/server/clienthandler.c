@@ -5,6 +5,7 @@
 #include "misc.h"
 #include "server.h"
 #include "clienthandler.h"
+#include "rooms.h"
 int init_clientHandler( ){
   
 }
@@ -13,8 +14,11 @@ void add_Client(int socket, stack *s){
   
   pthread_mutex_lock(&clientsStackMutex);
   int count = pop(s);
+  printf("creating client with index %d\n", count);
+  fflush(stdout);
   clientsArr[count].inet_addr = 0;
   clientsArr[count].socket = socket;
+  join_room("default", &clientsArr[count]);
   pthread_create(&threadIds[count], NULL, &handle, &clientsArr[count]);
   pthread_mutex_unlock(&clientsStackMutex);
   
@@ -31,11 +35,12 @@ int find_index_of_client(clients_t *client){
 }
 
 
+
 int remove_Client(clients_t *client){
   int index=0;
   index = find_index_of_client(client);
   pthread_mutex_lock(&clientsStackMutex);
-  
+  push(&availableClientNr, index);
   printf("removing client with index : %d\n", index);
   close(client->socket);
   
@@ -67,6 +72,8 @@ void *handle( void *args ){
 	      SerializableMessage_t response;
 	      response.client = client;
 	      strcpy(response.message, json_object_get_string(recv_json_cmd));
+	      json_object_object_get_ex(recieved_obj, "room", &recv_json_cmd);
+	      strcpy( response.roomname, json_object_get_string(recv_json_cmd));
 	      pthread_t id;
 	      printf("creating writethread\n");
 	      pthread_create(&id, NULL, &write_to_client, &response); //create writethread  
@@ -91,7 +98,7 @@ void *write_to_client(void *args){
    
   json_object *usn = json_object_new_string((p->client->username)); 
   json_object *mes = json_object_new_string((p->message)); 
-  json_object *chrom = json_object_new_string("null");
+  json_object *chrom = json_object_new_string(p->roomname);
   json_object *fromserv = json_object_new_int(1); 
   
   json_object_object_add(messageobj, "fromserver", fromserv );
@@ -110,17 +117,33 @@ void *write_to_client(void *args){
   strcpy (sermes.jsonstring, json_string);
   sermes.size= strlen(sermes.jsonstring)+1;
   
-  
-  write_server_message(&sermes, p->client->socket);
+  write_to_room(p->roomname, &sermes, p->client);
+  //write_server_message(&sermes, p->client->socket);
   pthread_exit(&val);
 
 }
+void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender){
+  int index=find_index_of_room(roomname, THREAD_COUNT);
+  printf("found room index %d\n", index);
+  int i =0;
+  printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns);
+  for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
+    if(roomsArr[index].connected[i]!=sender){
+      write_server_message(sermes,roomsArr[index].connected[i]->socket );
+    }
+    else{
+      printf("same as sendere\n");
+    }
+  }
+  
+}
+
 
 
 char* read_client_message( int socket){
   int tmp_buf=0;
   char* p;
-  printf("reading");
+  printf("reading\n");
   fflush(stdout);
   if( read(socket, &tmp_buf, sizeof(int))>0){ 
     p = (char *) malloc(tmp_buf+1);

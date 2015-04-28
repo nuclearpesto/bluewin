@@ -1,3 +1,5 @@
+#ifndef CLIENTHANDLER  
+
 #ifndef JSON_MAX_LENGTH
 #define JSON_MAX_LENGTH 1000
 #endif
@@ -5,13 +7,12 @@ struct Clients {
   int inet_addr, socket;
   char username[255];
   
-
 };
 typedef struct Clients clients_t;
 
 struct SerializableMessage{
   clients_t *client;
-  char message[255] ;
+  char message[255], roomname[255] ;
   
 };typedef struct SerializableMessage SerializableMessage_t;
 
@@ -29,11 +30,13 @@ void *write_to_client(void *args); //writeloop, takes a struct containing a json
 char* read_client_message(int socket);
 void write_server_message(SerializedMessage_t *message, int socket);
 void *handle( void *args ); //main handle loop, a thread will read continously from the appropriate socket specified in args until there is a message and then act accordingly.
+void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender);
+
+
 extern clients_t clientsArr[]; 
 extern stack availableClientNr;
 extern pthread_mutex_t clientsStackMutex;
 extern pthread_t threadIds [];
 
-#ifndef CLIENTHANDLER  
 #define CLIENTHANDLER
 #endif
