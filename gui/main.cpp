@@ -13,7 +13,7 @@
 #include <SDL2_ttf/SDL_ttf.h>
 #include <stdio.h>
 #include <string>
-#include <string.h>
+#include <sstream>
 #endif
 
 #ifdef __MINGW32__
@@ -23,14 +23,11 @@
 #include <SDL_ttf.h>
 #include <stdio.h>
 #include <string>
-#include <string.h>
+#include <sstream>
 #endif
 
 bool writeText = false;
 int field = 0;
-
-//Render text flag
-bool renderText = false;
 
 typedef struct screen{
     int w,h;
@@ -44,17 +41,91 @@ typedef struct button{
 const int BUTTON_WIDTH = 200;
 const int BUTTON_HEIGHT = 75;
 const int TOTAL_BUTTONS = 1;
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 480;
 
 //Room button constants
 const int ROOM_BUTTON_WIDTH = 400;
 const int ROOM_BUTTON_HEIGHT = 75;
 const int ROOM_BUTTON_TOTAL = 1;
+const int TOTAL_WINDOWS = 1;
 
 enum LButtonSprite{
     BUTTON_SPRITE_MOUSE_DEFAULT = 0,
     BUTTON_SPRITE_MOUSE_PRESS = 1,
     BUTTON_SPRITE_TOTAL = 2
 };
+class LWindow
+{
+	public:
+		//Intializes internals
+		LWindow();
+
+		//Creates window
+		bool init();
+
+		//Handles window events
+		void handleEvent( SDL_Event& e );
+
+		//Focuses on window
+		void focus();
+
+		//Shows windows contents
+		void render();
+
+		//Deallocates internals
+		void free();
+
+		//Window dimensions
+		int getWidth();
+		int getHeight();
+
+		//Window focii
+		bool hasMouseFocus();
+		bool hasKeyboardFocus();
+		bool isMinimized();
+		bool isShown();
+
+	private:
+		//Window data
+		SDL_Window* mWindow;
+		SDL_Renderer* mRenderer;
+		int mWindowID;
+
+		//Window dimensions
+		int mWidth;
+		int mHeight;
+
+		//Window focus
+		bool mMouseFocus;
+		bool mKeyboardFocus;
+		bool mFullScreen;
+		bool mMinimized;
+		bool mShown;
+};
+//Starts up SDL and creates window
+bool init();
+//Frees media and shuts down SDL
+void close();
+
+//Our custom windows
+LWindow gWindows[ TOTAL_WINDOWS ];
+
+LWindow::LWindow()
+{
+	//Initialize non-existant window
+	mWindow = NULL;
+	mRenderer = NULL;
+
+	mMouseFocus = false;
+	mKeyboardFocus = false;
+	mFullScreen = false;
+	mShown = false;
+	mWindowID = -1;
+
+	mWidth = 0;
+	mHeight = 0;
+}
 
 //Texture wrapper class
 class LTexture{
@@ -121,7 +192,196 @@ private:
     //If button has focus
     bool focusText;
 };
+bool LWindow::init()
+{
+	//Create window
+	mWindow = SDL_CreateWindow( "SDL Tutoriall", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
+	if( mWindow != NULL )
+	{
+		mMouseFocus = true;
+		mKeyboardFocus = true;
+		mWidth = SCREEN_WIDTH;
+		mHeight = SCREEN_HEIGHT;
 
+		//Create renderer for window
+		mRenderer = SDL_CreateRenderer( mWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
+		if( mRenderer == NULL )
+		{
+			printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
+			SDL_DestroyWindow( mWindow );
+			mWindow = NULL;
+		}
+		else
+		{
+			//Initialize renderer color
+			SDL_SetRenderDrawColor( mRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+
+			//Grab window identifier
+			mWindowID = SDL_GetWindowID( mWindow );
+
+			//Flag as opened
+			mShown = true;
+		}
+	}
+	else
+	{
+		printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
+	}
+
+	return mWindow != NULL && mRenderer != NULL;
+}
+void LWindow::handleEvent( SDL_Event& e )
+{
+	//If an event was detected for this window
+	if( e.type == SDL_WINDOWEVENT && e.window.windowID == mWindowID )
+	{
+		//Caption update flag
+		bool updateCaption = false;
+
+		switch( e.window.event )
+		{
+			//Window appeared
+			case SDL_WINDOWEVENT_SHOWN:
+			mShown = true;
+			break;
+
+			//Window disappeared
+			case SDL_WINDOWEVENT_HIDDEN:
+			mShown = false;
+			break;
+
+			//Get new dimensions and repaint
+			case SDL_WINDOWEVENT_SIZE_CHANGED:
+			mWidth = e.window.data1;
+			mHeight = e.window.data2;
+			SDL_RenderPresent( mRenderer );
+			break;
+
+			//Repaint on expose
+			case SDL_WINDOWEVENT_EXPOSED:
+			SDL_RenderPresent( mRenderer );
+			break;
+
+			//Mouse enter
+			case SDL_WINDOWEVENT_ENTER:
+			mMouseFocus = true;
+			updateCaption = true;
+			break;
+
+			//Mouse exit
+			case SDL_WINDOWEVENT_LEAVE:
+			mMouseFocus = false;
+			updateCaption = true;
+			break;
+
+			//Keyboard focus gained
+			case SDL_WINDOWEVENT_FOCUS_GAINED:
+			mKeyboardFocus = true;
+			updateCaption = true;
+			break;
+
+			//Keyboard focus lost
+			case SDL_WINDOWEVENT_FOCUS_LOST:
+			mKeyboardFocus = false;
+			updateCaption = true;
+			break;
+
+			//Window minimized
+			case SDL_WINDOWEVENT_MINIMIZED:
+            mMinimized = true;
+            break;
+
+			//Window maxized
+			case SDL_WINDOWEVENT_MAXIMIZED:
+			mMinimized = false;
+            break;
+
+			//Window restored
+			case SDL_WINDOWEVENT_RESTORED:
+			mMinimized = false;
+            break;
+
+			//Hide on close
+			case SDL_WINDOWEVENT_CLOSE:
+			SDL_HideWindow( mWindow );
+			break;
+		}
+
+		//Update window caption with new data
+		if( updateCaption )
+		{
+			std::stringstream caption;
+			caption << "SDL Tutorial - ID: " << mWindowID << " MouseFocus:" << ( ( mMouseFocus ) ? "On" : "Off" ) << " KeyboardFocus:" << ( ( mKeyboardFocus ) ? "On" : "Off" );
+			SDL_SetWindowTitle( mWindow, caption.str().c_str() );
+		}
+	}
+}
+void LWindow::focus()
+{
+	//Restore window if needed
+	if( !mShown )
+	{
+		SDL_ShowWindow( mWindow );
+	}
+
+	//Move window forward
+	SDL_RaiseWindow( mWindow );
+}
+
+void LWindow::render()
+{
+	if( !mMinimized )
+	{
+		//Clear screen
+		SDL_SetRenderDrawColor( mRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+		SDL_RenderClear( mRenderer );
+
+		//Update screen
+		SDL_RenderPresent( mRenderer );
+	}
+}
+void LWindow::free()
+{
+	if( mWindow != NULL )
+	{
+		SDL_DestroyWindow( mWindow );
+	}
+
+	mMouseFocus = false;
+	mKeyboardFocus = false;
+	mWidth = 0;
+	mHeight = 0;
+}
+
+int LWindow::getWidth()
+{
+	return mWidth;
+}
+
+int LWindow::getHeight()
+{
+	return mHeight;
+}
+
+bool LWindow::hasMouseFocus()
+{
+	return mMouseFocus;
+}
+
+bool LWindow::hasKeyboardFocus()
+{
+	return mKeyboardFocus;
+}
+
+bool LWindow::isMinimized()
+{
+	return mMinimized;
+}
+
+bool LWindow::isShown()
+{
+	return mShown;
+}
 //Starts up SDL and creates window
 bool init();
 
@@ -155,6 +415,8 @@ TTF_Font* gDefaultFont = NULL;
 TTF_Font* gLargeBoldFont = NULL;
 TTF_Font* gLargeFont = NULL;
 
+//
+
 //Rendered texture
 LTexture gTextTexture;
 
@@ -162,8 +424,8 @@ LTexture gTextTexture;
 LTexture gFooTexture;
 LTexture gBackgroundTexture;
 LTexture gMainTexture;
-LTexture gUsernameTextTexture;
-LTexture gPasswordTextTexture;
+LTexture gPromtTextTexture;
+LTexture gInputTextTexture;
 
 //Login button sprites
 SDL_Rect gLoginSpriteClips[ BUTTON_SPRITE_TOTAL ];
@@ -322,10 +584,19 @@ void action(int* e){
     if (*e == 0) {
         printf("Hej 0");
         *e=1;
-        
+		//Initialize the rest of the windows
+
     }else if (*e == 1){
         printf("Hej 1");
         *e=0;
+        for( int i = 0; i < TOTAL_WINDOWS; ++i )
+		{
+			gWindows[ i ].init();
+		}
+
+		}
+        //close();
+
     }
 }
 
@@ -370,18 +641,10 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                     }
                     switch (selected) {
                         case 0:
-                            action(screenShow);
-                            break;
-                            
-                        case 1:
                             field=0;
                             break;
                             
-                        case 2:
-                            field=1;
-                            break;
-                        
-                        case 3:
+                        case 1:
                             field=1;
                             break;
                             
@@ -389,7 +652,7 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                             break;
                     }
                     //focusText=true;
-                    //action(screenShow);
+                    action(screenShow);
                     
                     break;
             }
@@ -419,72 +682,16 @@ void getPromptText(std::string text, TTF_Font* gFont, int select){
     if (select==0) {
         //Get prompt text
         SDL_Color textColor = {0,0,0};
-        if (!gUsernameTextTexture.loadFromRenderedText(text, textColor, gFont)) {
+        if (!gPromtTextTexture.loadFromRenderedText(text, textColor, gFont)) {
             printf("Failed to render promt text texture!\n");
         }
     }else if (select==1){
         //Get prompt text
         SDL_Color textColor = {0,0,0};
-        if (!gPasswordTextTexture.loadFromRenderedText(text, textColor, gFont)) {
+        if (!gInputTextTexture.loadFromRenderedText(text, textColor, gFont)) {
             printf("Failed to render promt text texture!\n");
         }
     }
-}
-
-void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor){
-    //Render text flag
-    //bool renderText = false;
-    char showPassword[50] = " ";
-    
-    //Special key input
-    if (e.type == SDL_KEYDOWN){
-        //Handle backspace
-        if (e.key.keysym.sym == SDLK_BACKSPACE && inputText->length()>0) {
-            //Lop off character
-            inputText->pop_back();
-            renderText = true;
-        }//Handle copy
-        else if (e.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL){
-            SDL_SetClipboardText(inputText->c_str());
-        }//Handle paste
-        else if (e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL){
-            *inputText = SDL_GetClipboardText();
-            renderText = true;
-        }
-    }//Special text input event
-    else if (e.type == SDL_TEXTINPUT){
-        //Not copy or pasting
-        if (!((e.text.text[0]=='c' || e.text.text[0]=='C') && (e.text.text[0]=='v' || e.text.text[0]=='V') && SDL_GetModState() & KMOD_CTRL) ) {
-            //Append character
-            *inputText += e.text.text;
-            printf("%s\n",inputText->c_str());
-            renderText = true;
-        }
-    }
-    
-    //Rerender text if needed
-    if (renderText) {
-        //Text is not empty
-        if (*inputText !="") {
-            inputText->erase(std::remove(inputText->begin(), inputText->end(), ' '), inputText->end());
-            if (field==0) {
-                //Render new text, username
-                gUsernameTextTexture.loadFromRenderedText(inputText->c_str(), textColor, gDefaultFont);
-            }else{
-                //Render new text, passw0rd
-                gPasswordTextTexture.loadFromRenderedText(inputText->c_str(), textColor, gDefaultFont);
-            }
-        }//Text is empty
-        else{
-            if (field==0) {
-                //Render space texture, username
-                gUsernameTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
-            }else{
-                //Render space texture, password
-                gPasswordTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
-            }
-        }
-     }
 }
 
 bool init(Screen windowSize){
@@ -606,6 +813,10 @@ bool loadMedia(){
 
 void close(){
     //Free loaded image
+    for( int i = 0; i < TOTAL_WINDOWS; ++i )
+	{
+		gWindows[ i ].free();
+	}
     SDL_DestroyTexture(gTexture);
     gTexture = NULL;
     gLoginButtonSpriteSheetTexture.free();
@@ -614,8 +825,8 @@ void close(){
     gBackgroundTexture.free();
     gMainTexture.free();
     gTextTexture.free();
-    gUsernameTextTexture.free();
-    gPasswordTextTexture.free();
+    gInputTextTexture.free();
+    gPromtTextTexture.free();
     
     //Free global font
     TTF_CloseFont(gDefaultFont);
@@ -659,7 +870,7 @@ SDL_Texture* loadTexture(std::string path){
 
 int main( int argc, char* args[] ){
     //Initialize varibles
-    int screenShow = 0,boxInput = 0, totalElements=0,totalButtons=0,totalFields=0;//,field = 0;
+    int screenShow = 0,boxInput = 0;//,field = 0;
     Screen windowSize;
     windowSize.w=400;
     windowSize.h=800;
@@ -704,7 +915,7 @@ int main( int argc, char* args[] ){
             //While application is running
             while( !quit ){
                 //Render text flag
-                //bool renderText = false;
+                bool renderText = false;
                 
                 //Handle events on queue
                 while( SDL_PollEvent( &e ) != 0 ){
@@ -713,31 +924,200 @@ int main( int argc, char* args[] ){
                         quit = true;
                     }
                     else if (screenShow==0) {
-                        totalElements=1+totalButtons+totalFields;
-                        //Generate all elements in login screen
-                        for (int i = 0; i< totalElements; i++) {
-                            if (i<totalButtons) {
-                                gLoginButtons[i].handleEvent(&e,&screenShow,&buttonTypeSmall,i);
-                            }else if(i<totalButtons+totalFields){
-                                gFieldButtons[i-totalButtons].handleEvent(&e, &boxInput, &fieldButton,i);
-                            }
+                    //Handle window events
+				for( int i = 0; i < TOTAL_WINDOWS; ++i )
+				{
+					gWindows[ i ].handleEvent( e );
+				}
+
+				//Pull up window
+				if( e.type == SDL_KEYDOWN )
+				{
+					switch( e.key.keysym.sym )
+					{
+						case SDLK_1:
+						gWindows[ 0 ].focus();
+						break;
+
+						case SDLK_2:
+						gWindows[ 1 ].focus();
+						break;
+
+						case SDLK_3:
+						gWindows[ 2 ].focus();
+						break;
+					}
+				}
+                    if (screenShow==0) {
+                        //Handle login button events
+                        for (int i = 0; i < TOTAL_BUTTONS; i++) {
+                            gLoginButtons[i].handleEvent(&e,&screenShow,&buttonTypeSmall,i);
+                        }
+                        //Handle username and password field
+                        for (int i = 0; i < 3; i++) {
+                            gFieldButtons[i].handleEvent(&e, &boxInput, &fieldButton,i);
                         }
                     }else if(screenShow == 1){
-                        totalElements=1+totalButtons;
-                        //Generate all elements in main screen
-                        for (int i =0; i<totalElements; i++) {
+                        //Handle rooms button events
+                        for (int i = 0; i < ROOM_BUTTON_TOTAL; i++) {
                             gRoomButtons[i].handleEvent(&e, &screenShow,&buttonTypeWide,i);
                         }
                     }
                     if (writeText) {
                         if (field==0) {
-                            getTextString(&inputUsernameText,e,textColor);
+                            //Special key input
+                            if (e.type == SDL_KEYDOWN){
+                                //Handle backspace
+                                if (e.key.keysym.sym == SDLK_BACKSPACE && inputUsernameText.length()>0) {
+                                    //Lop off character
+                                    inputUsernameText.pop_back();
+                                    renderText = true;
+                                }//Handle copy
+                                else if (e.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL){
+                                    SDL_SetClipboardText(inputUsernameText.c_str());
+                                }//Handle paste
+                                else if (e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL){
+                                    inputUsernameText = SDL_GetClipboardText();
+                                    renderText = true;
+                                }
+                            }//Special text input event
+                            else if (e.type == SDL_TEXTINPUT){
+                                //Not copy or pasting
+                                if (!((e.text.text[0]=='c' || e.text.text[0]=='C') && (e.text.text[0]=='v' || e.text.text[0]=='V') && SDL_GetModState() & KMOD_CTRL) ) {
+                                    //Append character
+                                    if (field==0) {
+                                        inputUsernameText += e.text.text;
+                                        printf("%s\n",inputUsernameText.c_str());
+                                        renderText = true;
+                                    }
+                                }
+                            }
+                            
+                            //Rerender text if needed
+                            if (renderText) {
+                                //Text is not empty
+                                if (inputUsernameText !="") {
+                                    //Render new text, username
+                                    gPromtTextTexture.loadFromRenderedText(inputUsernameText.c_str(), textColor, gDefaultFont);
+                                }//Text is empty
+                                else{
+                                    //Render space texture, username
+                                    gPromtTextTexture.loadFromRenderedText(inputUsernameText.c_str(), textColor, gDefaultFont);
+                                }
+                             }
                         }else if (field==1){
-                            getTextString(&inputPasswordText, e, textColor);
+                            //Special key input
+                            if (e.type == SDL_KEYDOWN){
+                                //Handle backspace
+                                if (e.key.keysym.sym == SDLK_BACKSPACE && inputPasswordText.length()>0) {
+                                    //Lop off character
+                                    inputPasswordText.pop_back();
+                                    renderText = true;
+                                }//Handle copy
+                                else if (e.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL){
+                                    SDL_SetClipboardText(inputPasswordText.c_str());
+                                }//Handle paste
+                                else if (e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL){
+                                    inputPasswordText = SDL_GetClipboardText();
+                                    renderText = true;
+                                }
+                            }//Special text input event
+                            else if (e.type == SDL_TEXTINPUT){
+                                //Not copy or pasting
+                                if (!((e.text.text[0]=='c' || e.text.text[0]=='C') && (e.text.text[0]=='v' || e.text.text[0]=='V') && SDL_GetModState() & KMOD_CTRL) ) {
+                                    //Append character
+                                    inputPasswordText += e.text.text;
+                                    printf("%s\n",inputPasswordText.c_str());
+                                    renderText = true;
+                                    }
+                                }
+                            }
+                        //Rerender text if needed
+                        if (renderText) {
+                            //Text is not empty
+                            if (inputPasswordText !="") {
+                                //Render new text, username
+                                gInputTextTexture.loadFromRenderedText(inputPasswordText.c_str(), textColor, gDefaultFont);
+                            }//Text is empty
+                            else{
+                                //Render space texture, username
+                                gInputTextTexture.loadFromRenderedText(inputPasswordText.c_str(), textColor, gDefaultFont);
+                            }
                         }
+                        
+                        /*//Special key input
+                        if (e.type == SDL_KEYDOWN){
+                            //Handle backspace
+                            if (e.key.keysym.sym == SDLK_BACKSPACE && inputText.length()>0) {
+                                //Lop off character
+                                inputText.pop_back();
+                                renderText = true;
+                            }//Handle copy
+                            else if (e.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL){
+                                SDL_SetClipboardText(inputText.c_str());
+                            }//Handle paste
+                            else if (e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL){
+                                inputText = SDL_GetClipboardText();
+                                renderText = true;
+                            }
+                        }//Special text input event
+                        else if (e.type == SDL_TEXTINPUT){
+                            //Not copy or pasting
+                            if (!((e.text.text[0]=='c' || e.text.text[0]=='C') && (e.text.text[0]=='v' || e.text.text[0]=='V') && SDL_GetModState() & KMOD_CTRL) ) {
+                                //Append character
+                                if (field==0) {
+                                    inputUsernameText += e.text.text;
+                                    printf("%s\n",inputUsernameText.c_str());
+                                    renderText = true;
+                                }else if (field==1){
+                                    inputPasswordText += e.text.text;
+                                    printf("%s\n",inputPasswordText.c_str());
+                                    renderText = true;
+                                }
+                            }
+                        }*/
                     }
                 }
                 
+                //Rerender text if needed
+                /*if (renderText) {
+                    //Text is not empty
+                    if (inputText !="") {
+                        if (field==0) {
+                            //Render new text, username
+                            gPromtTextTexture.loadFromRenderedText(inputText.c_str(), textColor, gDefaultFont);
+                        }else{
+                            //Render new text, passw0rd
+                            gInputTextTexture.loadFromRenderedText(inputText.c_str(), textColor, gDefaultFont);
+                        }
+                    }//Text is empty
+                    else{
+                        if (field==1) {
+                            //Render space texture, username
+                            gPromtTextTexture.loadFromRenderedText(inputText.c_str(), textColor, gDefaultFont);
+                        }else{
+                            //Render space texture, password
+                            gInputTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
+                        }
+                    }
+                }*/
+                
+                //Update all windows
+			for( int i = 0; i < TOTAL_WINDOWS; ++i )
+			{
+				gWindows[ i ].render();
+			}
+
+			//Check all windows
+			bool allWindowsClosed = true;
+			for( int i = 0; i < TOTAL_WINDOWS; ++i )
+			{
+				if( gWindows[ i ].isShown() )
+				{
+					allWindowsClosed = false;
+					break;
+				}
+			}
                 //Clear screen
                 SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
                 SDL_RenderClear(gRenderer);
@@ -746,8 +1126,6 @@ int main( int argc, char* args[] ){
                 SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
                 
                 if(screenShow==0){
-                    totalButtons=1;
-                    totalFields=2;
                     //Render buttons
                     for (int i = 0; i < TOTAL_BUTTONS; ++i) {
                         gLoginButtons[i].render(screenShow);
@@ -762,21 +1140,21 @@ int main( int argc, char* args[] ){
                     //Positionate text fields
                     gFieldButtons[0].setPosition(fieldButton.x,300);
                     gFieldButtons[1].setPosition(fieldButton.x,420);
-                    //gFieldButtons[2].setPosition(fieldButton.x, 300);
+                    gFieldButtons[2].setPosition(fieldButton.x, 300);
                     
                     if (inputUsernameText=="" || inputUsernameText==" ") {
                         getPromptText("Username", gDefaultFont,0);
-                        gUsernameTextTexture.render(fieldButton.x+10,320);
+                        gPromtTextTexture.render(fieldButton.x+10,320);
                     }
                     
                     if (inputPasswordText=="" || inputPasswordText==" ") {
                         getPromptText("Password", gDefaultFont,1);
-                        gPasswordTextTexture.render(fieldButton.x+10, 440);
+                        gInputTextTexture.render(fieldButton.x+10, 440);
                     }
                     
                     //Render text texture
-                    gUsernameTextTexture.render(fieldButton.x+10, 320);
-                    gPasswordTextTexture.render(fieldButton.x+10, 440);
+                    gPromtTextTexture.render(fieldButton.x+10, 320);
+                    gInputTextTexture.render(fieldButton.x+10, 440);
                     
                     //Render current frame
                     getText("BlueWin", gLargeBoldFont);
@@ -791,13 +1169,12 @@ int main( int argc, char* args[] ){
                     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 60));
                 }else{
                     int buttX=0,buttY=200;
-                    totalButtons=1;
-                    totalFields=0;
+                    
                     //Render rooms texture to screen
                     gFooTexture.render(0, 0);
                     
                     //Render Username
-                    gUsernameTextTexture.render(10, 10);
+                    gPromtTextTexture.render(10, 10);
                     
                     //Render buttons
                     for (int i = 0; i < TOTAL_BUTTONS; ++i) {
