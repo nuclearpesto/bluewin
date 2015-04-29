@@ -1,22 +1,30 @@
-#include <pthread.h>
-#include <json-c/json.h>
+
 #include <stdio.h>
 #include <string.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_net.h>
+#include <SDL2/SDL_thread.h>
+#include <jansson.h>
 #include "misc.h"
 #include "server.h"
 #include "clienthandler.h"
+#include "rooms.h"
 int init_clientHandler( ){
   
 }
 
-void add_Client(int socket, stack *s){
+void add_Client(TCPsocket socket, stack *s){
   
-  pthread_mutex_lock(&clientsStackMutex);
+  SDL_LockMutex(clientsStackMutex);
   int count = pop(s);
-  clientsArr[count].inet_addr = 0;
+  printf("creating client with index %d\n", count);
+  fflush(stdout);
+  //clientsArr[count].inet_addr = 0;
   clientsArr[count].socket = socket;
-  pthread_create(&threadIds[count], NULL, &handle, &clientsArr[count]);
-  pthread_mutex_unlock(&clientsStackMutex);
+  join_room("default", &clientsArr[count]);
+  threadIds = SDL_CreateThread(handle, "handle", (void *) &clientsArr[count]) ;
+  SDL_DetachThread(threadIds);
+  SDL_UnlockMutex(clientsStackMutex);
   
 }
 
@@ -31,77 +39,88 @@ int find_index_of_client(clients_t *client){
 }
 
 
+
 int remove_Client(clients_t *client){
   int index=0;
   index = find_index_of_client(client);
-  pthread_mutex_lock(&clientsStackMutex);
-  
+  SDL_LockMutex(clientsStackMutex);
+  push(&availableClientNr, index);
   printf("removing client with index : %d\n", index);
-  close(client->socket);
+  leave_room("default", client);
+  SDLNet_TCP_Close(client->socket);
   
-  pthread_mutex_unlock(&clientsStackMutex); 
+  SDL_UnlockMutex(clientsStackMutex); 
 }
 
-void *handle( void *args ){
+int handle( void *args ){
 
   clients_t *client =  (clients_t * )args ;
   char* messagepointer;
-  json_tokener *json_tok;
-  json_object *recieved_obj;
-  json_object *recv_json_cmd, *recv_json_message;
+  json_t *recieved_obj;
+  json_t *recv_json_cmd, *recv_json_message;
+  json_error_t jsonError;
   printf("started handling\n");
   fflush(stdout);
   while( (messagepointer=read_client_message(client->socket))!=NULL){
-      if((recieved_obj = json_tokener_parse(messagepointer))!=NULL){
-	
-	printf("recieved json:  %s\n", messagepointer);
-	fflush(stdout);
-	if(json_object_object_get_ex(recieved_obj, "cmd", &recv_json_cmd)){
-	  if(strcmp("exit\n", json_object_get_string(recv_json_cmd))==0){
-	    
-	    remove_Client(client);  
-	    pthread_exit(0);
-	  }
-	  else if(strcmp("msg", json_object_get_string(recv_json_cmd)) == 0){
-	    if(json_object_object_get_ex(recieved_obj, "message", &recv_json_cmd)){
-	      SerializableMessage_t response;
-	      response.client = client;
-	      strcpy(response.message, json_object_get_string(recv_json_cmd));
-	      pthread_t id;
-	      printf("creating writethread\n");
-	      pthread_create(&id, NULL, &write_to_client, &response); //create writethread  
-	      pthread_join(id,NULL );
-	      free(messagepointer);
-	    }
-	  }
-	}	
-      }
+	  printf("got something ");
+	  printf("recieved this:  %s\n", messagepointer);
+		fflush(stdout);
+    if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
+		printf("recieved json:  %s\n", messagepointer);
+		fflush(stdout);
+		recv_json_cmd= json_object_get(recieved_obj, "cmd");
+		if(recv_json_cmd!=NULL){
+		  if(strcmp("exit\n", json_string_value(recv_json_cmd))==0){
+			remove_Client(client); 
+			free(messagepointer);
+			return 1;
+		  }
+		  else if(strcmp("msg", json_string_value(recv_json_cmd)) == 0){
+			  printf("found msg");
+			  fflush(stdout);
+			if(recv_json_cmd = json_object_get(recieved_obj, "message")){
+			  SerializableMessage_t response;
+			  response.client = client;
+			  strcpy(response.message, json_string_value(recv_json_cmd));
+			  printf("copied string");
+			  fflush(stdout);
+			  recv_json_cmd=json_object_get(recieved_obj, "room");
+			  strcpy( response.roomname, json_string_value(recv_json_cmd));
+			  SDL_Thread *id;
+			  printf("creating writethread\n");
+			  id= SDL_CreateThread(write_to_client,"writer", &response); //create writethread 
+			  SDL_DetachThread(id);
+			  free(messagepointer);
+			}
+		  }
+		}	
+	}
   }
   remove_Client(client);
-  int retval = 1;
-  pthread_exit(&retval);
+  return 1;
 }
 
-void *write_to_client(void *args){
+int write_to_client(void *args){
 
     printf("gonna write\n");
     
   SerializableMessage_t *p  = (SerializableMessage_t *)args;
-  json_object *messageobj = json_object_new_object();
+	json_int_t x = 1;
+  json_t *messageobj = json_object();
    
-  json_object *usn = json_object_new_string((p->client->username)); 
-  json_object *mes = json_object_new_string((p->message)); 
-  json_object *chrom = json_object_new_string("null");
-  json_object *fromserv = json_object_new_int(1); 
+  json_t *usn = json_string((p->client->username)); 
+  json_t *mes = json_string((p->message)); 
+  json_t *chrom = json_string(p->roomname);
+  json_t *fromserv = json_integer(x); 
   
-  json_object_object_add(messageobj, "fromserver", fromserv );
-  json_object_object_add(messageobj, "username", usn );
-  json_object_object_add(messageobj, "chroom", chrom );
-  json_object_object_add(messageobj, "message", mes );
+  json_object_set(messageobj, "fromserv", fromserv);
+  json_object_set(messageobj,"username", usn );
+  json_object_set(messageobj, "chroom", chrom );
+  json_object_set(messageobj, "message", mes );
   
   printf("created jsonobj\n");
   fflush(stdout);
-  const char *json_string = json_object_to_json_string(messageobj);
+  const char *json_string = json_dumps(messageobj, 0);
 		   
   int val = 1;
   
@@ -110,22 +129,42 @@ void *write_to_client(void *args){
   strcpy (sermes.jsonstring, json_string);
   sermes.size= strlen(sermes.jsonstring)+1;
   
+  write_to_room(p->roomname, &sermes, p->client);
+  //write_server_message(&sermes, p->client->socket);
   
-  write_server_message(&sermes, p->client->socket);
-  pthread_exit(&val);
-
+	return 1;
+}
+void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender){
+  int index=find_index_of_room(roomname, THREAD_COUNT);
+  printf("found room index %d\n", index);
+  int i =0;
+  printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns);
+  SDL_LockMutex(roomsStackMutex);
+  for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
+    if(roomsArr[index].connected[i]!=sender){
+		printf("%p and %p are not same", sender, roomsArr[index].connected[i]);
+      write_server_message(sermes,roomsArr[index].connected[i]->socket );
+    }
+    else{
+      printf("same as sendere\n");
+    }
+  }
+  SDL_UnlockMutex(roomsStackMutex);
 }
 
 
-char* read_client_message( int socket){
+
+char* read_client_message( TCPsocket socket){
   int tmp_buf=0;
   char* p;
-  printf("reading");
+  printf("reading\n");
   fflush(stdout);
-  if( read(socket, &tmp_buf, sizeof(int))>0){ 
+  if( SDLNet_TCP_Recv(socket, &tmp_buf, sizeof(int))>0){ 
     p = (char *) malloc(tmp_buf+1);
-    read(socket, p, tmp_buf);
-    
+	printf("gonna read %d bytes\n", tmp_buf);
+    tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
+    printf("read %d bytes\n", tmp_buf);
+	*(p+tmp_buf)='\0';
     return p;
   }
   printf("returning null\n");
@@ -133,8 +172,8 @@ char* read_client_message( int socket){
   return NULL;
 }
 
- void write_server_message( SerializedMessage_t *message, int socket){
+ void write_server_message( SerializedMessage_t *message, TCPsocket socket){
 
-  write(socket, &(message->size), sizeof(int));
-  write(socket, message->jsonstring, message->size);
+  SDLNet_TCP_Send(socket, &(message->size), sizeof(int));
+  SDLNet_TCP_Send(socket, message->jsonstring, message->size);
 }

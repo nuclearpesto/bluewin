@@ -1,2 +1,5 @@
-*.o
 src/server/server.exe
+*.exe
+*.stackdump
+src/server/clienthandler.o
+*.o

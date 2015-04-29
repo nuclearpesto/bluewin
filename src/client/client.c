@@ -2,15 +2,13 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <json-c/json.h>
+//#include <json-c/json.h>
+#include <jansson.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_thread.h>
+#include <SDL2/SDL_net.h>
 
-#define SOCK_PATH "/tmp/shdsocket"
-#define READ_BUF_SIZE 10000
-#define ENT "\nENDOFTRANS\n\0"
-#define EXIT_FROM_CLIENT "[CMD]_EXIT_FROM_CLIENT"
+#define READ_BUF_SIZE 1000
 
 struct Message{
   char message[255];
@@ -18,65 +16,79 @@ struct Message{
 };typedef struct Message Message_s;
 
 void clear_str(char str[], int size);
-void write_to_server(int socket, char s[], int strlen);
-void read_from_server(int socket, char *response);
+void write_to_server(TCPsocket socket, char *s, int strlen);
+char* read_from_server(TCPsocket socket, char *response);
 void user_input(char* msg);
 char* serialize(Message_s msg);
+void message_printer(char *response);
+int readThread (void * p);
+
 
 int main(int argc, char *argv[])
 {
-
+    IPaddress ip;
+    TCPsocket sd;
   if(argc<3){
     printf("too few args , specify inetaddr and port as args");
     exit(1);
   }
 
-  int s, t, len, i, e=0, port=atoi(argv[2]);
+  int t, len, i, e=0, port=atoi(argv[2]);
+
   /* char inet_adr[16]=argv[1]; */
 
-  struct sockaddr_in remote;
   char str[READ_BUF_SIZE]={0};
   char r[READ_BUF_SIZE]={0};
 
-  if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-    perror("socket");
+if(SDLNet_Init() < 0){
+    printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());
     exit(1);
-  }
+}
+
 
   printf("Trying to connect...\n");
-
-  remote.sin_family = AF_INET;
-  remote.sin_port=htons(port);
-  remote.sin_addr.s_addr=inet_addr(argv[1]);
-  if (connect(s, (struct sockaddr *)&remote, sizeof(remote)) == -1) {
-    perror("connect");
+if(SDLNet_ResolveHost(&ip, argv[1], port) < 0){
+    fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
     exit(1);
-  }
+}
+
+if(!(sd = SDLNet_TCP_Open(&ip))){
+    fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+    exit(1);
+}
 
   printf("Connected.\n");
   fflush(stdout);
   char *string;
-  char *response;
   int size = sizeof(string);
     Message_s msg;
-
+	SDL_CreateThread(readThread, "reader", &sd);
+	
   while(1){
     user_input(msg.message);
-    string = serialize(msg);
-    write_to_server(s, string, strlen(string));
     if(msg.message == "exit\n"){
-        exit(0);
-        }
-   /* else if(string == "file"){
-
-
-        }*/
-    else{
-        read_from_server(s, response);
-        //free(response);
-        }
+			exit(0);
+		}
+	string = serialize(msg);
+	
+	//printf("%s\n", string);
+    write_to_server(sd, string, strlen(string));
     }
 
+}
+
+
+int readThread (void * p){
+	TCPsocket *sd = (TCPsocket *) p;	
+	char *response;
+	char *string;
+	while(1){
+			string =read_from_server(*sd, response);
+			message_printer(string);
+			//printf("gonna free");
+			free(string);
+			//printf("freed\n");
+   }
 }
 
 
@@ -89,47 +101,64 @@ void clear_str(char *str, int size){
   return;
 }
 
-void write_to_server(int socket, char *s, int len){
-    write(socket, &len, sizeof(int));
-    write(socket, s, len);
+void write_to_server(TCPsocket socket, char *s, int len){
+    SDLNet_TCP_Send(socket, &len, sizeof(int));
+    SDLNet_TCP_Send(socket, s, len);
 }
 
-void read_from_server(int socket, char *response){
+char* read_from_server(TCPsocket socket, char *response){
 
     int temp;
-    read(socket, &temp, sizeof(int));
-    response= (char *)malloc(temp+1);
-    read(socket,response, temp );
-    printf("read response : %s\n",response);
-
+    SDLNet_TCP_Recv(socket, &temp, sizeof(int));
+    response = (char *)malloc(temp+1);
+    SDLNet_TCP_Recv(socket,response, temp );
+    //printf("read response : %s\n",response);
+    return response;
 }
 
 void user_input(char* msg){
     fgets(msg, 254, stdin);
-    printf("%s", msg);
+    //printf("%s", msg);
 
 }
 
 char* serialize(Message_s msg){
     char str1[10];
     int ret;
-    json_object *obj;
-    json_object *string;
-    char *json_string;
-    obj = json_object_new_object();
+
+    json_t *obj;
+    json_t *string;
+    char *json_s;
+    obj = json_object();
     strcpy(str1, "exit\n");
     ret = strcmp(msg.message, str1);
     if(ret == 0){
-        string = json_object_new_string(msg.message);
-        json_object_object_add(obj, "cmd", string);
-        json_string = json_object_to_json_string(obj);
+        string = json_string(msg.message);
+        json_object_set_new(obj, "cmd", string);
+        json_s = json_dumps(obj, 0);
         }
     else{
-        string = json_object_new_string(msg.message);
-        json_object_object_add(obj, "message", string);
-        string = json_object_new_string("msg");
-        json_object_object_add(obj, "cmd", string);
-        json_string = json_object_to_json_string(obj);
+
+        string = json_string(msg.message);
+        json_object_set_new(obj, "message", string);
+        string = json_string("msg");
+        json_object_set_new(obj, "cmd", string);
+        string = json_string("default");
+        json_object_set_new(obj, "room", string);
+
+        json_s = json_dumps(obj, 0);
         }
-    return json_string;
+    return json_s;
 }
+
+void message_printer(char *response){
+    json_t *rec_obj;
+    json_t *rec_message;
+    char string_resp[1000];
+    if((rec_obj = json_loads(response, 0, NULL))!=NULL);
+    if((rec_message = json_object_get(rec_obj, "message"))!= NULL){
+        strcpy(string_resp, json_string_value(rec_message));
+        printf("from server : %s", string_resp);
+    }
+}
+
