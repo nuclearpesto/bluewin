@@ -9,19 +9,20 @@
 #include "clienthandler.h"
 #include "server.h"
 #include "rooms.h"
+
 clients_t clientsArr[THREAD_COUNT];
 room_t roomsArr[THREAD_COUNT];
 stack availableClientNr, availableRoomNr;
 SDL_mutex *clientsStackMutex, *roomsStackMutex;
 SDL_Thread *threadIds;
-  
+
 int main(int argc, char **argv){
   int port, t;
     int i;
    IPaddress ip;
    TCPsocket servsock, acceptsock;
   SDLNet_SocketSet set;
-  
+
   if(argc<2){
     printf("usage: server [port]");
     exit(1);
@@ -36,7 +37,7 @@ int main(int argc, char **argv){
 		printf("SDLNet_Init: %s\n", SDLNet_GetError());
 		exit(2);
 	}
- 
+
   createstack(&availableClientNr, THREAD_COUNT);
   createstack(&availableRoomNr, THREAD_COUNT);
   printf("created stacks\n");
@@ -52,7 +53,7 @@ int main(int argc, char **argv){
   add_room("default");
   printf("created default room\n");
   fflush(stdout);
-	
+
 	set = SDLNet_AllocSocketSet(1);
  if(SDLNet_ResolveHost(&ip,NULL,port)==-1) {
     printf("SDLNet_ResolveHost: %s\n", SDLNet_GetError());
@@ -64,15 +65,15 @@ int main(int argc, char **argv){
 		printf("SDLNet_TCP_Open: %s\n", SDLNet_GetError());
 		exit(2);
 	}
-  
-  
-  
+
+
+
 if(SDLNet_ResolveHost(&ip,NULL,9999)==-1) {
     printf("SDLNet_ResolveHost: %s\n", SDLNet_GetError());
     exit(1);
 }
 	SDLNet_TCP_AddSocket(set, servsock);
- 
+
   while(1){
 	if(SDLNet_CheckSockets(set, 100)){
 	   acceptsock=SDLNet_TCP_Accept(servsock);
@@ -81,7 +82,7 @@ if(SDLNet_ResolveHost(&ip,NULL,9999)==-1) {
 		}
 		else {
 			// communicate over new_tcpsock
-		
+
 			printf("adding a client\n");
 			fflush(stdout);
 			add_Client(acceptsock, &availableClientNr);

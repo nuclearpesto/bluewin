@@ -9,12 +9,14 @@
 #include "server.h"
 #include "clienthandler.h"
 #include "rooms.h"
+#include "crypt.h"
 int init_clientHandler( ){
-  
+
 }
 
+
 void add_Client(TCPsocket socket, stack *s){
-  
+
   SDL_LockMutex(clientsStackMutex);
   int count = pop(s);
   printf("creating client with index %d\n", count);
@@ -25,7 +27,7 @@ void add_Client(TCPsocket socket, stack *s){
   threadIds = SDL_CreateThread(handle, "handle", (void *) &clientsArr[count]) ;
   SDL_DetachThread(threadIds);
   SDL_UnlockMutex(clientsStackMutex);
-  
+
 }
 
 int find_index_of_client(clients_t *client){
@@ -48,8 +50,8 @@ int remove_Client(clients_t *client){
   printf("removing client with index : %d\n", index);
   leave_room("default", client);
   SDLNet_TCP_Close(client->socket);
-  
-  SDL_UnlockMutex(clientsStackMutex); 
+
+  SDL_UnlockMutex(clientsStackMutex);
 }
 
 int handle( void *args ){
@@ -63,6 +65,8 @@ int handle( void *args ){
   fflush(stdout);
   while( (messagepointer=read_client_message(client->socket))!=NULL){
 	  printf("got something ");
+	  //DEKRYPTERA!!!!
+	  decrypt_Handler(messagepointer);
 	  printf("recieved this:  %s\n", messagepointer);
 		fflush(stdout);
     if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
@@ -71,7 +75,7 @@ int handle( void *args ){
 		recv_json_cmd= json_object_get(recieved_obj, "cmd");
 		if(recv_json_cmd!=NULL){
 		  if(strcmp("exit\n", json_string_value(recv_json_cmd))==0){
-			remove_Client(client); 
+			remove_Client(client);
 			free(messagepointer);
 			return 1;
 		  }
@@ -88,12 +92,12 @@ int handle( void *args ){
 			  strcpy( response.roomname, json_string_value(recv_json_cmd));
 			  SDL_Thread *id;
 			  printf("creating writethread\n");
-			  id= SDL_CreateThread(write_to_client,"writer", &response); //create writethread 
+			  id= SDL_CreateThread(write_to_client,"writer", &response); //create writethread
 			  SDL_DetachThread(id);
 			  free(messagepointer);
 			}
 		  }
-		}	
+		}
 	}
   }
   remove_Client(client);
@@ -103,38 +107,40 @@ int handle( void *args ){
 int write_to_client(void *args){
 
     printf("gonna write\n");
-    
+
   SerializableMessage_t *p  = (SerializableMessage_t *)args;
 	json_int_t x = 1;
   json_t *messageobj = json_object();
-   
-  json_t *usn = json_string((p->client->username)); 
-  json_t *mes = json_string((p->message)); 
+
+  json_t *usn = json_string((p->client->username));
+  json_t *mes = json_string((p->message));
   json_t *chrom = json_string(p->roomname);
-  json_t *fromserv = json_integer(x); 
-  
+  json_t *fromserv = json_integer(x);
+
   json_object_set(messageobj, "fromserv", fromserv);
   json_object_set(messageobj,"username", usn );
   json_object_set(messageobj, "chroom", chrom );
   json_object_set(messageobj, "message", mes );
-  
+
   printf("created jsonobj\n");
   fflush(stdout);
   const char *json_string = json_dumps(messageobj, 0);
-		   
+
   int val = 1;
-  
+
   printf("jsonstr size %d\ncontains %s", sizeof(json_string), json_string);
   SerializedMessage_t sermes;
   strcpy (sermes.jsonstring, json_string);
   sermes.size= strlen(sermes.jsonstring)+1;
-  
+
   write_to_room(p->roomname, &sermes, p->client);
   //write_server_message(&sermes, p->client->socket);
-  
+
 	return 1;
 }
 void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender){
+  //KRYPTERA
+  encrypt_Handler(sermes);
   int index=find_index_of_room(roomname, THREAD_COUNT);
   printf("found room index %d\n", index);
   int i =0;
@@ -143,7 +149,7 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
   for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
     if(roomsArr[index].connected[i]!=sender){
 		printf("%p and %p are not same", sender, roomsArr[index].connected[i]);
-      write_server_message(sermes,roomsArr[index].connected[i]->socket );
+      write_server_message(sermes,roomsArr[index].connected[i]->socket ); //ändra sermes till krypterad text variabel
     }
     else{
       printf("same as sendere\n");
@@ -159,7 +165,7 @@ char* read_client_message( TCPsocket socket){
   char* p;
   printf("reading\n");
   fflush(stdout);
-  if( SDLNet_TCP_Recv(socket, &tmp_buf, sizeof(int))>0){ 
+  if( SDLNet_TCP_Recv(socket, &tmp_buf, sizeof(int))>0){
     p = (char *) malloc(tmp_buf+1);
 	printf("gonna read %d bytes\n", tmp_buf);
     tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
