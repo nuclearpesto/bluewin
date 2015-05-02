@@ -32,7 +32,7 @@ void serialize_message(json_t *masterobj, Message_s msg);
 void serialize_cmd(json_t *masterobj, char *cmd);
 void serialize_password(json_t *masterobj, user_s usr );
 void serialize_username(json_t *masterobj, user_s *usr );
-void message_printer(char *response);
+void message_printer(json_t *masterobj);
 int readThread (void * p);
 
 
@@ -123,13 +123,29 @@ int readThread (void * p){
 	TCPsocket *sd = (TCPsocket *) p;
 	char *response;
 	char *string;
+	json_t *masterobj;
+	json_t *keycheckobj;
+	masterobj = json_object();
 	while(1){
 
 			string = read_from_server(*sd, response);
-			message_printer(string);
-			//printf("gonna free");
-			free(string);
-			//printf("freed\n");
+			masterobj = json_loads(string, 0, NULL);
+			if(masterobj == NULL){
+                free(string);
+			}
+			else{
+                free(string);
+                if((keycheckobj = json_object_get(masterobj, "login"))!= NULL){
+                    if(json_is_true(keycheckobj) == 1){
+                        login = true;
+                    }
+                }
+                else{
+                message_printer(masterobj);
+                //printf("gonna free");
+                //printf("freed\n");
+                }
+			}
    }
 }
 
@@ -188,12 +204,10 @@ void serialize_message(json_t *masterobj, Message_s msg){
 //        }
 }
 
-void message_printer(char *response){
-    json_t *rec_obj;
+void message_printer(json_t *masterobj){
     json_t *rec_message;
     char string_resp[1000];
-    if((rec_obj = json_loads(response, 0, NULL))!=NULL);
-    if((rec_message = json_object_get(rec_obj, "message"))!= NULL){
+    if((rec_message = json_object_get(masterobj, "message"))!= NULL){
         strcpy(string_resp, json_string_value(rec_message));
         printf("from server : %s", string_resp);
     }
