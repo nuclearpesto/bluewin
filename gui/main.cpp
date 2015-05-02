@@ -685,24 +685,43 @@ void getPromptText(std::string text, TTF_Font* gFont, int select){
     }
 }
 
-void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor){
+void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std::string* password){
     //Render text flag
     //bool renderText = false;
     //char showPassword[50] = " ";
+    //std::string password = " ";
     
     //Special key input
     if (e.type == SDL_KEYDOWN){
         //Handle backspace
         if (e.key.keysym.sym == SDLK_BACKSPACE && inputText->length()>0) {
             //Lop off character
-            inputText->pop_back();
+            if(field==0){
+                inputText->pop_back();
+            }else if (field==1) {
+                inputText->pop_back();
+                password->pop_back();
+                printf("%s\n",password->c_str());
+            }
+            printf("%s\n",inputText->c_str());
             renderText = true;
+            
         }//Handle copy
         else if (e.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL){
-            SDL_SetClipboardText(inputText->c_str());
+            if (field==0) {
+                SDL_SetClipboardText(inputText->c_str());
+            }else if (field==1) {
+                SDL_SetClipboardText(inputText->c_str());
+                SDL_SetClipboardText(password->c_str());
+            }
         }//Handle paste
         else if (e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL){
-            *inputText = SDL_GetClipboardText();
+            if (field==0) {
+                *inputText = SDL_GetClipboardText();
+            }else if (field==1) {
+                *inputText = SDL_GetClipboardText();
+                *password = SDL_GetClipboardText();
+            }
             renderText = true;
         }
     }//Special text input event
@@ -710,7 +729,13 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor){
         //Not copy or pasting
         if (!((e.text.text[0]=='c' || e.text.text[0]=='C') && (e.text.text[0]=='v' || e.text.text[0]=='V') && SDL_GetModState() & KMOD_CTRL) ) {
             //Append character
-            *inputText += e.text.text;
+            if (field==0) {
+                *inputText += e.text.text;
+            }else if (field==1) {
+                *password += e.text.text;
+                *inputText += "*";
+                printf("%s\n",password->c_str());
+            }
             printf("%s\n",inputText->c_str());
             renderText = true;
         }
@@ -719,13 +744,14 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor){
     //Rerender text if needed
     if (renderText) {
         //Text is not empty
-        if (*inputText !="") {
-            inputText->erase(std::remove(inputText->begin(), inputText->end(), ' '), inputText->end());
+        if (*inputText !="" || *password !="") {
             if (field==0) {
                 //Render new text, username
+                inputText->erase(std::remove(inputText->begin(), inputText->end(), ' '), inputText->end());
                 gUsernameTextTexture.loadFromRenderedText(inputText->c_str(), textColor, gDefaultFont);
             }else{
                 //Render new text, passw0rd
+                password->erase(std::remove(password->begin(), password->end(), ' '), password->end());
                 gPasswordTextTexture.loadFromRenderedText(inputText->c_str(), textColor, gDefaultFont);
             }
         }//Text is empty
@@ -953,8 +979,9 @@ int main( int argc, char* args[] ){
             SDL_Color textColor = {0,0,0,0xff};
             
             //The current input text
-            std::string inputUsernameText = " ";
-            std::string inputPasswordText = " ";
+            std::string inputUsernameText = "";
+            std::string inputPasswordText = "";
+            std::string outputPasswordText = "";
             
             //Enable text input
             SDL_StartTextInput();
@@ -1011,9 +1038,9 @@ int main( int argc, char* args[] ){
                     }
                     if (writeText) {
                         if (field==0) {
-                            getTextString(&inputUsernameText,e,textColor);
+                            getTextString(&inputUsernameText,e,textColor,&outputPasswordText);
                         }else if (field==1){
-                            getTextString(&inputPasswordText, e, textColor);
+                            getTextString(&inputPasswordText, e, textColor,&outputPasswordText);
                         }
                     }
                     //Update all windows
