@@ -7,19 +7,31 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
 #include <SDL2/SDL_net.h>
+#include <stdbool.h>
 
 #define READ_BUF_SIZE 1000
+
+bool login = false;
 
 struct Message{
   char message[255];
 
 };typedef struct Message Message_s;
 
+struct User{
+    char username[20];
+    char password[20];
+}; typedef struct User user_s;
+
 void clear_str(char str[], int size);
-void write_to_server(TCPsocket socket, char *s, int strlen);
+void write_to_server(json_t *masterobj, TCPsocket socket);
 char* read_from_server(TCPsocket socket, char *response);
 void user_input(char* msg);
-char* serialize(Message_s msg);
+void user_login(user_s *usr);
+void serialize_message(json_t *masterobj, Message_s msg);
+void serialize_cmd(json_t *masterobj, char *cmd);
+void serialize_password(json_t *masterobj, user_s usr );
+void serialize_username(json_t *masterobj, user_s *usr );
 void message_printer(char *response);
 int readThread (void * p);
 
@@ -39,6 +51,7 @@ int main(int argc, char *argv[])
 
   char str[READ_BUF_SIZE]={0};
   char r[READ_BUF_SIZE]={0};
+
 
 if(SDLNet_Init() < 0){
     printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());
@@ -60,30 +73,59 @@ if(!(sd = SDLNet_TCP_Open(&ip))){
   printf("Connected.\n");
   fflush(stdout);
   char *string;
+  user_s usr;
+  int c;
   int size = sizeof(string);
     Message_s msg;
+    json_t *masterobj;
+    masterobj = json_object();
 	SDL_CreateThread(readThread, "reader", &sd);
-	
+    while(!login){
+        user_login(&usr);
+        printf("%s", usr.username);
+        serialize_username(masterobj, &usr);
+        printf("user\n");
+        fflush(stdout);
+        serialize_password(masterobj, usr);
+        printf("pass\n");
+        fflush(stdout);
+        serialize_cmd(masterobj, "login");
+        printf("cmd\n");
+        fflush(stdout);
+        write_to_server(masterobj, sd);
+
+        c = 0;
+        while(!login && c<10 ){
+           sleep(1);
+            c++;
+            printf("%d\n", c);
+            if(login){
+                break;
+            }
+        }
+    }
+	printf("Welcome!\n");
   while(1){
     user_input(msg.message);
     if(msg.message == "exit\n"){
 			exit(0);
 		}
-	string = serialize(msg);
-	
+	serialize_message(masterobj, msg);
+    serialize_cmd(masterobj, "msg");
 	//printf("%s\n", string);
-    write_to_server(sd, string, strlen(string));
+    write_to_server(masterobj, sd);
     }
 
 }
 
 
 int readThread (void * p){
-	TCPsocket *sd = (TCPsocket *) p;	
+	TCPsocket *sd = (TCPsocket *) p;
 	char *response;
 	char *string;
 	while(1){
-			string =read_from_server(*sd, response);
+
+			string = read_from_server(*sd, response);
 			message_printer(string);
 			//printf("gonna free");
 			free(string);
@@ -101,12 +143,17 @@ void clear_str(char *str, int size){
   return;
 }
 
-void write_to_server(TCPsocket socket, char *s, int len){
-    SDLNet_TCP_Send(socket, &len, sizeof(int));
-    SDLNet_TCP_Send(socket, s, len);
+void write_to_server(json_t *masterobj, TCPsocket socket){
+    char *json_s;
+    int len;
+    json_s = json_dumps(masterobj, 0);
+    len = strlen(json_s);
+    //SDLNet_TCP_Send(socket, len, sizeof(int));
+    //SDLNet_TCP_Send(socket, json_s, len);
+    printf("%s", json_s);
 }
 
-char* read_from_server(TCPsocket socket, char *response){
+char* read_from_server( TCPsocket socket, char *response){
 
     int temp;
     SDLNet_TCP_Recv(socket, &temp, sizeof(int));
@@ -122,33 +169,23 @@ void user_input(char* msg){
 
 }
 
-char* serialize(Message_s msg){
+void serialize_message(json_t *masterobj, Message_s msg){
     char str1[10];
     int ret;
-
-    json_t *obj;
     json_t *string;
-    char *json_s;
-    obj = json_object();
-    strcpy(str1, "exit\n");
+/*    strcpy(str1, "exit\n");
     ret = strcmp(msg.message, str1);
     if(ret == 0){
         string = json_string(msg.message);
-        json_object_set_new(obj, "cmd", string);
-        json_s = json_dumps(obj, 0);
+        json_object_set_new(masterobj, "cmd", string);
         }
     else{
-
+*/
         string = json_string(msg.message);
-        json_object_set_new(obj, "message", string);
-        string = json_string("msg");
-        json_object_set_new(obj, "cmd", string);
+        json_object_set_new(masterobj, "message", string);
         string = json_string("default");
-        json_object_set_new(obj, "room", string);
-
-        json_s = json_dumps(obj, 0);
-        }
-    return json_s;
+        json_object_set_new(masterobj, "room", string);
+//        }
 }
 
 void message_printer(char *response){
@@ -162,3 +199,28 @@ void message_printer(char *response){
     }
 }
 
+void user_login(user_s *usr){
+    printf("Username: ");
+    user_input(usr->username);
+    printf("Password: ");
+    user_input(usr->password);
+}
+
+void serialize_username(json_t *masterobj, user_s *usr ){
+    json_t *string;
+    string = json_string(usr->username);
+    printf("json string");
+    json_object_set(masterobj, "username", string);
+}
+
+void serialize_password(json_t *masterobj, user_s usr ){
+    json_t *string;
+    string = json_string(usr.password);
+    json_object_set(masterobj, "password", string);
+}
+
+void serialize_cmd(json_t *masterobj, char *cmd ){
+    json_t *string;
+    string = json_string(cmd);
+    json_object_set(masterobj, "cmd", string);
+}
