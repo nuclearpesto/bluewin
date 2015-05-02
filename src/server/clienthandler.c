@@ -69,7 +69,7 @@ int handle( void *args ){
   while( (messagepointer=read_client_message(client->socket))!=NULL){
 	  printf("got something ");
 	  //DEKRYPTERA!!!!
-	  decrypt_Handler(messagepointer);
+	  //decrypt_Handler(messagepointer);
 	  printf("recieved this:  %s\n", messagepointer);
 		fflush(stdout);
 		if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
@@ -184,7 +184,7 @@ int write_to_client(void *args){
 }
 void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender){
   //KRYPTERA
-  encrypt_Handler(sermes);
+  //encrypt_Handler(sermes);
   int index=find_index_of_room(roomname, THREAD_COUNT);
   printf("found room index %d\n", index);
   int i =0;

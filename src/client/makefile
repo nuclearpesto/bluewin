@@ -1,2 +1,35 @@
-all:
-	gcc client.c -o client -I/usr/include -I/usr/local/include -I/mingw/include -L/usr/lib -L/usr/local/lib -lmingw32 -lSDL2main -lSDL2_net -lSDL2 -ljansson 
+
+CFLAGS=-c $(INC_DIR)
+
+DEPS=*.h
+BIN_DIR=../../bin/
+OBJDIR=../../obj/
+CC=gcc
+LOCALINCDIR=../../include/
+OBJ_FILES= $(OBJ_DIR)client.o $(OBJ)clientcrypt.o
+ifeq ($(OS),Windows_NT)
+LIBS=-lmingw32 -lSDL2main -lSDL2 -lSDL2_net -ljansson
+INC_DIR=-I../../include -I/usr/include -I/usr/local/include
+LIBPATHS= -L/usr/lib -L/usr/local/lib
+else
+UNAME_S:=$(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+LIBS= -lSDL2 -lSDL2_net -ljansson
+INC_DIR=../../include
+endif
+ifeq ($(UNAME_s),Darwin)
+LIBS= -lSDL2 -lSDL2_net -ljansson
+INC_DIR=../../include
+endif
+endif
+
+
+all: client
+client: $(OBJ_FILES)
+	$(CC) -o client $(OBJ_FILES) $(INC_DIR) $(LIBPATHS) $(LIBS)
+
+client.o: client.c
+	$(CC) client.c $(CFLAGS) $(INC_DIR) $(LIBPATHS) $(LIBS)
+
+clientcrypt.o: clientcrypt.c
+	$(CC) clientcrypt.c $(CFLAGS) $(INC_DIR) $(LIBPATHS) $(LIBS)
