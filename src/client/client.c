@@ -126,6 +126,7 @@ int readThread (void * p){
 	while(1){
 
 			string = read_from_server(*sd, response);
+			printf("recived json %s \n", string);
 			message_printer(string);
 			//printf("gonna free");
 			free(string);
@@ -148,8 +149,9 @@ void write_to_server(json_t *masterobj, TCPsocket socket){
     int len;
     json_s = json_dumps(masterobj, 0);
     len = strlen(json_s);
-    //SDLNet_TCP_Send(socket, len, sizeof(int));
-    //SDLNet_TCP_Send(socket, json_s, len);
+	printf("len is %d", len);
+    SDLNet_TCP_Send(socket, &len, sizeof(int));
+	SDLNet_TCP_Send(socket, json_s, len);
     printf("%s", json_s);
 }
 
@@ -164,7 +166,8 @@ char* read_from_server( TCPsocket socket, char *response){
 }
 
 void user_input(char* msg){
-    fgets(msg, 254, stdin);
+	fgets(msg, 254, stdin);
+	msg[strlen(msg)-1]='\0';
     //printf("%s", msg);
 
 }

@@ -6,7 +6,7 @@
 struct Clients {
   IPaddress ip;
   TCPsocket socket;
-  SDL_Thread *handleThreadId;
+  bool loggin;
   char username[255];
   
 };
@@ -24,15 +24,16 @@ struct SerializedMessage{
   
 };typedef struct SerializedMessage SerializedMessage_t;
 
-int init_clientHandler(); // shall be run once uppon a thread entering handle
-void add_Client(TCPsocket socket, stack *s); 
-int remove_Client(); //pushes disconnected client index on to free space stack
+void add_Client(TCPsocket socket, stack *s); //get the next available place in the array and connect the new client 
+int remove_Client(); //pushes disconnected client index on to free space stack and closes client socket also cleeans up the rooms for clients
 int write_to_client(void *args); //writeloop, takes a struct containing a jsonstring and the length of that string plus controll options. then writes to specific client
 
-char* read_client_message(TCPsocket socket);
-void write_server_message(SerializedMessage_t *message, TCPsocket socket);
+char* read_client_message(TCPsocket socket); //read a jsonstring from a client socket
+void write_server_message(SerializedMessage_t *message, TCPsocket socket); //write a jsonstring to socket
 int handle( void *args ); //main handle loop, a thread will read continously from the appropriate socket specified in args until there is a message and then act accordingly.
-void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender);
+void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender); // find a room and write to everyone except the sender
+void handle_login(json_t * recieved_obj, clients_t *client);
+void handle_message(json_t *recv_obj, clients_t *client);
 
 
 extern clients_t clientsArr[]; 

@@ -5,10 +5,12 @@
 #include <SDL2/SDL_net.h>
 #include <SDL2/SDL_thread.h>
 #include <jansson.h>
+#include <stdbool.h>
 #include "misc.h"
 #include "server.h"
 #include "clienthandler.h"
 #include "rooms.h"
+#include "users.h"
 int init_clientHandler( ){
   
 }
@@ -65,20 +67,35 @@ int handle( void *args ){
 	  printf("got something ");
 	  printf("recieved this:  %s\n", messagepointer);
 		fflush(stdout);
-    if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
-		printf("recieved json:  %s\n", messagepointer);
-		fflush(stdout);
-		recv_json_cmd= json_object_get(recieved_obj, "cmd");
-		if(recv_json_cmd!=NULL){
-		  if(strcmp("exit\n", json_string_value(recv_json_cmd))==0){
-			remove_Client(client); 
-			free(messagepointer);
-			return 1;
-		  }
-		  else if(strcmp("msg", json_string_value(recv_json_cmd)) == 0){
-			  printf("found msg");
-			  fflush(stdout);
-			if(recv_json_cmd = json_object_get(recieved_obj, "message")){
+		if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
+			printf("recieved json:  %s\n", messagepointer);
+			fflush(stdout);
+			if((recv_json_cmd= json_object_get(recieved_obj, "cmd"))!=NULL){
+			  if(strcmp("exit\n", json_string_value(recv_json_cmd))==0){
+				remove_Client(client); 
+				return 1;
+			  }
+			  else if(strcmp("msg", json_string_value(recv_json_cmd)) == 0){
+				  printf("found msg");
+				  handle_message(recieved_obj, client);
+				  fflush(stdout);
+			  }
+			  else if(strcmp("login", json_string_value(recv_json_cmd)) == 0){
+				  printf("found login");
+				  handle_login(recieved_obj, client);
+				  fflush(stdout);
+			  }
+			}	
+		}
+		free(messagepointer);
+	}
+  remove_Client(client);
+  return 1;
+}
+
+void handle_message(json_t *recieved_obj, clients_t *client){
+	json_t *recv_json_cmd;
+	if(recv_json_cmd = json_object_get(recieved_obj, "message")){
 			  SerializableMessage_t response;
 			  response.client = client;
 			  strcpy(response.message, json_string_value(recv_json_cmd));
@@ -90,15 +107,42 @@ int handle( void *args ){
 			  printf("creating writethread\n");
 			  id= SDL_CreateThread(write_to_client,"writer", &response); //create writethread 
 			  SDL_DetachThread(id);
-			  free(messagepointer);
 			}
-		  }
-		}	
-	}
-  }
-  remove_Client(client);
-  return 1;
+	
 }
+
+void handle_login(json_t * recieved_obj, clients_t *client){
+	json_t *writeobj, * username, * password, *json_login_val;
+	bool success = false;
+	char *strusn, *strpass;
+	username = json_object_get(recieved_obj, "username");
+	password = json_object_get(recieved_obj,"password");
+	strusn = json_string_value(username);
+	strpass = json_string_value(password);
+	printf("username befor login func is:  %s \n", strusn);
+	if(username!=NULL && password!=NULL){
+		success =login(strusn, strpass);
+	}
+	client->loggin=success;
+	if(success){
+		strcpy(client->username, json_string_value(username));
+	}
+	writeobj = json_object();
+	json_login_val = json_boolean(success);
+	json_object_set(writeobj, "login", json_login_val);
+	json_object_set(writeobj, "username",username);
+	char * jsonString = json_dumps(writeobj, 0);
+	SerializedMessage_t sermes;
+	strcpy(sermes.jsonstring,jsonString);
+	sermes.size = strlen(jsonString);
+	write_server_message(&sermes, client->socket);
+	
+	
+	
+	
+	
+}
+
 
 int write_to_client(void *args){
 

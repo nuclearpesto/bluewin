@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 #include <string.h>
+#include <stdbool.h>
 #include "misc.h"
 #include "server.h"
 #include "clienthandler.h"
