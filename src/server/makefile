@@ -1,10 +1,12 @@
 
-CFLAGS=-c -I$(INC_DIR)
+CFLAGS=-c $(INC_DIR)
+
 DEPS=*.h
 BIN_DIR=../../bin/
 OBJDIR=../../obj/
 CC=gcc
-
+LOCALINCDIR=../../include/
+OBJ_FILES= $(OBJ_DIR)clienthandler.o $(OBJ)misc.o $(OBJ)rooms.o  $(OBJ)users.o $(OBJ_DIR)server.o $(OBJ_DIR)crypt.o
 ifeq ($(OS),Windows_NT)
 LIBS=-lmingw32 -lSDL2main -lSDL2 -lSDL2_net -ljansson
 INC_DIR=-I../../include -I/usr/include -I/usr/local/include
@@ -21,26 +23,36 @@ INC_DIR=../../include
 endif
 endif
 
+
+
 all: $(BIN_DIR)server
-$(BIN_DIR)server : $(OBJ_DIR)server.o $(OBJ_DIR)clienthandler.o $(OBJ)misc.o $(OBJ)rooms.o $(OBJ)crypt.o
-	$(CC)  -o server server.o clienthandler.o misc.o rooms.o crypt.o $(INC_DIR) $(LIBPATHS) $(LIBS)
+
+
+$(BIN_DIR)server : $(OBJ_FILES)
+	$(CC)  -o server $(OBJ_FILES) $(INC_DIR) $(LIBPATHS) $(LIBS)
+
+
+$(OBJ_DIR)users.o : users.c
+	$(CC) users.c  $(CFLAGS) $(INC_DIR) $(LIBPATHS)  $(LIBS)
+
+
 
 $(OBJ_DIR)server.o : server.c
-	$(CC) server.c  $(CFLAGS) $(INC_DIR)  $(LIBS)
+	$(CC) server.c  $(CFLAGS) $(INC_DIR) $(LIBPATHS) $(LIBS)
 
 
 $(OBJ_DIR)clienthandler.o : clienthandler.c
-	$(CC) $(CFLAGS) $(INC_DIR)  $(LIBS)  clienthandler.c
+	$(CC) clienthandler.c  $(CFLAGS) $(INC_DIR) $(LIBPATHS)  $(LIBS)
 
 $(OBJ_DIR)misc.o : misc.c
-	$(CC) $(CFLAGS) $(INC_DIR)  $(LIBS)    misc.c
-
+	$(CC) misc.c  $(CFLAGS) $(INC_DIR) $(LIBPATHS)  $(LIBS)
 
 $(OBJ_DIR)rooms.o : rooms.c
 	$(CC) rooms.c  $(CFLAGS) $(INC_DIR)  $(LIBS)
 
 $(OBJ_DIR)crypt.o : crypt.c
 	$(CC) crypt.c  $(CFLAGS) $(INC_DIR)  $(LIBS)
+
 
 clean:
 	rm *o server

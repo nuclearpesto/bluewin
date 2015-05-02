@@ -5,15 +5,19 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 #include <SDL2/SDL_thread.h>
+#include <stdbool.h>
+#include <jansson.h>
 #include "misc.h"
 #include "clienthandler.h"
 #include "server.h"
 #include "rooms.h"
+#include "users.h"
+
 
 clients_t clientsArr[THREAD_COUNT];
 room_t roomsArr[THREAD_COUNT];
 stack availableClientNr, availableRoomNr;
-SDL_mutex *clientsStackMutex, *roomsStackMutex;
+SDL_mutex *clientsStackMutex, *roomsStackMutex, *UsersDbMutex;
 SDL_Thread *threadIds;
 
 int main(int argc, char **argv){
@@ -47,12 +51,20 @@ int main(int argc, char **argv){
   printf("filled stacks\n");
   fflush(stdout);
   clientsStackMutex = SDL_CreateMutex();
+  UsersDbMutex= SDL_CreateMutex();
   roomsStackMutex = SDL_CreateMutex();
   printf("initialized mutexes\n");
   fflush(stdout);
   add_room("default");
   printf("created default room\n");
   fflush(stdout);
+
+  users_init();
+/*	if(!success){
+	  perror("could not init users");
+	  exit(1);
+  }*/
+	printf("checked db");
 
 	set = SDLNet_AllocSocketSet(1);
  if(SDLNet_ResolveHost(&ip,NULL,port)==-1) {

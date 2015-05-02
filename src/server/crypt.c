@@ -1,7 +1,10 @@
+
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 #include <SDL2/SDL_thread.h>
+#include <stdbool.h>
+#include <jansson.h>
 #include "misc.h"
 #include "clienthandler.h"
 #include "crypt.h"
@@ -23,7 +26,7 @@ void encrypt(unsigned long k[], unsigned long tmp[])
     tmp[0]=y; tmp[1]=z;
 }
 
-void encrypt_Handler(SerializableMessage_t * sermes)
+void encrypt_Handler(SerializedMessage_t * sermes)
 {
     unsigned long k[4];
     k[0]=11111111111111;
@@ -31,19 +34,19 @@ void encrypt_Handler(SerializableMessage_t * sermes)
     k[2]=33333333333333;
     k[3]=44444444444444;
     char tmp[8];
-    int numBlock=0,totalBlock=strlen(sermes->message);
+    int numBlock=0,totalBlock=strlen(sermes->jsonstring);
     totalBlock=(totalBlock/8)+1;
     while(numBlock<totalBlock)
     {
         int i;
         for (i=0;i<8;i++)
         {
-            tmp[i]=sermes->message[i+(numBlock*8)];
+            tmp[i]=sermes->jsonstring[i+(numBlock*8)];
         }
         encrypt(k,(unsigned long *)tmp);
         for (i=0;i<8;i++)
         {
-            sermes->message[i+(numBlock*8)]=tmp[i];
+            sermes->jsonstring[i+(numBlock*8)]=tmp[i];
         }
         numBlock++;
     }
