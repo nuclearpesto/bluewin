@@ -220,7 +220,7 @@ void message_printer(json_t *masterobj){
       rec_username = json_object_get(masterobj, "username");
         strcpy(string_resp, json_string_value(rec_message));
 	strcpy(username, json_string_value(rec_username));
-	printf("%s : %s",username, string_resp);
+	printf("%s : %s\n",username, string_resp);
 	fflush(stdout);
     }
 }
