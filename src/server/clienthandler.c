@@ -12,6 +12,7 @@
 #include "rooms.h"
 #include "crypt.h"
 #include "users.h"
+#include "debug.h"
 
 int init_clientHandler( ){
 
@@ -22,7 +23,7 @@ void add_Client(TCPsocket socket, stack *s){
 
   SDL_LockMutex(clientsStackMutex);
   int count = pop(s);
-  printf("creating client with index %d\n", count);
+  D(printf("creating client with index %d\n", count));
   fflush(stdout);
   //clientsArr[count].inet_addr = 0;
   clientsArr[count].socket = socket;
@@ -50,7 +51,7 @@ int remove_Client(clients_t *client){
   index = find_index_of_client(client);
   SDL_LockMutex(clientsStackMutex);
   push(&availableClientNr, index);
-  printf("removing client with index : %d\n", index);
+  D(printf("removing client with index : %d\n", index));
   leave_room("default", client);
   SDLNet_TCP_Close(client->socket);
 
@@ -64,16 +65,16 @@ int handle( void *args ){
   json_t *recieved_obj;
   json_t *recv_json_cmd, *recv_json_message;
   json_error_t jsonError;
-  printf("started handling\n");
+  D(printf("started handling\n"));
   fflush(stdout);
   while( (messagepointer=read_client_message(client->socket))!=NULL){
-	  printf("got something ");
+    D(printf("got something "));
 	  //DEKRYPTERA!!!!
 	  //decrypt_Handler(messagepointer);
-	  printf("recieved this:  %s\n", messagepointer);
+    D(printf("recieved this:  %s\n", messagepointer));
 		fflush(stdout);
 		if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
-			printf("recieved json:  %s\n", messagepointer);
+		  D(printf("recieved json:  %s\n", messagepointer));
 			fflush(stdout);
 			if((recv_json_cmd= json_object_get(recieved_obj, "cmd"))!=NULL){
 			  if(strcmp("exit", json_string_value(recv_json_cmd))==0){
@@ -81,17 +82,17 @@ int handle( void *args ){
 				return 1;
 			  }
 			  else if(strcmp("msg", json_string_value(recv_json_cmd)) == 0){
-				  printf("found msg\n");
+			    D(printf("found msg\n"));
 				  handle_message(recieved_obj, client);
 				  fflush(stdout);
 			  }
 			  else if(strcmp("login", json_string_value(recv_json_cmd)) == 0){
-				  printf("found login\n");
+			    D(printf("found login\n"));
 				  handle_login(recieved_obj, client);
 				  fflush(stdout);
 			  }
 			  else if(strcmp("add user", json_string_value(recv_json_cmd)) == 0){
-				  printf("found add user\n");
+			    D(printf("found add user\n"));
 				  handle_add_user(recieved_obj, client);
 				  fflush(stdout);
 			  }
@@ -110,13 +111,13 @@ void handle_message(json_t *recieved_obj, clients_t *client){
 	  SerializableMessage_t response;
 	  response.client = client;
 	  strcpy(response.message, json_string_value(recv_json_cmd));
-	  printf("copied string\n");
+	  D(printf("copied string\n"));
 	  fflush(stdout);
 	  recv_json_cmd=json_object_get(recieved_obj, "room");
 	  strcpy( response.roomname, json_string_value(recv_json_cmd));
-	  printf("room in serializable message is %s\n", response.roomname);
+	  D(printf("room in serializable message is %s\n", response.roomname));
 	  SDL_Thread *id;
-	  printf("creating writethread\n");
+	  D(printf("creating writethread\n"));
 	  id= SDL_CreateThread(write_to_client,"writer", &response); //create writethread
 	  SDL_DetachThread(id);
 	}
@@ -128,7 +129,6 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 	char *strusn, *strpass;
 	username = json_object_get(recieved_obj, "username");
 	password = json_object_get(recieved_obj,"password");
-	printf("username befor login func is:  %s \n", strusn);
 	if(username!=NULL && password!=NULL){
 		strusn = json_string_value(username);
 		strpass = json_string_value(password);
@@ -162,7 +162,6 @@ void handle_add_user(json_t *recieved_obj, clients_t *client){
 	
 	username = json_object_get(recieved_obj, "username");
 	password = json_object_get(recieved_obj,"password");
-	printf("username befor login func is:  %s \n", strusn);
 	if(username!=NULL && password!=NULL){
 		strusn = json_string_value(username);
 		strpass = json_string_value(password);
@@ -208,7 +207,7 @@ void handle_del_user(json_t *recieved_obj, clients_t *client){
 
 int write_to_client(void *args){
 
-    printf("gonna write\n");
+  D(printf("gonna write\n"));
 	
 	SerializableMessage_t *p  = (SerializableMessage_t *)args;
 	char roomname[ROOM_NAME_SIZE];
@@ -227,14 +226,14 @@ int write_to_client(void *args){
   json_object_set_new(messageobj, "chroom", chrom );
   json_object_set_new(messageobj, "message", mes );
 
-	printf("in write_to_client roomane is %s\n", p->roomname);
-  printf("created jsonobj\n");
+  D(printf("in write_to_client roomane is %s\n", p->roomname));
+  D(printf("created jsonobj\n"));
   fflush(stdout);
   const char *json_string = json_dumps(messageobj, 0);
 
   int val = 1;
 
-  printf("jsonstr size %d\ncontains %s\n", sizeof(json_string), json_string);
+  D(printf("jsonstr size %d\ncontains %s\n", sizeof(json_string), json_string));
   SerializedMessage_t sermes;
   strcpy (sermes.jsonstring, json_string);
   sermes.size= strlen(sermes.jsonstring)+1;
@@ -247,17 +246,17 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
   //KRYPTERA
   //encrypt_Handler(sermes);
   int index=find_index_of_room(roomname, THREAD_COUNT);
-  printf("found room index %d\n", index);
+  D(printf("found room index %d\n", index));
   int i =0;
-  printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns);
+  D(printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns));
   SDL_LockMutex(roomsStackMutex);
   for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
     if(roomsArr[index].connected[i]!=sender){
-		printf("%p and %p are not same", sender, roomsArr[index].connected[i]);
+      D(printf("%p and %p are not same", sender, roomsArr[index].connected[i]));
       write_server_message(sermes,roomsArr[index].connected[i]->socket ); //ändra sermes till krypterad text variabel
     }
     else{
-      printf("same as sendere\n");
+      D(printf("same as sendere\n"));
     }
   }
   SDL_UnlockMutex(roomsStackMutex);
@@ -268,17 +267,17 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
 char* read_client_message( TCPsocket socket){
   int tmp_buf=0;
   char* p;
-  printf("reading\n");
+  D(printf("reading\n"));
   fflush(stdout);
   if( SDLNet_TCP_Recv(socket, &tmp_buf, sizeof(int))>0){
     p = (char *) malloc(tmp_buf+1);
-	printf("gonna read %d bytes\n", tmp_buf);
+    D(printf("gonna read %d bytes\n", tmp_buf));
     tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
-    printf("read %d bytes\n", tmp_buf);
+    D(printf("read %d bytes\n", tmp_buf));
 	*(p+tmp_buf)='\0';
     return p;
   }
-  printf("returning null\n");
+  D(printf("returning null\n"));
   fflush(stdout);
   return NULL;
 }

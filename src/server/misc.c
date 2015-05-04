@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "misc.h"
+#include "debug.h"
 
 
 
@@ -16,7 +17,7 @@ int push(stack *s, int nr)
 
     if(s->size == s->capacity)
     {
-        printf("Stack overflow");
+      D( printf("Stack overflow"));
         return 1;
     }
     
@@ -36,7 +37,7 @@ int pop(stack *s)
     s->size--;
     s->current_place--;
     int nr = *(s->current_place);
-    printf("popping %d from stack\n", nr);
+    D(printf("popping %d from stack\n", nr));
     return nr;
 }
 void fill_int_stack(stack *s, int size){

@@ -12,7 +12,7 @@
 #include "server.h"
 #include "rooms.h"
 #include "users.h"
-
+#include "debug.h"
 
 clients_t clientsArr[THREAD_COUNT];
 room_t roomsArr[THREAD_COUNT];
@@ -44,19 +44,19 @@ int main(int argc, char **argv){
 
   createstack(&availableClientNr, THREAD_COUNT);
   createstack(&availableRoomNr, THREAD_COUNT);
-  printf("created stacks\n");
+  D( printf("created stacks\n"));
   fflush(stdout);
   fill_int_stack(&availableClientNr, THREAD_COUNT);
   fill_int_stack(&availableRoomNr, THREAD_COUNT);
-  printf("filled stacks\n");
+  D(printf("filled stacks\n"));
   fflush(stdout);
   clientsStackMutex = SDL_CreateMutex();
   UsersDbMutex= SDL_CreateMutex();
   roomsStackMutex = SDL_CreateMutex();
-  printf("initialized mutexes\n");
+  D(printf("initialized mutexes\n"));
   fflush(stdout);
   add_room("default");
-  printf("created default room\n");
+  D(printf("created default room\n"));
   fflush(stdout);
 
   users_init();
@@ -64,7 +64,7 @@ int main(int argc, char **argv){
 	  perror("could not init users");
 	  exit(1);
   }*/
-	printf("checked db");
+  D(printf("checked db"));
 
 	set = SDLNet_AllocSocketSet(1);
  if(SDLNet_ResolveHost(&ip,NULL,port)==-1) {
@@ -95,10 +95,10 @@ if(SDLNet_ResolveHost(&ip,NULL,9999)==-1) {
 		else {
 			// communicate over new_tcpsock
 
-			printf("adding a client\n");
+		  D(printf("adding a client\n"));
 			fflush(stdout);
 			add_Client(acceptsock, &availableClientNr);
-			printf("created thread\n");
+			D(printf("created thread\n"));
 			fflush(stdout);
 
 		}

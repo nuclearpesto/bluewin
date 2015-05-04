@@ -1,5 +1,5 @@
 
-CFLAGS=-c $(INC_DIR)
+CFLAGS=-c
 
 DEPS=*.h
 BIN_DIR=../../bin/
@@ -25,7 +25,8 @@ endif
 
 
 all: $(BIN_DIR)server
-
+debug: CFLAGS += -DDEBUG 
+debug: $(BIN_DIR)server
 
 $(BIN_DIR)server : $(OBJ_FILES)
 	$(CC)  -o server $(OBJ_FILES) $(INC_DIR) $(LIBPATHS) $(LIBS)

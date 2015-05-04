@@ -7,7 +7,7 @@
 #include "server.h"
 #include "clienthandler.h"
 #include "rooms.h"
-
+#include "debug.h"
 
 void add_room(char *roomName){
   SDL_LockMutex(roomsStackMutex);
@@ -55,15 +55,15 @@ void leave_room(char*roomName, clients_t * client){
 
 int find_index_of_room(char *roomName, int arrLen){
   int i = 0;
-  printf("room we are looking for is named %s \n", roomName);
+  D(printf("room we are looking for is named %s \n", roomName));
   for(i = 0; i<arrLen; i++){
     if(strcmp(roomsArr[i].name, roomName) == 0){
-		printf("roomname of %d is :%s\n",i, roomsArr[i].name);
+      D(printf("roomname of %d is :%s\n",i, roomsArr[i].name));
 		fflush(stdout);
 		break;
     }
   }
-  printf("returning roomindex %d\n ", i);
+  D(printf("returning roomindex %d\n ", i));
   
   return i;
 }
