@@ -61,58 +61,60 @@ bool add_user(char *UserName, char *pw){
 		
 	if(fread(&jsonlen, sizeof(int), 1, fp  )>0){
 		if(fread(dbstr, jsonlen , 1, fp)>0){
-			masterObj= json_loads(dbstr, JSON_REJECT_DUPLICATES, &error);
-			/*TODO encrypt pass*/
-			UserPass=json_string(pw);
-			json_object_set(masterObj, UserName, UserPass);
-			dbstr = json_dumps(masterObj, 0);
 			fclose(fp);
-			fp = fopen(USERS_DB_FILE, "w");
-			fprintf(fp,"%d", strlen(dbstr) );
-			fprintf(fp,"%s", dbstr );
-			success=true;
-			
+			masterObj= json_loads(dbstr, JSON_REJECT_DUPLICATES, &error);
+				if(json_object_get(masterObj,UserName)==NULL){
+				/*TODO encrypt pass*/
+				
+				UserPass=json_string(pw);
+				json_object_set(masterObj, UserName, UserPass);
+				dbstr = json_dumps(masterObj, 0);
+				fp = fopen(USERS_DB_FILE, "w");
+				fprintf(fp,"%d", strlen(dbstr) );
+				fprintf(fp,"%s", dbstr );
+				success=true;
+				fclose(fp);
+			}
 		}
 	}
 	
-	fclose(fp);
 	SDL_UnlockMutex(UsersDbMutex);
 	return success;
 }
 
-bool del_user(char * UserName){
-		SDL_LockMutex(UsersDbMutex);
-	FILE * fp = fopen(USERS_DB_FILE, "r");
+bool del_user(char * UserName, char* pw){ //verify password of the user being deleted and then delete
 	bool success = false;
 	json_t *masterObj,*UserPass;;	
 	json_error_t error;
 	char *dbstr;
 	int jsonlen;
+	FILE * fp;
 	
-		
-	if(fscanf(fp, "%d", &jsonlen)){
-		printf("read int from file\n");
-		fflush(stdout);
-		if(fread(dbstr, jsonlen , 1, fp)>0){
-			masterObj= json_loads(dbstr, JSON_REJECT_DUPLICATES, &error);
-			/*TODO encrypt pass*/
-			json_object_del(masterObj, UserName);
-			dbstr = json_dumps(masterObj, 0);
-			close(fp);
-			fp = fopen(USERS_DB_FILE, "w");
-			fprintf(fp,"%d", strlen(dbstr) );
-			fprintf(fp,"%s", dbstr );
-			success=true;
-			
-		}
-	}
+	if(login(UserName, pw)){
+		SDL_LockMutex(UsersDbMutex);
+		fp = fopen(USERS_DB_FILE, "r");
 
-	fclose(fp);
-	SDL_UnlockMutex(UsersDbMutex);
+		if(fscanf(fp, "%d", &jsonlen)){
+			printf("read int from file\n");
+			fflush(stdout);
+			if(fread(dbstr, jsonlen , 1, fp)>0){
+				masterObj= json_loads(dbstr, JSON_REJECT_DUPLICATES, &error);
+				/*TODO encrypt pass*/
+				json_object_del(masterObj, UserName);
+				dbstr = json_dumps(masterObj, 0);
+				close(fp);
+				fp = fopen(USERS_DB_FILE, "w");
+				fprintf(fp,"%d", strlen(dbstr) );
+				fprintf(fp,"%s", dbstr );
+				success=true;
+				
+			}
+		}
+
+		fclose(fp);
+		SDL_UnlockMutex(UsersDbMutex);
+	}
 	return success;
-		
-		
-	
 }
 
 //load users file and try to load it as json returns -1 if file is corrupt, 

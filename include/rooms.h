@@ -1,6 +1,8 @@
 #ifndef ROOMS
 #define ROOMS
 #define MAX_CLIENTS_PER_ROOM 100
+#define ROOM_NAME_SIZE 100
+#define MAX_ROOMS 100
 
 struct Room{
   char name [255];

@@ -34,6 +34,7 @@ void join_room(char *roomName, clients_t * client ){
   roomsArr[index].nrOfCurrentConns++;
   SDL_UnlockMutex(roomsStackMutex);
 }
+
 void leave_room(char*roomName, clients_t * client){
   int index = find_index_of_room(roomName,THREAD_COUNT);
    int i, found=0;
@@ -53,11 +54,16 @@ void leave_room(char*roomName, clients_t * client){
 }
 
 int find_index_of_room(char *roomName, int arrLen){
-  int i = -1;
+  int i = 0;
+  printf("room we are looking for is named %s \n", roomName);
   for(i = 0; i<arrLen; i++){
     if(strcmp(roomsArr[i].name, roomName) == 0){
-      break;
+		printf("roomname of %d is :%s\n",i, roomsArr[i].name);
+		fflush(stdout);
+		break;
     }
   }
+  printf("returning roomindex %d\n ", i);
+  
   return i;
 }

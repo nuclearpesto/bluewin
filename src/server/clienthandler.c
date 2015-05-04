@@ -76,20 +76,26 @@ int handle( void *args ){
 			printf("recieved json:  %s\n", messagepointer);
 			fflush(stdout);
 			if((recv_json_cmd= json_object_get(recieved_obj, "cmd"))!=NULL){
-			  if(strcmp("exit\n", json_string_value(recv_json_cmd))==0){
+			  if(strcmp("exit", json_string_value(recv_json_cmd))==0){
 				remove_Client(client);
 				return 1;
 			  }
 			  else if(strcmp("msg", json_string_value(recv_json_cmd)) == 0){
-				  printf("found msg");
+				  printf("found msg\n");
 				  handle_message(recieved_obj, client);
 				  fflush(stdout);
 			  }
 			  else if(strcmp("login", json_string_value(recv_json_cmd)) == 0){
-				  printf("found login");
+				  printf("found login\n");
 				  handle_login(recieved_obj, client);
 				  fflush(stdout);
 			  }
+			  else if(strcmp("add user", json_string_value(recv_json_cmd)) == 0){
+				  printf("found add user\n");
+				  handle_add_user(recieved_obj, client);
+				  fflush(stdout);
+			  }
+			  
 			}
 		}
 		free(messagepointer);
@@ -101,18 +107,19 @@ int handle( void *args ){
 void handle_message(json_t *recieved_obj, clients_t *client){
 	json_t *recv_json_cmd;
 	if(recv_json_cmd = json_object_get(recieved_obj, "message")){
-			  SerializableMessage_t response;
-			  response.client = client;
-			  strcpy(response.message, json_string_value(recv_json_cmd));
-			  printf("copied string");
-			  fflush(stdout);
-			  recv_json_cmd=json_object_get(recieved_obj, "room");
-			  strcpy( response.roomname, json_string_value(recv_json_cmd));
-			  SDL_Thread *id;
-			  printf("creating writethread\n");
-			  id= SDL_CreateThread(write_to_client,"writer", &response); //create writethread
-			  SDL_DetachThread(id);
-			}
+	  SerializableMessage_t response;
+	  response.client = client;
+	  strcpy(response.message, json_string_value(recv_json_cmd));
+	  printf("copied string\n");
+	  fflush(stdout);
+	  recv_json_cmd=json_object_get(recieved_obj, "room");
+	  strcpy( response.roomname, json_string_value(recv_json_cmd));
+	  printf("room in serializable message is %s\n", response.roomname);
+	  SDL_Thread *id;
+	  printf("creating writethread\n");
+	  id= SDL_CreateThread(write_to_client,"writer", &response); //create writethread
+	  SDL_DetachThread(id);
+	}
 }
 
 void handle_login(json_t * recieved_obj, clients_t *client){
@@ -121,10 +128,11 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 	char *strusn, *strpass;
 	username = json_object_get(recieved_obj, "username");
 	password = json_object_get(recieved_obj,"password");
-	strusn = json_string_value(username);
-	strpass = json_string_value(password);
 	printf("username befor login func is:  %s \n", strusn);
 	if(username!=NULL && password!=NULL){
+		strusn = json_string_value(username);
+		strpass = json_string_value(password);
+	
 		success =login(strusn, strpass);
 	}
 	client->loggin=success;
@@ -147,42 +155,95 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 
 }
 
+void handle_add_user(json_t *recieved_obj, clients_t *client){
+	json_t *writeobj, *password, *username, *json_created_val;
+	char * strpass, *strusn;
+	bool success;
+	
+	username = json_object_get(recieved_obj, "username");
+	password = json_object_get(recieved_obj,"password");
+	printf("username befor login func is:  %s \n", strusn);
+	if(username!=NULL && password!=NULL){
+		strusn = json_string_value(username);
+		strpass = json_string_value(password);
+		success =add_user(strusn, strpass);
+	}
+	writeobj = json_object();
+	json_created_val = json_boolean(success);
+	json_object_set_new(writeobj, "add user", json_created_val);
+	json_object_set_new(writeobj, "username",username);
+	char * jsonString = json_dumps(writeobj, 0);
+	SerializedMessage_t sermes;
+	strcpy(sermes.jsonstring,jsonString);
+	sermes.size = strlen(jsonString);
+	write_server_message(&sermes, client->socket);
+	
+		
+}	
+
+void handle_del_user(json_t *recieved_obj, clients_t *client){
+	json_t *writeobj, *password, *username, *json_deleted_val;
+	char * strpass, *strusn;
+	bool success;
+	username = json_object_get(recieved_obj, "username");
+	password = json_object_get(recieved_obj,"password");
+	printf("username befor login func is:  %s \n", strusn);
+	if(username!=NULL && password!=NULL){
+		strusn = json_string_value(username);
+		strpass = json_string_value(password);
+		success =del_user(strusn, strpass);
+	}
+	writeobj = json_object();
+	json_deleted_val = json_boolean(success);
+	json_object_set_new(writeobj, "del user", json_deleted_val);
+	json_object_set_new(writeobj, "username",username);
+	char * jsonString = json_dumps(writeobj, 0);
+	SerializedMessage_t sermes;
+	strcpy(sermes.jsonstring,jsonString);
+	sermes.size = strlen(jsonString);
+	write_server_message(&sermes, client->socket);
+		
+}	
+
 
 int write_to_client(void *args){
 
     printf("gonna write\n");
-
-  SerializableMessage_t *p  = (SerializableMessage_t *)args;
+	
+	SerializableMessage_t *p  = (SerializableMessage_t *)args;
+	char roomname[ROOM_NAME_SIZE];
+	strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
+									//this is a short term solution
 	json_int_t x = 1;
-  json_t *messageobj = json_object();
+	json_t *messageobj = json_object();
 
   json_t *usn = json_string((p->client->username));
   json_t *mes = json_string((p->message));
   json_t *chrom = json_string(p->roomname);
   json_t *fromserv = json_integer(x);
 
-  json_object_set(messageobj, "fromserv", fromserv);
-  json_object_set(messageobj,"username", usn );
-  json_object_set(messageobj, "chroom", chrom );
-  json_object_set(messageobj, "message", mes );
+  json_object_set_new(messageobj, "fromserv", fromserv);
+  json_object_set_new(messageobj,"username", usn );
+  json_object_set_new(messageobj, "chroom", chrom );
+  json_object_set_new(messageobj, "message", mes );
 
+	printf("in write_to_client roomane is %s\n", p->roomname);
   printf("created jsonobj\n");
   fflush(stdout);
   const char *json_string = json_dumps(messageobj, 0);
 
   int val = 1;
 
-  printf("jsonstr size %d\ncontains %s", sizeof(json_string), json_string);
+  printf("jsonstr size %d\ncontains %s\n", sizeof(json_string), json_string);
   SerializedMessage_t sermes;
   strcpy (sermes.jsonstring, json_string);
   sermes.size= strlen(sermes.jsonstring)+1;
-
-  write_to_room(p->roomname, &sermes, p->client);
+  write_to_room(roomname, &sermes, p->client);
   //write_server_message(&sermes, p->client->socket);
 
 	return 1;
 }
-void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender){
+void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender){ //write to everyone in a room except sender
   //KRYPTERA
   //encrypt_Handler(sermes);
   int index=find_index_of_room(roomname, THREAD_COUNT);

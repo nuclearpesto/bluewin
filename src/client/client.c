@@ -129,6 +129,7 @@ int readThread (void * p){
 	while(1){
 
 			string = read_from_server(*sd, response);
+			printf("recieved %s\n", string);
 			masterobj = json_loads(string, 0, NULL);
 			if(masterobj == NULL){
                 free(string);
@@ -164,7 +165,7 @@ void write_to_server(json_t *masterobj, TCPsocket socket){
     json_s = json_dumps(masterobj, 0);
     //kryptera
     //encrypt_Handler(json_s);
-    puts(json_s);//kontroll
+    //puts(json_s);//kontroll
     len = strlen(json_s);
 	//printf("len is %d", len);
     SDLNet_TCP_Send(socket, &len, sizeof(int));
@@ -178,7 +179,8 @@ char* read_from_server( TCPsocket socket, char *response){
     SDLNet_TCP_Recv(socket, &temp, sizeof(int));
     response = (char *)malloc(temp+1);
     SDLNet_TCP_Recv(socket,response, temp );
-    //printf("read response : %s\n",response);
+	response[temp] = '\0';
+	//printf("read response : %s\n",response);
     //dekryptera
     //decrypt_Handler(response);
     return response;

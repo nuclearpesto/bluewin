@@ -34,7 +34,8 @@ int handle( void *args ); //main handle loop, a thread will read continously fro
 void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sender); // find a room and write to everyone except the sender
 void handle_login(json_t * recieved_obj, clients_t *client);
 void handle_message(json_t *recv_obj, clients_t *client);
-
+void handle_add_user(json_t *recieved_obj, clients_t *client);
+void handle_del_user(json_t *recieved_obj, clients_t *client);
 
 extern clients_t clientsArr[]; 
 extern stack availableClientNr;

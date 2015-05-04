@@ -8,7 +8,7 @@
 extern SDL_mutex *UsersDbMutex;
 bool login(char *username, char *pw);
 bool add_user(char *username, char *pw);
-bool del_user(char * username);
+bool del_user(char * username, char *pw);
 bool users_init();
 
 #endif
