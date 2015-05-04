@@ -213,11 +213,15 @@ void serialize_message(json_t *masterobj, Message_s msg){
 }
 
 void message_printer(json_t *masterobj){
-    json_t *rec_message;
+  json_t *rec_message, *rec_username;
     char string_resp[1000];
+    char username[255];
     if((rec_message = json_object_get(masterobj, "message"))!= NULL){
+      rec_username = json_object_get(masterobj, "username");
         strcpy(string_resp, json_string_value(rec_message));
-        printf("from server : %s", string_resp);
+	strcpy(username, json_string_value(rec_username));
+	printf("%s : %s",username, string_resp);
+	fflush(stdout);
     }
 }
 
