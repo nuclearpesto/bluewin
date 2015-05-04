@@ -5,7 +5,6 @@ DEPS=*.h
 BIN_DIR=../../bin/
 OBJDIR=../../obj/
 CC=gcc
-LOCALINCDIR=../../include/
 OBJ_FILES= $(OBJ_DIR)clienthandler.o $(OBJ)misc.o $(OBJ)rooms.o  $(OBJ)users.o $(OBJ_DIR)server.o $(OBJ_DIR)crypt.o
 ifeq ($(OS),Windows_NT)
 LIBS=-lmingw32 -lSDL2main -lSDL2 -lSDL2_net -ljansson
@@ -15,11 +14,11 @@ else
 UNAME_S:=$(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 LIBS= -lSDL2 -lSDL2_net -ljansson
-INC_DIR=../../include
+INC_DIR= -I../../include
 endif
 ifeq ($(UNAME_s),Darwin)
 LIBS= -lSDL2 -lSDL2_net -ljansson
-INC_DIR=../../include
+INC_DIR=-I../../include
 endif
 endif
 

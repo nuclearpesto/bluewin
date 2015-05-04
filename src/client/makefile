@@ -15,11 +15,11 @@ else
 UNAME_S:=$(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 LIBS= -lSDL2 -lSDL2_net -ljansson
-INC_DIR=../../include
+INC_DIR=-I../../include
 endif
 ifeq ($(UNAME_s),Darwin)
 LIBS= -lSDL2 -lSDL2_net -ljansson
-INC_DIR=../../include
+INC_DIR=-I../../include
 endif
 endif
 
