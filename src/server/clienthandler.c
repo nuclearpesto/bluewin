@@ -187,7 +187,7 @@ void handle_del_user(json_t *recieved_obj, clients_t *client){
 	bool success;
 	username = json_object_get(recieved_obj, "username");
 	password = json_object_get(recieved_obj,"password");
-	printf("username befor login func is:  %s \n", strusn);
+	//printf("username befor login func is:  %s \n", strusn);
 	if(username!=NULL && password!=NULL){
 		strusn = json_string_value(username);
 		strpass = json_string_value(password);

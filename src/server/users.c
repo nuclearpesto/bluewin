@@ -58,24 +58,29 @@ bool add_user(char *UserName, char *pw){
 	char *dbstr;
 	int jsonlen;
 	
-		
-	if(fread(&jsonlen, sizeof(int), 1, fp  )>0){
-		if(fread(dbstr, jsonlen , 1, fp)>0){
-			fclose(fp);
-			masterObj= json_loads(dbstr, JSON_REJECT_DUPLICATES, &error);
-				if(json_object_get(masterObj,UserName)==NULL){
-				/*TODO encrypt pass*/
-				
-				UserPass=json_string(pw);
-				json_object_set(masterObj, UserName, UserPass);
-				dbstr = json_dumps(masterObj, 0);
-				fp = fopen(USERS_DB_FILE, "w");
-				fprintf(fp,"%d", strlen(dbstr) );
-				fprintf(fp,"%s", dbstr );
-				success=true;
-				fclose(fp);
-			}
-		}
+	printf("gonna add a user\n");	
+	if(fscanf(fp, "%d", &jsonlen)>0){
+	  printf("read size");
+	  fflush(stdout);
+	  dbstr = (char *)malloc(jsonlen+1);
+	  if(fread(dbstr, jsonlen , 1, fp)>0){
+	    printf(" read db\n");
+	    fflush(stdout);
+	    fclose(fp);
+	    masterObj= json_loads(dbstr, JSON_REJECT_DUPLICATES, &error);
+	    if(json_object_get(masterObj,UserName)==NULL){
+	      /*TODO encrypt pass*/
+	      printf("no duplicate\n");
+	      UserPass=json_string(pw);
+	      json_object_set(masterObj, UserName, UserPass);
+	      dbstr = json_dumps(masterObj, 0);
+	      fp = fopen(USERS_DB_FILE, "w");
+	      fprintf(fp,"%d", strlen(dbstr) );
+	      fprintf(fp,"%s", dbstr );
+	      success=true;
+	      fclose(fp);
+	    }
+	  }
 	}
 	
 	SDL_UnlockMutex(UsersDbMutex);
