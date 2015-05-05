@@ -179,7 +179,7 @@ public:
     //Handles mouse event
     void handleEvent(SDL_Event* e, int* screenShow, Button* button, int i);
     //Shows button sprite
-    void render(int screenShow);
+    void render(int* screenShow, int* element);
     
 private:
     //Top left position
@@ -423,8 +423,12 @@ LTexture gLoginButtonSpriteSheetTexture;
 SDL_Rect gRoomSpriteClips[ BUTTON_SPRITE_TOTAL ];
 LTexture gRoomButtonSpriteSheetTexture;
 
+SDL_Rect gLogoutSpriteClips[BUTTON_SPRITE_TOTAL];
+LTexture gLogoutButtonSpriteSheetTexture;
+
 //Buttons objects
 LButton gLoginButtons[TOTAL_BUTTONS];
+LButton gLogoutButton[TOTAL_BUTTONS];
 LButton gRoomButtons[ROOM_BUTTON_TOTAL];
 LButton gFieldButtons[2];
 
@@ -571,10 +575,10 @@ void LButton::setPosition(int x, int y){
 
 void action(int* e){
     if (*e == 0) {
-        printf("Hej 0");
+        printf("Hej 0\n");
         *e=1;
     }else if (*e == 1){
-        printf("Hej 1");
+        printf("Hej 1\n");
         *e=0;
         //Initialize the rest of the windows
         for( int i = 0; i < TOTAL_WINDOWS; ++i ){
@@ -622,26 +626,71 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                         focusText=true;
                         writeText=true;
                     }
-                    switch (selected) {
-                        case 0:
-                            action(screenShow);
-                            break;
-                            
-                        case 1:
-                            field=0;
-                            break;
-                            
-                        case 2:
-                            field=1;
-                            break;
-                            
-                        case 3:
-                            field=1;
-                            break;
-                            
-                        default:
-                            break;
+                    if (*screenShow==0) {
+                        switch (selected) {
+                            case 0:
+                                action(screenShow);
+                                break;
+                                
+                            case 1:
+                                printf("Canto\n");
+                                break;
+                                
+                            case 2:
+                                field=0;
+                                break;
+                                
+                            case 3:
+                                field=1;
+                                break;
+                                
+                            case 4:
+                                field=1;
+                                break;
+                                
+                            default:
+                                break;
+                        }
+                    }else if (*screenShow==1){
+                        switch (selected) {
+                            case 0:
+                                *screenShow=0;
+                                printf("Logout button\n");
+                                break;
+                                
+                            case 1:
+                                printf("Room 1 button\n");
+                                break;
+                                
+                            case 2:
+                                printf("Room 2 button\n");
+                                break;
+                                
+                            case 3:
+                                printf("Room 3 button\n");
+                                break;
+                                
+                            case 4:
+                                printf("Room 4 button\n");
+                                break;
+                                
+                            case 5:
+                                printf("Room 5 button\n");
+                                break;
+                                
+                            case 6:
+                                printf("Room 6 button\n");
+                                break;
+                                
+                            case 7:
+                                printf("Room 7 button\n");
+                                break;
+                                
+                            default:
+                                break;
+                        }
                     }
+                    //screenView=false;
                     //focusText=true;
                     //action(screenShow);
                     
@@ -651,13 +700,18 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
     }
 }
 
-void LButton::render(int screenShow){
-    if (screenShow == 0) {
+void LButton::render(int* screenShow,int *element){
+    if (*screenShow == 0) {
         //show current login button sprite
         gLoginButtonSpriteSheetTexture.render(mPosition.x, mPosition.y,&gLoginSpriteClips[mCurrentSprite]);
-    }else if (screenShow == 1){
-        //Show current room button sprite
-        gRoomButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gRoomSpriteClips[mCurrentSprite]);
+    }else if (*screenShow == 1){
+        if (*element==0) {
+            //Show current logoff button sprite
+            gLogoutButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gLogoutSpriteClips[mCurrentSprite]);
+        }else if (*element==1){
+            //Show current room button sprite
+            gRoomButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gRoomSpriteClips[mCurrentSprite]);
+        }
     }
 }
 
@@ -688,8 +742,6 @@ void getPromptText(std::string text, TTF_Font* gFont, int select){
 void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std::string* password){
     //Render text flag
     //bool renderText = false;
-    //char showPassword[50] = " ";
-    //std::string password = " ";
     
     //Special key input
     if (e.type == SDL_KEYDOWN){
@@ -820,7 +872,6 @@ bool loadMedia(){
     bool success = true;
     
     //Load Login texture
-    //gTexture = loadTexture("bluewinimg/login.png");
     if (!gBackgroundTexture.loadFromFile("bluewinimg/login.png")) {
         printf("Failed to load login texture image!\n");
         success = false;
@@ -840,7 +891,7 @@ bool loadMedia(){
         //Set sprites
         for (int i = 0; i < BUTTON_SPRITE_TOTAL; i++) {
             gLoginSpriteClips[i].x=0;
-            gLoginSpriteClips[i].y=i*73;
+            gLoginSpriteClips[i].y=0;
             gLoginSpriteClips[i].w=BUTTON_WIDTH;
             gLoginSpriteClips[i].h=BUTTON_HEIGHT;
         }
@@ -848,9 +899,10 @@ bool loadMedia(){
     
     //Load rooms texture
     if (!gFooTexture.loadFromFile("bluewinimg/main.png")) {
-        printf("Failed to load rooms texture");
+        printf("Failed to load main texture");
         success = false;
     }
+    
     if (!gRoomButtonSpriteSheetTexture.loadFromFile("bluewinimg/roombutton.png")) {
         printf("Failed to load rooms button sprite texture");
         success = false;
@@ -858,9 +910,22 @@ bool loadMedia(){
         //Set sprites
         for (int i = 0; i < BUTTON_SPRITE_TOTAL; i++) {
             gRoomSpriteClips[i].x=0;
-            gRoomSpriteClips[i].y=i*80;
+            gRoomSpriteClips[i].y=0;
             gRoomSpriteClips[i].w=ROOM_BUTTON_WIDTH;
             gRoomSpriteClips[i].h=ROOM_BUTTON_HEIGHT;
+        }
+    }
+    
+    if (!gLogoutButtonSpriteSheetTexture.loadFromFile("bluewinimg/logout.png")) {
+        printf("Failed to load Logout button sprite texture");
+        success=false;
+    }else{
+        //Set sprites
+        for (int i = 0; i < BUTTON_SPRITE_TOTAL; i++) {
+            gLogoutSpriteClips[i].x=0;
+            gLogoutSpriteClips[i].y=0;
+            gLogoutSpriteClips[i].w=150;
+            gLogoutSpriteClips[i].h=50;
         }
     }
 
@@ -943,12 +1008,12 @@ SDL_Texture* loadTexture(std::string path){
 
 int main( int argc, char* args[] ){
     //Initialize varibles
-    int screenShow = 0,boxInput = 0, totalElements=0,totalButtons=0,totalFields=0;//,field = 0;
+    int screenShow = 0,boxInput = 0, totalElements=0,totalButtons=0,totalFields=0,element=0;//,field = 0;
     Screen windowSize;
     windowSize.w=400;
     windowSize.h=800;
     
-    Button buttonTypeSmall,buttonTypeWide,fieldButton,loginButton;
+    Button buttonTypeSmall,buttonTypeWide,fieldButton,loginButton,logoutButton;
     buttonTypeSmall.w=200;
     buttonTypeSmall.h=75;
     buttonTypeWide.w=400;
@@ -960,6 +1025,10 @@ int main( int argc, char* args[] ){
     loginButton.h=72;
     loginButton.x=100;
     loginButton.y=500;
+    logoutButton.w=150;
+    logoutButton.h=50;
+    logoutButton.y=0;
+    logoutButton.x=windowSize.w-logoutButton.w;
     
     //Start up SDL and create window
     if( !init(windowSize) ){
@@ -1006,16 +1075,24 @@ int main( int argc, char* args[] ){
                                 gFieldButtons[i-totalButtons].handleEvent(&e, &boxInput, &fieldButton,i);
                             }
                         }
+                    }else if(screenShow == 1){
+                        totalElements=1+totalButtons;
+                        //Generate all elements in main screen
+                        for (int i =0; i<totalElements; i++) {
+                            if (i<1) {
+                                gLogoutButton[i].handleEvent(&e, &screenShow, &logoutButton, i);
+                            }else if (i<totalButtons){
+                                gRoomButtons[(i-1)].handleEvent(&e, &screenShow,&buttonTypeWide,i);
+                            }
+                        }
+                        
                         //Handle window events
-                        for( int i = 0; i < TOTAL_WINDOWS; ++i )
-                        {
+                        for( int i = 0; i < TOTAL_WINDOWS; ++i ){
                             gWindows[ i ].handleEvent( e );
                         }
                         //Pull up window
-                        if( e.type == SDL_KEYDOWN )
-                        {
-                            switch( e.key.keysym.sym )
-                            {
+                        if( e.type == SDL_KEYDOWN ){
+                            switch( e.key.keysym.sym ){
                                 case SDLK_1:
                                     //gWindows[ 0 ].focus();
                                     break;
@@ -1023,19 +1100,14 @@ int main( int argc, char* args[] ){
                                 case SDLK_2:
                                     gWindows[ 1 ].focus();
                                     break;
-
+                                    
                                 case SDLK_3:
                                     gWindows[ 2 ].focus();
                                     break;
                             }
                         }
-                    }else if(screenShow == 1){
-                        totalElements=1+totalButtons;
-                        //Generate all elements in main screen
-                        for (int i =0; i<totalElements; i++) {
-                            gRoomButtons[i].handleEvent(&e, &screenShow,&buttonTypeWide,i);
-                        }
                     }
+                    
                     if (writeText) {
                         if (field==0) {
                             getTextString(&inputUsernameText,e,textColor,&outputPasswordText);
@@ -1066,15 +1138,16 @@ int main( int argc, char* args[] ){
                 SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
                 
                 if(screenShow==0){
-                    totalButtons=1;
+                    totalButtons=2;
                     totalFields=2;
+
                     //Render buttons
-                    for (int i = 0; i < TOTAL_BUTTONS; ++i) {
-                        gLoginButtons[i].render(screenShow);
+                    for (int i = 0; i < totalButtons; ++i) {
+                        gLoginButtons[i].render(&screenShow,&element);
                     }
                     //Positionate login button
                     gLoginButtons[0].setPosition(loginButton.x, loginButton.y);
-                    gLoginButtons[1].setPosition(loginButton.x, loginButton.y);
+                    gLoginButtons[1].setPosition(200, windowSize.h -30);
                     
                     //Render background texture to screen
                     gBackgroundTexture.render(0,0);
@@ -1082,7 +1155,6 @@ int main( int argc, char* args[] ){
                     //Positionate text fields
                     gFieldButtons[0].setPosition(fieldButton.x,300);
                     gFieldButtons[1].setPosition(fieldButton.x,420);
-                    //gFieldButtons[2].setPosition(fieldButton.x, 300);
                     
                     if (inputUsernameText=="" || inputUsernameText==" ") {
                         getPromptText("Username", gDefaultFont,0);
@@ -1111,21 +1183,38 @@ int main( int argc, char* args[] ){
                     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 60));
                 }else{
                     int buttX=0,buttY=200;
-                    totalButtons=1;
+                    totalButtons=8;
                     totalFields=0;
+                    
                     //Render rooms texture to screen
                     gFooTexture.render(0, 0);
                     
                     //Render Username
                     gUsernameTextTexture.render(10, 10);
                     
+                    //Render and positionate logoff button
+                    element=0;
+                    gLogoutButton[0].render(&screenShow,&element);
+                    gLogoutButton[0].setPosition(windowSize.w - logoutButton.w-3,3);
+                    
+                    element=1;
                     //Render buttons
-                    for (int i = 0; i < TOTAL_BUTTONS; ++i) {
-                        gRoomButtons[i].render(screenShow);
+                    for (int i = 0; i < 7; ++i) {
+                        gRoomButtons[i].render(&screenShow,&element);
+                        //Positionate room buttons
+                        gRoomButtons[i].setPosition(buttX, (buttY+(buttonTypeWide.h*i)));
+                        //gRoomButtons[i*2+1].setPosition(buttX, (buttY+(buttonTypeWide.h*i)));
+                        //printf("%d\n",buttY+(buttonTypeWide.h*i));
                     }
-                    //Positionate room buttons
-                    gRoomButtons[0].setPosition(buttX, buttY);
-                    gRoomButtons[1].setPosition(buttX, buttY);
+                    //gRoomButtons[0].render(&screenShow,&element);
+                    //gRoomButtons[0].setPosition(buttX, buttY);
+                    //gRoomButtons[1].setPosition(buttX, buttY);
+                    
+                    /*for (int i = 0; i<totalButtons*2; i++) {
+                        //Positionate room buttons
+                        gRoomButtons[0].setPosition(buttX, buttY);
+                        gRoomButtons[1].setPosition(buttX, buttY);
+                    }*/
                 }
                 
                 //Update screen
