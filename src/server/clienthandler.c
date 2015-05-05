@@ -2,13 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __APPLE__
-	#include <SDL.h>
-	#include <SDL_thread.h>
-	#include <SDL_net.h>
-#endif
-#ifdef __LINUX__
-#endif
+
+	#include <SDL2/SDL.h>
+	#include <SDL2/SDL_thread.h>
+	#include <SDL2/SDL_net.h>
 
 
 
@@ -104,7 +101,7 @@ int handle( void *args ){
 				  handle_add_user(recieved_obj, client);
 				  fflush(stdout);
 			  }
-			  
+
 			}
 		}
 		free(messagepointer);
@@ -140,7 +137,7 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 	if(username!=NULL && password!=NULL){
 		strusn = json_string_value(username);
 		strpass = json_string_value(password);
-	
+
 		success =login(strusn, strpass);
 	}
 	client->loggin=success;
@@ -167,7 +164,7 @@ void handle_add_user(json_t *recieved_obj, clients_t *client){
 	json_t *writeobj, *password, *username, *json_created_val;
 	char * strpass, *strusn;
 	bool success;
-	
+
 	username = json_object_get(recieved_obj, "username");
 	password = json_object_get(recieved_obj,"password");
 	if(username!=NULL && password!=NULL){
@@ -184,9 +181,9 @@ void handle_add_user(json_t *recieved_obj, clients_t *client){
 	strcpy(sermes.jsonstring,jsonString);
 	sermes.size = strlen(jsonString);
 	write_server_message(&sermes, client->socket);
-	
-		
-}	
+
+
+}
 
 void handle_del_user(json_t *recieved_obj, clients_t *client){
 	json_t *writeobj, *password, *username, *json_deleted_val;
@@ -209,14 +206,14 @@ void handle_del_user(json_t *recieved_obj, clients_t *client){
 	strcpy(sermes.jsonstring,jsonString);
 	sermes.size = strlen(jsonString);
 	write_server_message(&sermes, client->socket);
-		
-}	
+
+}
 
 
 int write_to_client(void *args){
 
   D(printf("gonna write\n"));
-	
+
 	SerializableMessage_t *p  = (SerializableMessage_t *)args;
 	char roomname[ROOM_NAME_SIZE];
 	strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
