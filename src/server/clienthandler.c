@@ -96,18 +96,18 @@ int handle( void *args ){
 			  }
 			  else if(strcmp("log out", json_string_value(recv_json_cmd)) == 0 && client->loggin ==true){
 			    D(printf("found logou\n"));
-				  handle_add_logout(recieved_obj, client);
+				  handle_logout( client);
 				  fflush(stdout);
 			  }
 
 			  else if(strcmp("get rooms", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
 			    D(printf("found get rooms\n"));
-				  handle_add_get_rooms(recieved_obj, client);
+				  handle_get_rooms(recieved_obj, client);
 				  fflush(stdout);
 			  }
 			  else if(strcmp("new room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
 			    D(printf("found new room\n"));
-				  handle_add_new_room(recieved_obj, client);
+				  handle_add_rooms(recieved_obj, client);
 				  fflush(stdout);
 			  }
 			  else if(strcmp("switch room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){

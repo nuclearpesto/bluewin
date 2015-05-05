@@ -41,6 +41,9 @@ void handle_send_file(json_t * recieved_obj, clients_t *client);
 void handle_logout(clients_t *client);
 void handle_add_call(json_t * recieved_obj, clients_t *client);
 void handle_switch_room(json_t * recieved_obj, clients_t *client);
+void handle_add_rooms(json_t * recieved_obj, clients_t *client);
+void handle_delete_room(json_t * recieved_obj, clients_t *client);
+
 extern clients_t clientsArr[]; 
 extern stack availableClientNr;
 extern SDL_mutex *clientsStackMutex;
