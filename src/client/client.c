@@ -4,12 +4,14 @@
 #include <string.h>
 //#include <json-c/json.h>
 #include <jansson.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_thread.h>
 #include <stdbool.h>
 #include "debug.h"
 
-#ifdef __win32__
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_thread.h>
+#ifdef __APPLE__
+#include <SDL2_net/SDL_net.h>
+#else
 #include <SDL2/SDL_net.h>
 #endif
 
