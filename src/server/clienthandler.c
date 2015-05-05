@@ -82,7 +82,7 @@ int handle( void *args ){
 				  handle_message(recieved_obj, client);
 				  fflush(stdout);
 			  }
-			  else if(strcmp("login", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			  else if(strcmp("login", json_string_value(recv_json_cmd)) == 0){
 			    D(printf("found login\n"));
 				  handle_login(recieved_obj, client);
 				  fflush(stdout);
