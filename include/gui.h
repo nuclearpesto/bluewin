@@ -29,6 +29,6 @@
 #include <sstream>
 #endif
 
-int mainUI();
+int mainUI(int nrRooms);
 
 #endif /* defined(__bluewin_gui__gui__) */
