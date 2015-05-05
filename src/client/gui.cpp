@@ -282,7 +282,8 @@ void LWindow::handleEvent( SDL_Event& e ){
                 
                 //Hide on close
             case SDL_WINDOWEVENT_CLOSE:
-                SDL_HideWindow( mWindow );
+                SDL_DestroyWindow(mWindow);
+                //SDL_HideWindow( mWindow );
                 break;
         }
         
@@ -642,6 +643,7 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                                 
                             case 1:
                                 printf("Room 1 button\n");
+                                gWindows[ 0 ].init();
                                 break;
                                 
                             case 2:
@@ -988,7 +990,7 @@ SDL_Texture* loadTexture(std::string path){
     return newTexture;
 }
 
-int mainUI(){
+int mainUI(int nrRooms){
     //Initialize varibles
     int screenShow = 0,boxInput = 0, totalElements=0,totalButtons=0,totalFields=0,element=0;//,field = 0;
     Screen windowSize;
@@ -1165,7 +1167,7 @@ int mainUI(){
                     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 60));
                 }else{
                     int buttX=0,buttY=200;
-                    totalButtons=8;
+                    totalButtons=1+nrRooms;
                     totalFields=0;
                     
                     //Render rooms texture to screen
@@ -1178,25 +1180,22 @@ int mainUI(){
                     element=0;
                     gLogoutButton[0].render(&screenShow,&element);
                     gLogoutButton[0].setPosition(windowSize.w - logoutButton.w-3,3);
+                    getText("Logout", gLargeFont);
+                    gTextTexture.render((windowSize.w - logoutButton.w)+((logoutButton.w - gTextTexture.getWidth())/2)-3, (logoutButton.h - gTextTexture.getHeight())/2);
                     
                     element=1;
                     //Render buttons
-                    for (int i = 0; i < 7; ++i) {
+                    for (int i = 0; i < nrRooms; ++i) {
                         gRoomButtons[i].render(&screenShow,&element);
                         //Positionate room buttons
                         gRoomButtons[i].setPosition(buttX, (buttY+(buttonTypeWide.h*i)));
-                        //gRoomButtons[i*2+1].setPosition(buttX, (buttY+(buttonTypeWide.h*i)));
-                        //printf("%d\n",buttY+(buttonTypeWide.h*i));
+                        //Get text on button
+                        std::ostringstream stream;
+                        stream << "Chat room " << i+1;
+                        std::string text = stream.str();
+                        getText(text, gLargeFont);
+                        gTextTexture.render((buttX+((buttonTypeWide.w - gTextTexture.getWidth())/2)), (buttY+((buttonTypeWide.h - gTextTexture.getHeight())/2)+(buttonTypeWide.h*i)));
                     }
-                    //gRoomButtons[0].render(&screenShow,&element);
-                    //gRoomButtons[0].setPosition(buttX, buttY);
-                    //gRoomButtons[1].setPosition(buttX, buttY);
-                    
-                    /*for (int i = 0; i<totalButtons*2; i++) {
-                     //Positionate room buttons
-                     gRoomButtons[0].setPosition(buttX, buttY);
-                     gRoomButtons[1].setPosition(buttX, buttY);
-                     }*/
                 }
                 
                 //Update screen

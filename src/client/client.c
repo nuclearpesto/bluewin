@@ -5,8 +5,18 @@
 #include <jansson.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
+<<<<<<< HEAD
 #include <SDL2/SDL_net.h>
+=======
+>>>>>>> 7687fa6020f0c96214a464bfc9a9870c19915acb
 #include <stdbool.h>
+#include "debug.h"
+
+#ifdef __APPLE__
+#include <SDL2_net/SDL_net.h>
+#else
+#include <SDL2/SDL_net.h>
+#endif
 
 #define READ_BUF_SIZE 1000
 
@@ -77,15 +87,15 @@ if(!(sd = SDLNet_TCP_Open(&ip))){
   char *string;
   user_s usr;
   int choice;
-  
+
   int size = sizeof(string);
   Message_s msg;
   json_t *masterobj;
 
     masterobj = json_object();
     SDL_CreateThread(readThread, "reader", &sd);
-    
-    printf("0: login\n 1: new user\n:"); 
+
+    printf("0: login\n 1: new user\n:");
     fscanf(stdin, "%d", &choice);
     switch(choice){
     case 0:
@@ -99,7 +109,7 @@ if(!(sd = SDLNet_TCP_Open(&ip))){
       break;
     }
 
-    
+
     printf("Welcome!\n");
   while(1){
     user_input(msg.message);
@@ -125,7 +135,7 @@ int readThread (void * p){
 	while(1){
 
 	  string = read_from_server(*sd, response);
-	  printf("recieved %s\n", string);
+	  //D(printf("recieved %s\n", string));
 	  masterobj = json_loads(string, 0, NULL);
 	  if(masterobj == NULL){
 	    free(string);
@@ -137,7 +147,7 @@ int readThread (void * p){
 		login = true;
 	      }
 	    }
-	    
+
 	  }
 	  message_printer(masterobj);
 	  //printf("gonna free");
@@ -188,7 +198,7 @@ void send_login(json_t * masterobj, user_s *usr, TCPsocket sd){
             }
         }
     }
-  
+
 }
 
 
@@ -206,9 +216,9 @@ void add_user(json_t * masterobj, user_s *usr, TCPsocket sd){
         //printf("cmd\n");
   fflush(stdout);
   write_to_server(masterobj, sd);
-  
-  
-  
+
+
+
 }
 
 
@@ -303,3 +313,11 @@ void serialize_cmd(json_t *masterobj, char *cmd ){
     string = json_string(cmd);
     json_object_set(masterobj, "cmd", string);
 }
+
+/* string_convert(std::string s,char* msg[20]){
+    int i = 0, j = s.size();
+    for(i;i <= j;i++){
+        msg[i] = s[i];
+    }
+    //printf("%s", msg);
+}*/

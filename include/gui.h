@@ -29,6 +29,8 @@
 #include <sstream>
 #endif
 
-int mainUI();
+int mainUI(int nrRooms);
+std::string inputUsernameText = "";
+std::string inputPasswordText = "";
 
 #endif /* defined(__bluewin_gui__gui__) */
