@@ -5,10 +5,6 @@
 #include <jansson.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
-<<<<<<< HEAD
-#include <SDL2/SDL_net.h>
-=======
->>>>>>> 7687fa6020f0c96214a464bfc9a9870c19915acb
 #include <stdbool.h>
 #include "debug.h"
 

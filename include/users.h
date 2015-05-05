@@ -1,6 +1,5 @@
 #ifndef USERS
 #define USERS
-#define USERNAME_LEN 255
 #define USERPASS_LEN 255
 #define USERS_DB_FILE "users.db"
 

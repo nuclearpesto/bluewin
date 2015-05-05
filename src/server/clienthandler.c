@@ -92,8 +92,7 @@ int handle( void *args ){
 				  handle_add_user(recieved_obj, client);
 				  fflush(stdout);
 			  }
-			  else if(strcmp("log out",
-					 json_string_value(recv_json_cmd)) == 0 && client->loggin ==true){
+			  else if(strcmp("log out",json_string_value(recv_json_cmd)) == 0 && client->loggin ==true){
 			    D(printf("found logou\n"));
 				  handle_logout( client);
 				  fflush(stdout);
@@ -159,7 +158,6 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 	if(username!=NULL && password!=NULL){
 		strusn = json_string_value(username);
 		strpass = json_string_value(password);
-
 		success =login(strusn, strpass);
 	}
 

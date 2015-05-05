@@ -31,6 +31,7 @@ void join_room(char *roomName, clients_t * client ){
   int index = find_index_of_room(roomName,MAX_ROOMS);
   SDL_LockMutex(roomsStackMutex);
   strcpy(client->currentRoom,roomName );
+  D(printf("adding client to room %s", roomName));
   roomsArr[index].connected[roomsArr[index].nrOfCurrentConns] =client;
   roomsArr[index].nrOfCurrentConns++;
   SDL_UnlockMutex(roomsStackMutex);
