@@ -4,10 +4,14 @@
 #include <string.h>
 //#include <json-c/json.h>
 #include <jansson.h>
+#include <stdbool.h>
+#include "debug.h"
+
+#ifdef __win32__
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
 #include <SDL2/SDL_net.h>
-#include <stdbool.h>
+#endif
 
 #define READ_BUF_SIZE 1000
 
@@ -126,7 +130,7 @@ int readThread (void * p){
 	while(1){
 
 	  string = read_from_server(*sd, response);
-	  printf("recieved %s\n", string);
+	  //D(printf("recieved %s\n", string));
 	  masterobj = json_loads(string, 0, NULL);
 	  if(masterobj == NULL){
 	    free(string);
