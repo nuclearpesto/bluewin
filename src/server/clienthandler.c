@@ -92,7 +92,8 @@ int handle( void *args ){
 				  handle_add_user(recieved_obj, client);
 				  fflush(stdout);
 			  }
-			  else if(strcmp("log out", json_string_value(recv_json_cmd)) == 0 && client->loggin ==true){
+			  else if(strcmp("log out",
+					 json_string_value(recv_json_cmd)) == 0 && client->loggin ==true){
 			    D(printf("found logou\n"));
 				  handle_logout( client);
 				  fflush(stdout);
@@ -161,8 +162,9 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 
 		success =login(strusn, strpass);
 	}
-	client->loggin=success;
+
 	if(success){
+	  client->loggin=success;
 	  strcpy(client->username, json_string_value(username));
 	  join_room("default", client);
 	}
@@ -299,7 +301,7 @@ int write_to_client(void *args){
   D(printf("gonna write\n"));
 
 	SerializableMessage_t *p  = (SerializableMessage_t *)args;
-	char roomname[ROOM_NAME_SIZE];
+	char roomname[ROOM_NAME_SIZE+1];
 	strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
 									//this is a short term solution
 	json_int_t x = 1;
@@ -309,13 +311,14 @@ int write_to_client(void *args){
   json_t *mes = json_string((p->message));
   json_t *chrom = json_string(p->roomname);
   json_t *fromserv = json_integer(x);
+  printf("in write_to_client before json roomname is %s\n", roomname);
 
   json_object_set_new(messageobj, "fromserv", fromserv);
   json_object_set_new(messageobj,"username", usn );
   json_object_set_new(messageobj, "chroom", chrom );
   json_object_set_new(messageobj, "message", mes );
 
-  D(printf("in write_to_client roomane is %s\n", p->roomname));
+  D(printf("in write_to_client roomane is %s\n", roomname));
   D(printf("created jsonobj\n"));
   fflush(stdout);
   const char *json_string = json_dumps(messageobj, 0);
