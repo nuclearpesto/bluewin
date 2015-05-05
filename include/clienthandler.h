@@ -3,18 +3,21 @@
 #ifndef JSON_MAX_LENGTH
 #define JSON_MAX_LENGTH 1000
 #endif
+#define USERNAME_LEN 255
+#define ROOM_NAME_SIZE 100
+
 struct Clients {
-  IPaddress ip;
-  TCPsocket socket;
-  bool loggin;
-  char username[255];
-  
+IPaddress ip;
+TCPsocket socket;
+bool loggin;
+char username[USERNAME_LEN], currentRoom[ROOM_NAME_SIZE];
+
 };
 typedef struct Clients clients_t;
 
 struct SerializableMessage{
   clients_t *client;
-  char message[255], roomname[255] ;
+  char message[JSON_MAX_LENGTH], roomname[ROOM_NAME_SIZE] ;
   
 };typedef struct SerializableMessage SerializableMessage_t;
 

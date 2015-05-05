@@ -21,15 +21,16 @@ void delete_room(char *roomName){
   int index=0;
 
   SDL_LockMutex(roomsStackMutex);
-  index = find_index_of_room(roomName, THREAD_COUNT);
+  index = find_index_of_room(roomName, MAX_ROOMS);
   strcpy('\0',roomsArr[index].name );
   push(&availableRoomNr, index);
   SDL_UnlockMutex(roomsStackMutex);
 }
 
 void join_room(char *roomName, clients_t * client ){
-  int index = find_index_of_room(roomName,THREAD_COUNT);
+  int index = find_index_of_room(roomName,MAX_ROOMS);
   SDL_LockMutex(roomsStackMutex);
+  strcpy(client->currentRoom,roomName );
   roomsArr[index].connected[roomsArr[index].nrOfCurrentConns] =client;
   roomsArr[index].nrOfCurrentConns++;
   SDL_UnlockMutex(roomsStackMutex);
@@ -37,12 +38,12 @@ void join_room(char *roomName, clients_t * client ){
 
 
 void switch_room(char *roomName, clients_t * client ){
-  leave_room(roomName, client);
+  leave_room(client);
   join_room(roomName, client);
 }
 
-void leave_room(char*roomName, clients_t * client){
-  int index = find_index_of_room(roomName,THREAD_COUNT);
+void leave_room(clients_t * client){
+  int index = find_index_of_room(client->currentRoom,MAX_ROOMS);
    int i, found=0;
   SDL_LockMutex(roomsStackMutex);
    for(i=0; i<roomsArr[index].nrOfCurrentConns; i++){

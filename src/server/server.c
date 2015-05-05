@@ -17,7 +17,7 @@
 #include "debug.h"
 
 clients_t clientsArr[THREAD_COUNT];
-room_t roomsArr[THREAD_COUNT];
+room_t roomsArr[MAX_ROOMS];
 stack availableClientNr, availableRoomNr;
 SDL_mutex *clientsStackMutex, *roomsStackMutex, *UsersDbMutex;
 SDL_Thread *threadIds;
@@ -45,11 +45,11 @@ int main(int argc, char **argv){
 	}
 
   createstack(&availableClientNr, THREAD_COUNT);
-  createstack(&availableRoomNr, THREAD_COUNT);
+  createstack(&availableRoomNr, MAX_ROOMS);
   D( printf("created stacks\n"));
   fflush(stdout);
   fill_int_stack(&availableClientNr, THREAD_COUNT);
-  fill_int_stack(&availableRoomNr, THREAD_COUNT);
+  fill_int_stack(&availableRoomNr, MAX_ROOMS);
   D(printf("filled stacks\n"));
   fflush(stdout);
   clientsStackMutex = SDL_CreateMutex();

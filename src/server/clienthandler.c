@@ -25,9 +25,7 @@ void add_Client(TCPsocket socket, stack *s){
   int count = pop(s);
   D(printf("creating client with index %d\n", count));
   fflush(stdout);
-  //clientsArr[count].inet_addr = 0;
   clientsArr[count].socket = socket;
-  join_room("default", &clientsArr[count]);
   threadIds = SDL_CreateThread(handle, "handle", (void *) &clientsArr[count]) ;
   SDL_DetachThread(threadIds);
   SDL_UnlockMutex(clientsStackMutex);
@@ -165,7 +163,8 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 	}
 	client->loggin=success;
 	if(success){
-		strcpy(client->username, json_string_value(username));
+	  strcpy(client->username, json_string_value(username));
+	  join_room("default", client);
 	}
 	writeobj = json_object();
 	json_login_val = json_boolean(success);
@@ -190,18 +189,10 @@ void handle_switch_room(json_t * recieved_obj, clients_t *client){
 	room = json_object_get(recieved_obj, "room");
 	if(room!=NULL){
 	  strroom = json_string_value(room);
-	  success =switch_room(client, strroom);
+	  switch_room( strroom, client);
 	}
 	writeobj = json_object();
-	/* //json_login_val = json_boolean(success); */
-	/* json_object_set(writeobj, "room", json_login_val); */
-        /* char * jsonString = json_dumps(writeobj, 0); */
-	/* SerializedMessage_t sermes; */
-	/* strcpy(sermes.jsonstring,jsonString); */
-	/* sermes.size = strlen(jsonString); */
-	/* write_server_message(&sermes, client->socket); */
-
-	//TODO FIX
+	//TODO RETURN SOMETHING TO CLIENT TO LET THEM KNOW IT WORKED
 
 
 
@@ -210,15 +201,26 @@ void handle_switch_room(json_t * recieved_obj, clients_t *client){
 
 
 void handle_get_rooms(json_t * recieved_obj, clients_t *client){
-
+  json_t *writeobj, *room;
+  bool success = false;
+  char *strroom;
+  writeobj = json_object();
   //TODO IMPLEMENT
 
 
 }
 void handle_add_rooms(json_t * recieved_obj, clients_t *client){
 
-  //TODO IMPLEMENT
-
+  json_t *writeobj, *room;
+  bool success = false;
+  char *strroom;
+  room = json_object_get(recieved_obj, "room");
+  if(room!=NULL){
+    strroom = json_string_value(room);
+    add_room(strroom);
+    switch_room( strroom, client);
+ 
+  } 
 
 }
 
@@ -285,10 +287,10 @@ void handle_del_user(json_t *recieved_obj, clients_t *client){
 }
 void handle_logout(clients_t *client){
   client->loggin=false;
+  leave_room( client);
   remove_Client(client);
     /*TODO MAKE CLIENT LEAVE CURRENT ROOM THEY ARE IN*/
-  leave_room("default", client);
-
+ 
 }
 
 
