@@ -1,14 +1,9 @@
 
 #include <stdio.h>
 #include <string.h>
-
-
-	#include <SDL2/SDL.h>
-	#include <SDL2/SDL_thread.h>
-	#include <SDL2/SDL_net.h>
-
-
-
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_thread.h>
+#include <SDL2/SDL_net.h>
 #include <jansson.h>
 #include <stdbool.h>
 #include "misc.h"
@@ -57,9 +52,7 @@ int remove_Client(clients_t *client){
   SDL_LockMutex(clientsStackMutex);
   push(&availableClientNr, index);
   D(printf("removing client with index : %d\n", index));
-  leave_room("default", client);
   SDLNet_TCP_Close(client->socket);
-
   SDL_UnlockMutex(clientsStackMutex);
 }
 
@@ -83,15 +76,15 @@ int handle( void *args ){
 			fflush(stdout);
 			if((recv_json_cmd= json_object_get(recieved_obj, "cmd"))!=NULL){
 			  if(strcmp("exit", json_string_value(recv_json_cmd))==0){
-				remove_Client(client);
+				handle_logout(client);
 				return 1;
 			  }
-			  else if(strcmp("msg", json_string_value(recv_json_cmd)) == 0){
+			  else if(strcmp("msg", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
 			    D(printf("found msg\n"));
 				  handle_message(recieved_obj, client);
 				  fflush(stdout);
 			  }
-			  else if(strcmp("login", json_string_value(recv_json_cmd)) == 0){
+			  else if(strcmp("login", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
 			    D(printf("found login\n"));
 				  handle_login(recieved_obj, client);
 				  fflush(stdout);
@@ -101,12 +94,42 @@ int handle( void *args ){
 				  handle_add_user(recieved_obj, client);
 				  fflush(stdout);
 			  }
+			  else if(strcmp("log out", json_string_value(recv_json_cmd)) == 0 && client->loggin ==true){
+			    D(printf("found logou\n"));
+				  handle_add_logout(recieved_obj, client);
+				  fflush(stdout);
+			  }
 
+			  else if(strcmp("get rooms", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			    D(printf("found get rooms\n"));
+				  handle_add_get_rooms(recieved_obj, client);
+				  fflush(stdout);
+			  }
+			  else if(strcmp("new room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			    D(printf("found new room\n"));
+				  handle_add_new_room(recieved_obj, client);
+				  fflush(stdout);
+			  }
+			  else if(strcmp("switch room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			    D(printf("found switch room\n"));
+				  handle_switch_room(recieved_obj, client);
+				  fflush(stdout);
+			  }
+			  else if(strcmp("send file", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			    D(printf("foudn send file\n"));
+			  	  handle_send_file(recieved_obj, client);
+			  	  fflush(stdout);
+			  }
+			  else if(strcmp("call", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			    D(printf("found call\n"));
+			  	  handle_add_call(recieved_obj, client);
+			  	  fflush(stdout);
+			  }
 			}
 		}
 		free(messagepointer);
-	}
-  remove_Client(client);
+  }
+  handle_logout(client);
   return 1;
 }
 
@@ -160,6 +183,58 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 
 }
 
+void handle_switch_room(json_t * recieved_obj, clients_t *client){
+	json_t *writeobj, *room;
+	bool success = false;
+	char *strroom;
+	room = json_object_get(recieved_obj, "room");
+	if(room!=NULL){
+	  strroom = json_string_value(room);
+	  // success =leave_room(client, strroom);
+	}
+	writeobj = json_object();
+	/* //json_login_val = json_boolean(success); */
+	/* json_object_set(writeobj, "room", json_login_val); */
+        /* char * jsonString = json_dumps(writeobj, 0); */
+	/* SerializedMessage_t sermes; */
+	/* strcpy(sermes.jsonstring,jsonString); */
+	/* sermes.size = strlen(jsonString); */
+	/* write_server_message(&sermes, client->socket); */
+
+	//TODO FIX
+
+
+
+}
+
+
+
+void handle_get_rooms(json_t * recieved_obj, clients_t *client){
+
+  //TODO IMPLEMENT
+
+
+}
+void handle_add_rooms(json_t * recieved_obj, clients_t *client){
+
+  //TODO IMPLEMENT
+
+
+}
+
+void handle_add_call(json_t * recieved_obj, clients_t *client){
+
+  //TODO IMPLEMENT
+
+
+}
+
+void handle_send_file(json_t * recieved_obj, clients_t *client){
+
+  //TODO IMPLEMENT
+
+
+}
 void handle_add_user(json_t *recieved_obj, clients_t *client){
 	json_t *writeobj, *password, *username, *json_created_val;
 	char * strpass, *strusn;
@@ -206,6 +281,13 @@ void handle_del_user(json_t *recieved_obj, clients_t *client){
 	strcpy(sermes.jsonstring,jsonString);
 	sermes.size = strlen(jsonString);
 	write_server_message(&sermes, client->socket);
+
+}
+void handle_logout(clients_t *client){
+  client->loggin=false;
+  remove_Client(client);
+    /*TODO MAKE CLIENT LEAVE CURRENT ROOM THEY ARE IN*/
+  leave_room("default", client);
 
 }
 
