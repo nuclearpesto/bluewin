@@ -1,9 +1,17 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_net.h>
-#include <SDL2/SDL_thread.h>
+
+#ifdef __APPLE__
+	#include <SDL.h>
+	#include <SDL_thread.h>
+	#include <SDL_net.h>
+#endif
+#ifdef __LINUX__
+#endif
+
+
+
 #include <jansson.h>
 #include <stdbool.h>
 #include "misc.h"

@@ -1,3 +1,3 @@
 all:
-	cd src/server; make
+	cd src/server; make debug
 	cd src/client; make

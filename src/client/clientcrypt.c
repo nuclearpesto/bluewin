@@ -1,6 +1,6 @@
 #include <string.h>
 
-void encrypt(unsigned long k[], unsigned long tmp[])
+void encrypt_cli(unsigned long k[], unsigned long tmp[])
 {
     unsigned long y = tmp[0],z = tmp[1];
     unsigned long delta = 0x9e3779b9, sum = 0;
@@ -31,7 +31,7 @@ void encrypt_Handler(char msg[])
         {
             tmp[i]=msg[i+(numBlock*8)];
         }
-        encrypt(k,(unsigned long *)tmp);
+        encrypt_cli(k,(unsigned long *)tmp);
         for (i=0;i<8;i++)
         {
             msg[i+(numBlock*8)]=tmp[i];

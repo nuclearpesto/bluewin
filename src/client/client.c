@@ -6,7 +6,7 @@
 #include <jansson.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
-#include <SDL2/SDL_net.h>
+#include <SDL2_net/SDL_net.h>
 #include <stdbool.h>
 
 #define READ_BUF_SIZE 1000
@@ -181,7 +181,7 @@ void send_login(json_t * masterobj, user_s *usr, TCPsocket sd){
 
         c = 0;
         while(!login && c<10 ){
-           sleep(1);
+           //sleep(1);
             c++;
             printf("%d\n", c);
             if(login){
