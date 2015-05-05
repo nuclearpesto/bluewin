@@ -35,6 +35,12 @@ void join_room(char *roomName, clients_t * client ){
   SDL_UnlockMutex(roomsStackMutex);
 }
 
+
+void switch_room(char *roomName, clients_t * client ){
+  leave_room(roomName, client);
+  join_room(roomName, client);
+}
+
 void leave_room(char*roomName, clients_t * client){
   int index = find_index_of_room(roomName,THREAD_COUNT);
    int i, found=0;

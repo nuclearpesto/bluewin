@@ -190,7 +190,7 @@ void handle_switch_room(json_t * recieved_obj, clients_t *client){
 	room = json_object_get(recieved_obj, "room");
 	if(room!=NULL){
 	  strroom = json_string_value(room);
-	  // success =leave_room(client, strroom);
+	  success =switch_room(client, strroom);
 	}
 	writeobj = json_object();
 	/* //json_login_val = json_boolean(success); */
