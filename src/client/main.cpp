@@ -33,10 +33,10 @@ struct Message{
     
 };typedef struct Message Message_s;
 
-struct User{
+typedef struct User{
     char username[20];
     char password[20];
-}; typedef struct User user_s;
+}user_s;
 
 void clear_str(char str[], int size);
 void write_to_server(json_t *masterobj, TCPsocket socket);
@@ -52,12 +52,17 @@ int readThread (void * p);
 void send_login(json_t * masterobj, user_s *usr, TCPsocket sd);
 void add_user(json_t * masterobj, user_s *usr, TCPsocket sd);
 void clear_input();
-
+void string_convert(std::string s,char msg[20]);
 
 int main(int argc, char *argv[])
 {
     int nrRooms=8;
     mainUI(nrRooms);
+    user_s user1;
+    char msgen[20];
+    std::string stringen;
+    //user1.username = string_convert("Hello", msgen);
+    string_convert(inputUsernameText, msgen);
     IPaddress ip;
     TCPsocket sd;
     if(argc<3){
@@ -132,6 +137,14 @@ int main(int argc, char *argv[])
     
 }
 
+
+void string_converter(std::string s,char* msgen[20]){
+    int i = 0, j = s.size();
+    for(i;i <= j;i++){
+        msgen[i] = &s[i];
+    }
+    //printf("%s", msg);
+}
 
 int readThread (void * p){
     TCPsocket *sd = (TCPsocket *) p;
@@ -322,10 +335,3 @@ void serialize_cmd(json_t *masterobj, char *cmd ){
     json_object_set(masterobj, "cmd", string);
 }
 
-void string_convert(std::string s,char* msg[20]){
-    int i = 0, j = s.size();
-    for(i;i <= j;i++){
-        msg[i] = &s[i];
-    }
-    //printf("%s", msg);
- }
