@@ -4,7 +4,7 @@
 #define JSON_MAX_LENGTH 1000
 #endif
 #define USERNAME_LEN 255
-#define ROOM_NAME_SIZE 100
+#define ROOM_NAME_SIZE 255
 
 struct Clients {
 IPaddress ip;

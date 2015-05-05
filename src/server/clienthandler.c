@@ -134,6 +134,7 @@ int handle( void *args ){
 
 void handle_message(json_t *recieved_obj, clients_t *client){
 	json_t *recv_json_cmd;
+	SDL_Thread *id;
 	if(recv_json_cmd = json_object_get(recieved_obj, "message")){
 	  SerializableMessage_t response;
 	  response.client = client;
@@ -142,8 +143,7 @@ void handle_message(json_t *recieved_obj, clients_t *client){
 	  fflush(stdout);
 	  recv_json_cmd=json_object_get(recieved_obj, "room");
 	  strcpy( response.roomname, json_string_value(recv_json_cmd));
-	  D(printf("room in serializable message is %s\n", response.roomname));
-	  SDL_Thread *id;
+	  //D(printf("room in serializable message is %s\n", response.roomname));
 	  D(printf("creating writethread\n"));
 	  id= SDL_CreateThread(write_to_client,"writer", &response); //create writethread
 	  SDL_DetachThread(id);
