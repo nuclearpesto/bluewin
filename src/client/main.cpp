@@ -30,7 +30,7 @@ bool login = false;
 
 struct Message{
     char message[255];
-    
+
 };typedef struct Message Message_s;
 
 typedef struct User{
@@ -56,8 +56,7 @@ void string_convert(std::string s,char msg[20]);
 
 int main(int argc, char *argv[])
 {
-    int nrRooms=8;
-    mainUI(nrRooms);
+    int *rooms;
     user_s user1;
     char msgen[20];
     std::string stringen;
@@ -69,45 +68,45 @@ int main(int argc, char *argv[])
         printf("too few args , specify inetaddr and port as args");
         exit(1);
     }
-    
+
     int t, len, i, e=0, port=atoi(argv[2]);
-    
+
     /* char inet_adr[16]=argv[1]; */
-    
+
     char str[READ_BUF_SIZE]={0};
     char r[READ_BUF_SIZE]={0};
-    
-    
+
+
     if(SDLNet_Init() < 0){
         printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());
         exit(1);
     }
-    
-    
+
+
     printf("Trying to connect...\n");
     if(SDLNet_ResolveHost(&ip, argv[1], port) < 0){
         fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
         exit(1);
     }
-    
+
     if(!(sd = SDLNet_TCP_Open(&ip))){
         fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
         exit(1);
     }
-    
+
     printf("Connected.\n");
     fflush(stdout);
     char *string;
     user_s usr;
     int choice;
-    
+
     int size = sizeof(string);
     Message_s msg;
     json_t *masterobj;
-    
+
     masterobj = json_object();
     SDL_CreateThread(readThread, "reader", &sd);
-    
+
     printf("0: login\n 1: new user\n:");
     fscanf(stdin, "%d", &choice);
     switch(choice){
@@ -121,9 +120,9 @@ int main(int argc, char *argv[])
             send_login(masterobj, &usr, sd);
             break;
     }
-    
-    
+
     printf("Welcome!\n");
+
     while(1){
         user_input(msg.message);
         if(msg.message == "exit\n"){
@@ -134,7 +133,7 @@ int main(int argc, char *argv[])
         //printf("%s\n", string);
         write_to_server(masterobj, sd);
     }
-    
+
 }
 
 
@@ -154,7 +153,7 @@ int readThread (void * p){
     json_t *keycheckobj;
     masterobj = json_object();
     while(1){
-        
+
         string = read_from_server(*sd, response);
         //D(printf("recieved %s\n", string));
         masterobj = json_loads(string, 0, NULL);
@@ -168,7 +167,7 @@ int readThread (void * p){
                     login = true;
                 }
             }
-            
+
         }
         message_printer(masterobj);
         //printf("gonna free");
@@ -208,7 +207,7 @@ void send_login(json_t * masterobj, user_s *usr, TCPsocket sd){
         //printf("cmd\n");
         fflush(stdout);
         write_to_server(masterobj, sd);
-        
+
         c = 0;
         while(!login && c<10 ){
             //sleep(1);
@@ -219,12 +218,12 @@ void send_login(json_t * masterobj, user_s *usr, TCPsocket sd){
             }
         }
     }
-    
+
 }
 
 
 void add_user(json_t * masterobj, user_s *usr, TCPsocket sd){
-    
+
     user_login(usr);
     //printf("%s", usr.username);
     serialize_username(masterobj, usr);
@@ -237,9 +236,9 @@ void add_user(json_t * masterobj, user_s *usr, TCPsocket sd){
     //printf("cmd\n");
     fflush(stdout);
     write_to_server(masterobj, sd);
-    
-    
-    
+
+
+
 }
 
 
@@ -258,7 +257,7 @@ void write_to_server(json_t *masterobj, TCPsocket socket){
 }
 
 char* read_from_server( TCPsocket socket, char *response){
-    
+
     int temp;
     SDLNet_TCP_Recv(socket, &temp, sizeof(int));
     response = (char *)malloc(temp+1);
@@ -274,7 +273,7 @@ void user_input(char* msg){
     fgets(msg, 254, stdin);
     msg[strlen(msg)-1]='\0';
     //printf("%s", msg);
-    
+
 }
 
 void serialize_message(json_t *masterobj, Message_s msg){
@@ -335,3 +334,6 @@ void serialize_cmd(json_t *masterobj, char *cmd ){
     json_object_set(masterobj, "cmd", string);
 }
 
+    serialize_cmd(masterobj, "get rooms");
+    write_to_server(masterobj, socket);
+    read_from_server(socket, rooms);
