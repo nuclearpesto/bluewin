@@ -111,7 +111,7 @@ int handle( void *args ){
 			  }
 			  else if(strcmp("delete room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
 			    D(printf("found delete\n"));
-			    handle_delete_rooms(recieved_obj, client);
+			    handle_delete_room(recieved_obj, client);
 			    fflush(stdout);
 			  }
 			  else if(strcmp("switch room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
@@ -254,9 +254,8 @@ void handle_delete_room(json_t * recieved_obj, clients_t *client){
   if(room!=NULL){
     strroom = json_string_value(room);
     delete_room(strroom);
- 
-  } 
-
+  }
+  
 }
 void handle_add_call(json_t * recieved_obj, clients_t *client){
 
@@ -368,19 +367,21 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
   //encrypt_Handler(sermes);
   int index=find_index_of_room(roomname, THREAD_COUNT);
   D(printf("found room index %d\n", index));
-  int i =0;
-  D(printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns));
-  SDL_LockMutex(roomsStackMutex);
-  for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
-    if(roomsArr[index].connected[i]!=sender){
-      D(printf("%p and %p are not same", sender, roomsArr[index].connected[i]));
-      write_server_message(sermes,roomsArr[index].connected[i]->socket ); //ändra sermes till krypterad text variabel
+  if(index){
+    int i =0;
+    D(printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns));
+    SDL_LockMutex(roomsStackMutex);
+    for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
+      if(roomsArr[index].connected[i]!=sender){
+	D(printf("%p and %p are not same", sender, roomsArr[index].connected[i]));
+	write_server_message(sermes,roomsArr[index].connected[i]->socket ); //ändra sermes till krypterad text variabel
+      }
+      else{
+	D(printf("same as sendere\n"));
+      }
     }
-    else{
-      D(printf("same as sendere\n"));
-    }
+    SDL_UnlockMutex(roomsStackMutex);
   }
-  SDL_UnlockMutex(roomsStackMutex);
 }
 
 

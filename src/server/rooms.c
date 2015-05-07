@@ -14,6 +14,7 @@ void add_room(char *roomName){
   int count = pop(&availableRoomNr);
   if(count>=0){
     strcpy(roomsArr[count].name, roomName);
+    D(printf("roomname  of new room is %s with index %d\n ", roomsArr[count].name, count));
     roomsArr[count].nrOfCurrentConns = 0;
   }
   SDL_UnlockMutex(roomsStackMutex);
@@ -21,15 +22,16 @@ void add_room(char *roomName){
 }
 void delete_room(char *roomName){
   int index=0;
-
-  SDL_LockMutex(roomsStackMutex);
-  index = find_index_of_room(roomName, MAX_ROOMS);
-  if(index>=0){
-    strcpy('\0',roomsArr[index].name );
-    roomsArr[index].nrOfCurrentConns = 0;
-    push(&availableRoomNr, index);
+  if(strcmp(roomName, "default")!=0){
+    SDL_LockMutex(roomsStackMutex);
+    index = find_index_of_room(roomName, MAX_ROOMS);
+    if(index>=0){
+      strcpy('\0',roomsArr[index].name );
+      roomsArr[index].nrOfCurrentConns = 0;
+      push(&availableRoomNr, index);
+    }
+    SDL_UnlockMutex(roomsStackMutex);
   }
-  SDL_UnlockMutex(roomsStackMutex);
 }
 
 void join_room(char *roomName, clients_t * client ){
@@ -102,7 +104,7 @@ json_t * find_existing_rooms(int arrLen){
   int i = 0;
   json_t *current, *available_rooms_arr = json_array();
   
-  D(printf("gong to check array\n"));
+  D(printf("len is %d \n", arrLen));
   fflush(stdout);
   SDL_LockMutex(roomsStackMutex);
   D(printf("gong to check array\n"));
