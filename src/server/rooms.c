@@ -26,7 +26,7 @@ void delete_room(char *roomName){
     SDL_LockMutex(roomsStackMutex);
     index = find_index_of_room(roomName, MAX_ROOMS);
     if(index>=0){
-      strcpy('\0',roomsArr[index].name );
+      roomsArr[index].name[0]='\0';
       roomsArr[index].nrOfCurrentConns = 0;
       push(&availableRoomNr, index);
     }

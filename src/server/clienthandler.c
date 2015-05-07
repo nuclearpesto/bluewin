@@ -110,7 +110,7 @@ int handle( void *args ){
 				  fflush(stdout);
 			  }
 			  else if(strcmp("delete room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
-			    D(printf("found delete\n"));
+			    D(printf("found delete room\n"));
 			    handle_delete_room(recieved_obj, client);
 			    fflush(stdout);
 			  }
@@ -235,7 +235,7 @@ void handle_add_room(json_t * recieved_obj, clients_t *client){
   json_t *writeobj, *room;
   bool success = false;
   char *strroom;
-  room = json_object_get(recieved_obj, "room");
+  room = json_object_get(recieved_obj, "roomname");
   if(room!=NULL){
     strroom = json_string_value(room);
     add_room(strroom);
@@ -250,7 +250,7 @@ void handle_delete_room(json_t * recieved_obj, clients_t *client){
   json_t *writeobj, *room;
   bool success = false;
   char *strroom;
-  room = json_object_get(recieved_obj, "room");
+  room = json_object_get(recieved_obj, "roomname");
   if(room!=NULL){
     strroom = json_string_value(room);
     delete_room(strroom);
@@ -392,12 +392,14 @@ char* read_client_message( TCPsocket socket){
   D(printf("reading\n"));
   fflush(stdout);
   if( SDLNet_TCP_Recv(socket, &tmp_buf, sizeof(int))>0){
-    p = (char *) malloc(tmp_buf+1);
-    D(printf("gonna read %d bytes\n", tmp_buf));
-    tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
-    D(printf("read %d bytes\n", tmp_buf));
-	*(p+tmp_buf)='\0';
-    return p;
+    if(tmp_buf>0){
+      p = (char *) malloc(tmp_buf+1);
+      D(printf("gonna read %d bytes\n", tmp_buf));
+      tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
+      D(printf("read %d bytes\n", tmp_buf));
+      *(p+tmp_buf)='\0';
+      return p;
+    }
   }
   D(printf("returning null\n"));
   fflush(stdout);
