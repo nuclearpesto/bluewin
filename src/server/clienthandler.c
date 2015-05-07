@@ -25,11 +25,16 @@ void add_Client(TCPsocket socket, stack *s){
   int count = pop(s);
   D(printf("creating client with index %d\n", count));
   fflush(stdout);
-  clientsArr[count].socket = socket;
-  threadIds = SDL_CreateThread(handle, "handle", (void *) &clientsArr[count]) ;
-  SDL_DetachThread(threadIds);
+  if(count >=0){
+    clientsArr[count].socket = socket;
+    threadIds = SDL_CreateThread(handle, "handle", (void *) &clientsArr[count]) ;
+    SDL_DetachThread(threadIds);
+  }
+  else{
+    perror("no available client slots");
+      close(socket);
+  }
   SDL_UnlockMutex(clientsStackMutex);
-
 }
 
 int find_index_of_client(clients_t *client){
@@ -73,11 +78,7 @@ int handle( void *args ){
 		  D(printf("recieved json:  %s\n", messagepointer));
 			fflush(stdout);
 			if((recv_json_cmd= json_object_get(recieved_obj, "cmd"))!=NULL){
-			  if(strcmp("exit", json_string_value(recv_json_cmd))==0){
-				handle_logout(client);
-				return 1;
-			  }
-			  else if(strcmp("msg", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			   if(strcmp("msg", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
 			    D(printf("found msg\n"));
 				  handle_message(recieved_obj, client);
 				  fflush(stdout);
@@ -103,10 +104,15 @@ int handle( void *args ){
 				  handle_get_rooms(recieved_obj, client);
 				  fflush(stdout);
 			  }
-			  else if(strcmp("new room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
-			    D(printf("found new room\n"));
-				  handle_add_rooms(recieved_obj, client);
+			  else if(strcmp("add room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			    D(printf("found add room\n"));
+				  handle_add_room(recieved_obj, client);
 				  fflush(stdout);
+			  }
+			  else if(strcmp("delete room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			    D(printf("found delete\n"));
+			    handle_delete_rooms(recieved_obj, client);
+			    fflush(stdout);
 			  }
 			  else if(strcmp("switch room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
 			    D(printf("found switch room\n"));
@@ -201,15 +207,30 @@ void handle_switch_room(json_t * recieved_obj, clients_t *client){
 
 
 void handle_get_rooms(json_t * recieved_obj, clients_t *client){
-  json_t *writeobj, *room;
+  json_t *writeobj, *rooms, *json_success;
   bool success = false;
   char *strroom;
   writeobj = json_object();
-  //TODO IMPLEMENT
-
+  D(printf("getting rooms\n"));
+  fflush(stdout);
+  if((rooms=find_existing_rooms(MAX_ROOMS))!=NULL){
+    json_object_set_new(writeobj,"roomsArr", rooms);
+    json_success = json_boolean(1);
+      json_object_set_new(writeobj,"get rooms", json_success);
+      }
+  else{
+    json_success = json_boolean(0);
+    json_object_set_new(writeobj,"get rooms", json_success);
+  }
+  char * jsonstr = json_dumps(writeobj, 0);
+  SerializedMessage_t sermes = create_serialized_message(jsonstr);
+  write_server_message(&sermes, client->socket);
 
 }
-void handle_add_rooms(json_t * recieved_obj, clients_t *client){
+
+
+
+void handle_add_room(json_t * recieved_obj, clients_t *client){
 
   json_t *writeobj, *room;
   bool success = false;
@@ -224,6 +245,19 @@ void handle_add_rooms(json_t * recieved_obj, clients_t *client){
 
 }
 
+void handle_delete_room(json_t * recieved_obj, clients_t *client){
+
+  json_t *writeobj, *room;
+  bool success = false;
+  char *strroom;
+  room = json_object_get(recieved_obj, "room");
+  if(room!=NULL){
+    strroom = json_string_value(room);
+    delete_room(strroom);
+ 
+  } 
+
+}
 void handle_add_call(json_t * recieved_obj, clients_t *client){
 
   //TODO IMPLEMENT
@@ -254,9 +288,7 @@ void handle_add_user(json_t *recieved_obj, clients_t *client){
 	json_object_set_new(writeobj, "add user", json_created_val);
 	json_object_set_new(writeobj, "username",username);
 	char * jsonString = json_dumps(writeobj, 0);
-	SerializedMessage_t sermes;
-	strcpy(sermes.jsonstring,jsonString);
-	sermes.size = strlen(jsonString);
+	SerializedMessage_t sermes = create_serialized_message(jsonString);
 	write_server_message(&sermes, client->socket);
 
 
@@ -279,9 +311,7 @@ void handle_del_user(json_t *recieved_obj, clients_t *client){
 	json_object_set_new(writeobj, "del user", json_deleted_val);
 	json_object_set_new(writeobj, "username",username);
 	char * jsonString = json_dumps(writeobj, 0);
-	SerializedMessage_t sermes;
-	strcpy(sermes.jsonstring,jsonString);
-	sermes.size = strlen(jsonString);
+	SerializedMessage_t sermes = create_serialized_message(jsonString);
 	write_server_message(&sermes, client->socket);
 
 }
@@ -289,8 +319,16 @@ void handle_logout(clients_t *client){
   client->loggin=false;
   leave_room( client);
   remove_Client(client);
-    /*TODO MAKE CLIENT LEAVE CURRENT ROOM THEY ARE IN*/
+    /*TODO MAKE CLIENT SEND RESPONS BEFORE LOGGIN OUT*/
  
+}
+
+SerializedMessage_t  create_serialized_message(char *json_string){
+  SerializedMessage_t sermes;
+  strcpy(sermes.jsonstring, json_string);
+  sermes.size = strlen(json_string);
+  return sermes;
+  
 }
 
 
@@ -298,20 +336,17 @@ int write_to_client(void *args){
 
   D(printf("gonna write\n"));
 
-	SerializableMessage_t *p  = (SerializableMessage_t *)args;
-	char roomname[ROOM_NAME_SIZE+1];
-	strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
-									//this is a short term solution
-	json_int_t x = 1;
-	json_t *messageobj = json_object();
-
+  SerializableMessage_t *p  = (SerializableMessage_t *)args;
+  char roomname[ROOM_NAME_SIZE+1];
+  strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
+  //this is a short term solution
+  json_int_t x = 1;
+  json_t *messageobj = json_object();
   json_t *usn = json_string((p->client->username));
   json_t *mes = json_string((p->message));
   json_t *chrom = json_string(p->roomname);
-  json_t *fromserv = json_integer(x);
   printf("in write_to_client before json roomname is %s\n", roomname);
-
-  json_object_set_new(messageobj, "fromserv", fromserv);
+  
   json_object_set_new(messageobj,"username", usn );
   json_object_set_new(messageobj, "chroom", chrom );
   json_object_set_new(messageobj, "message", mes );
@@ -319,14 +354,10 @@ int write_to_client(void *args){
   D(printf("in write_to_client roomane is %s\n", roomname));
   D(printf("created jsonobj\n"));
   fflush(stdout);
-  const char *json_string = json_dumps(messageobj, 0);
-
-  int val = 1;
+  char *json_string = json_dumps(messageobj, 0);
 
   D(printf("jsonstr size %d\ncontains %s\n", sizeof(json_string), json_string));
-  SerializedMessage_t sermes;
-  strcpy (sermes.jsonstring, json_string);
-  sermes.size= strlen(sermes.jsonstring)+1;
+  SerializedMessage_t sermes = create_serialized_message(json_string);
   write_to_room(roomname, &sermes, p->client);
   //write_server_message(&sermes, p->client->socket);
 
@@ -376,4 +407,5 @@ char* read_client_message( TCPsocket socket){
 
   SDLNet_TCP_Send(socket, &(message->size), sizeof(int));
   SDLNet_TCP_Send(socket, message->jsonstring, message->size);
-}
+  
+ }
