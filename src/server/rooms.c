@@ -124,3 +124,20 @@ json_t * find_existing_rooms(int arrLen){
   }
   return available_rooms_arr;
 }
+
+
+json_t *get_users_in_room(char *strroom){
+  json_t *jsonarr = json_array() ,*current;
+  int index = find_index_of_room(strroom, MAX_ROOMS ), i=0;
+  
+    D(printf("nr current cons of %s is %d\n", roomsArr[index].name,  roomsArr[index].nrOfCurrentConns));
+  for(i=0; i<roomsArr[index].nrOfCurrentConns; i++){
+    fflush(stdout);
+    current = json_string(roomsArr[index].connected[i]->username);
+    D(printf("adding a user to jsonarr\n"));
+    fflush(stdout);
+    json_array_append_new(jsonarr, current);
+  }
+  D(printf("returning json arr\n"));
+  return jsonarr;
+}

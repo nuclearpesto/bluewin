@@ -46,6 +46,7 @@ void handle_add_call(json_t * recieved_obj, clients_t *client);//runs login, ser
 void handle_switch_room(json_t * recieved_obj, clients_t *client);//runs login, serializes message to cleint and writes it
 void handle_add_room(json_t * recieved_obj, clients_t *client);//runs login, serializes message to cleint and writes it
 void handle_delete_room(json_t * recieved_obj, clients_t *client);//runs login, serializes message to cleint and writes it
+void handle_get_users_in_room(json_t * recieved_obj, clients_t *client);
 SerializedMessage_t  create_serialized_message(char *json_string); //returns struct serialized message
 
 extern clients_t clientsArr[]; 

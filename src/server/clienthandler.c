@@ -104,6 +104,11 @@ int handle( void *args ){
 				  handle_get_rooms(recieved_obj, client);
 				  fflush(stdout);
 			  }
+			  else if(strcmp("get users in room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			    D(printf("found get users in room rooms\n"));
+				  handle_get_users_in_room(recieved_obj, client);
+				  fflush(stdout);
+			  }
 			  else if(strcmp("add room", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
 			    D(printf("found add room\n"));
 				  handle_add_room(recieved_obj, client);
@@ -199,11 +204,41 @@ void handle_switch_room(json_t * recieved_obj, clients_t *client){
 	}
 	writeobj = json_object();
 	//TODO RETURN SOMETHING TO CLIENT TO LET THEM KNOW IT WORKED
-
-
-
 }
 
+
+void handle_get_users_in_room(json_t * recieved_obj, clients_t *client){
+  json_t *writeobj, *usersarr, *json_success, *room ;
+  bool success = false;
+  char *strroom;
+  writeobj = json_object();
+  D(printf("getting users from room\n"));
+  fflush(stdout);
+  room = json_object_get(recieved_obj,"roomname");
+  strroom = json_string_value(room);
+  if((usersarr=get_users_in_room(strroom))!=NULL){
+    json_object_set_new(writeobj,"usersArr", usersarr);   
+    json_success = json_boolean(1);
+    json_object_set_new(writeobj,"get users in room", json_success);
+
+  }
+  else{
+    json_success = json_boolean(0);
+    json_object_set_new(writeobj,"get users in room", json_success);
+  }
+  D(printf("writeobj = %p\n ", writeobj));
+    fflush(stdout);
+  char * jsonstr = json_dumps(writeobj, 0);
+    D(printf("dumped\n "));
+    fflush(stdout);
+  SerializedMessage_t sermes = create_serialized_message(jsonstr);
+    D(printf("createdsermes\n "));
+    fflush(stdout);
+  write_server_message(&sermes, client->socket);
+   D(printf("wrote\n "));
+    fflush(stdout);
+ 
+}
 
 
 void handle_get_rooms(json_t * recieved_obj, clients_t *client){
@@ -225,7 +260,6 @@ void handle_get_rooms(json_t * recieved_obj, clients_t *client){
   char * jsonstr = json_dumps(writeobj, 0);
   SerializedMessage_t sermes = create_serialized_message(jsonstr);
   write_server_message(&sermes, client->socket);
-
 }
 
 

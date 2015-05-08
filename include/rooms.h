@@ -24,5 +24,6 @@ int find_index_of_room(char *roomName, int arrLen); // returns index of first in
 void leave_room(clients_t * client);  //  overwrites all connected member arr of room from index where client was found with next member and decrements nrConnectedClients member
 void switch_room(char * roomname, clients_t *client); // runs leave_room and then join_room;
 json_t * find_existing_rooms(int arrLen); // returns jsonarray pointer wich contains all rooms currently known returns null if no rooms;
+json_t *get_users_in_room(char *strroom);
   void  init_rooms(room_t *rooms, int len); //sets all roomnames to '\0', all client pointers in each room to NULL and nrCurrentConns to 0 NOT THREADSAFE
 #endif
