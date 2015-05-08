@@ -6,8 +6,7 @@
 //  Copyright (c) 2015 Rasmus Jansson. All rights reserved.
 //
 
-#ifndef __bluewin_gui__gui__
-#define __bluewin_gui__gui__
+
 
 #ifdef __APPLE__
 //If you are on mac
@@ -17,6 +16,8 @@
 #include <stdio.h>
 #include <string>
 #include <sstream>
+#include "client.h"
+#include <algorithm>
 #endif
 
 #ifdef __MINGW32__
@@ -27,10 +28,16 @@
 #include <stdio.h>
 #include <string>
 #include <sstream>
+#include "client.h"
+#include <algorithm>
 #endif
 
-int mainUI(int nrRooms);
+#ifndef __bluewin_gui__gui__
+#define __bluewin_gui__gui__
+
+/*#ifdef
 std::string inputUsernameText = "";
 std::string inputPasswordText = "";
+#endif*/
 
 #endif /* defined(__bluewin_gui__gui__) */

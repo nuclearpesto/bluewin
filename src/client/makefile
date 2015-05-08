@@ -4,11 +4,11 @@ CFLAGS=-c $(INC_DIR)
 DEPS=*.h
 BIN_DIR=../../bin/
 OBJDIR=../../obj/
-CC=gcc
+CC=g++
 LOCALINCDIR=../../include/
-OBJ_FILES= $(OBJ_DIR)client.o $(OBJ)clientcrypt.o
+OBJ_FILES= $(OBJ_DIR)client.o $(OBJ)clientcrypt.o $(OBJ)main.o $(OBJ)gui.o
 ifeq ($(OS),Windows_NT)
-LIBS=-lmingw32 -lSDL2main -lSDL2 -lSDL2_net -ljansson
+LIBS=-lmingw32 -lSDL2main -lSDL2 -lSDL2_net -lSDL2_img -lSDL2_ttf -ljansson 
 INC_DIR=-I../../include -I/usr/include -I/usr/local/include
 LIBPATHS= -L/usr/lib -L/usr/local/lib
 else
@@ -33,3 +33,9 @@ client.o: client.c
 
 clientcrypt.o: clientcrypt.c
 	$(CC) clientcrypt.c $(CFLAGS) $(INC_DIR) $(LIBPATHS) $(LIBS)
+
+main.o: main.cpp
+	$(CC) main.cpp  $(CFLAGS) $(INC_DIR) $(LIBPATHS) $(LIBS)
+
+gui.o: gui.cpp
+	$(CC) gui.cpp  $(CFLAGS) $(INC_DIR) $(LIBPATHS) $(LIBS)

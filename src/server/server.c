@@ -57,6 +57,7 @@ int main(int argc, char **argv){
   roomsStackMutex = SDL_CreateMutex();
   D(printf("initialized mutexes\n"));
   fflush(stdout);
+  init_rooms(roomsArr, MAX_ROOMS);
   add_room("default");
   D(printf("created default room\n"));
   fflush(stdout);

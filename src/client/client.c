@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-//#include <json-c/json.h>
 #include <jansson.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
@@ -187,7 +186,7 @@ void send_login(json_t * masterobj, user_s *usr, TCPsocket sd){
 
         c = 0;
         while(!login && c<10 ){
-           //sleep(1);
+           sleep(1);
             c++;
             printf("%d\n", c);
             if(login){
