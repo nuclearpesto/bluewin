@@ -2,12 +2,18 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-//#include <json-c/json.h>
 #include <jansson.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
-#include <SDL2/SDL_net.h>
 #include <stdbool.h>
+#include "debug.h"
+#include "clientcrypt.h"
+
+#ifdef __APPLE__
+#include <SDL2_net/SDL_net.h>
+#else
+#include <SDL2/SDL_net.h>
+#endif
 
 #define READ_BUF_SIZE 1000
 
@@ -126,7 +132,7 @@ int readThread (void * p){
 	while(1){
 
 	  string = read_from_server(*sd, response);
-	  printf("recieved %s\n", string);
+	  //D(printf("recieved %s\n", string));
 	  masterobj = json_loads(string, 0, NULL);
 	  if(masterobj == NULL){
 	    free(string);
@@ -181,7 +187,7 @@ void send_login(json_t * masterobj, user_s *usr, TCPsocket sd){
 
         c = 0;
         while(!login && c<10 ){
-           sleep(1);
+           //sleep(1);
             c++;
             printf("%d\n", c);
             if(login){
@@ -313,3 +319,11 @@ void serialize_cmd(json_t *masterobj, char *cmd ){
     string = json_string(cmd);
     json_object_set(masterobj, "cmd", string);
 }
+
+/* string_convert(std::string s,char* msg[20]){
+    int i = 0, j = s.size();
+    for(i;i <= j;i++){
+        msg[i] = s[i];
+    }
+    //printf("%s", msg);
+}*/

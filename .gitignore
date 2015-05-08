@@ -3,3 +3,4 @@ src/server/server.exe
 *.stackdump
 src/server/clienthandler.o
 *.o
+*.db

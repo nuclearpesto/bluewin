@@ -1,4 +1,3 @@
-
 CFLAGS=-c
 
 DEPS=*.h
@@ -16,9 +15,10 @@ ifeq ($(UNAME_S),Linux)
 LIBS= -lSDL2 -lSDL2_net -ljansson
 INC_DIR= -I../../include
 endif
-ifeq ($(UNAME_s),Darwin)
-LIBS= -lSDL2 -lSDL2_net -ljansson
-INC_DIR=-I../../include
+ifeq ($(UNAME_S),Darwin)
+LIBS= -framework SDL2 -framework SDL2_net -ljansson
+INC_DIR=-I../../include -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_net.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers
+CFLAGS+= -D__apple__
 endif
 endif
 
