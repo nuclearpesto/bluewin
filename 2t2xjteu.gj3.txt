@@ -1,0 +1,39 @@
+﻿Merge branch 'master' of https://github.com/nuclearpesto/bluewin
+
+Conflicts:
+	include/main.h
+	src/client/main.cpp
+	src/client/main.cpp.orig
+	src/client/makefile
+#
+# It looks like you may be committing a merge.
+# If this is not correct, please remove the file
+#	.git/MERGE_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch master
+# Your branch and 'origin/master' have diverged,
+# and have 2 and 6 different commits each, respectively.
+#   (use "git pull" to merge the remote branch into yours)
+#
+# All conflicts fixed but you are still merging.
+#
+# Changes to be committed:
+#	new file:   client.h
+#	modified:   clienthandler.h
+#	renamed:    gui.h -> main.h
+#	modified:   rooms.h
+#	new file:   ../src/client/client.cpp
+#	new file:   ../src/client/client.cpp.orig
+#	deleted:    ../src/client/gui.cpp
+#	new file:   ../src/client/main.cpp.orig
+#	new file:   ../src/client/mainOld.cpp
+#	modified:   ../src/client/makefile
+#	new file:   ../src/client/makefile.orig
+#	modified:   ../src/server/clienthandler.c
+#	modified:   ../src/server/rooms.c
+#
+
