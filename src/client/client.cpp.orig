@@ -2,12 +2,11 @@
 //  client.cpp
 //  bluewinclient
 //
-//  Created by Rasmus Jansson on 17/04/15.
-//  Copyright (c) 2015 Grupp 2 individer. All rights reserved.
+//  Created by Rasmus Jansson on 07/05/15.
+//  Copyright (c) 2015 Rasmus Jansson. All rights reserved.
 //
 
 #include "client.h"
-
 
 #define READ_BUF_SIZE 1000
 
@@ -15,7 +14,6 @@ bool login = false;
 
 struct Message{
     char message[255];
-
 };typedef struct Message Message_s;
 
 typedef struct User{
@@ -43,7 +41,6 @@ void send_login(std::string* inputUsernameText, std::string* inputPasswordText);
 void add_user(json_t * masterobj, user_s *usr, TCPsocket sd);
 void clear_input();
 void string_convert(std::string s,char msg[20]);
-//void collect_rooms(json_t *masterobj, int *rooms, TCPsocket socket);
 
 /*int mainTest(int argc, char *argv[])
 {
@@ -160,7 +157,6 @@ int readThread (void * p){
     json_t *keycheckobj;
     masterobj = json_object();
     while(1){
-        
         string = read_from_server(*sd, response);
         //D(printf("recieved %s\n", string));
         masterobj = json_loads(string, 0, NULL);
@@ -174,7 +170,6 @@ int readThread (void * p){
                     login = true;
                 }
             }
-            
         }
         message_printer(masterobj);
         //printf("gonna free");
@@ -197,7 +192,6 @@ void clear_input(){
         scanf("%c",&c);
     }
 }
-
 
 void send_login(std::string* inputUsernameText,std::string* inputPasswordText){
     int c;
@@ -271,7 +265,6 @@ void write_to_server(TCPsocket socket){
 }
 
 char* read_from_server( TCPsocket socket, char *response){
-    
     int temp;
     SDLNet_TCP_Recv(socket, &temp, sizeof(int));
     response = (char *)malloc(temp+1);
@@ -287,7 +280,6 @@ void user_input(char* msg){
     fgets(msg, 254, stdin);
     msg[strlen(msg)-1]='\0';
     //printf("%s", msg);
-    
 }
 
 void serialize_message(json_t *masterobj, Message_s msg){
@@ -342,7 +334,32 @@ void serialize_cmd(json_t *masterobj, char *cmd ){
     json_object_set(masterobj, "cmd", string);
 }
 
-void collect_rooms(json_t *masterobj, int *rooms, TCPsocket socket);{
+/*void collect_rooms(json_t *masterobj, int *rooms, TCPsocket socket);{
     serialize_cmd(masterobj, "get rooms");
     write_to_server(masterobj, socket);
-}
+    read_from_server(socket, rooms);
+}*/
+
+/*void init_connect(TCPsocket sd, argc, argv,IPadress ip){
+    if(argc<3){
+        printf("too few args , specify inetaddr and port as args");
+        exit(1);
+    }
+
+    if(SDLNet_Init() < 0){
+        printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());
+        exit(1);
+    }
+
+
+    printf("Trying to connect...\n");
+    if(SDLNet_ResolveHost(&ip, argv[1], port) < 0){
+        fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+        exit(1);
+    }
+
+    if(!(sd = SDLNet_TCP_Open(&ip))){
+        fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+        exit(1);
+
+}*/
