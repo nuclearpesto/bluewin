@@ -201,7 +201,7 @@ void clear_input(){
 
 void send_login(std::string* inputUsernameText,std::string* inputPasswordText){
     int c;
-    //json_t *masterobj;
+    json_t *masterobj = json_object();
     usr.username=(char*)inputUsernameText->c_str();
     usr.password=(char*)inputPasswordText->c_str();
     //printf("%s\n",inputUsernameText->c_str());
@@ -345,4 +345,4 @@ void serialize_cmd(json_t *masterobj, char *cmd ){
 void collect_rooms(json_t *masterobj, int *rooms, TCPsocket socket){
     serialize_cmd(masterobj, "get rooms");
     write_to_server(masterobj, socket);
-}
+}*/

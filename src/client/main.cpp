@@ -628,7 +628,7 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                                 break;
                                 
                             case 1://Lost password
-                                printf("Canto\n");
+                                printf("Lost password button\n");
                                 break;
                                 
                             case 2://Username text field
@@ -1090,7 +1090,7 @@ void loginScreen(int* totalButtons, int* totalFields,int* screenShow,Screen wind
     }
     //Positionate login button
     gLoginButtons[0].setPosition(loginButton.x, loginButton.y);
-    gLoginButtons[1].setPosition(200, windowSize.h -30);
+    gLoginButtons[1].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 30));
     
     //Render background texture to screen
     gBackgroundTexture.render(0,0);
