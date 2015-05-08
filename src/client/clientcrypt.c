@@ -23,10 +23,18 @@ void encrypt_Handler(char msg[])
     k[3]=44444444444444;
     char tmp[8];
     int numBlock=0,totalBlock=strlen(msg);
-    totalBlock=(totalBlock/8)+1;
+    /*int msgLenght=strlen(msg),pad=msgLenght%8;
+    msgLenght=msgLenght+pad;
+    int i;
+    for (i=totalBlock;i<msgLenght;i++)
+    {
+        msg[i]=' ';
+    }
+    totalBlock=msgLenght/8;*/
+    totalBlock=totalBlock/8;
+    int i;
     while(numBlock<totalBlock)
     {
-        int i;
         for (i=0;i<8;i++)
         {
             tmp[i]=msg[i+(numBlock*8)];
@@ -63,14 +71,7 @@ void decrypt_Handler(char msg[])
     k[2]=33333333333333;
     k[3]=44444444444444;
     int numBlock=0,totalBlock=strlen(msg);
-    if (totalBlock%8==0)
-    {
-        totalBlock=totalBlock/8;
-    }
-    else
-    {
-        totalBlock=(totalBlock/8)+1;
-    }
+    totalBlock=totalBlock/8;
     while(numBlock<totalBlock)
     {
         int i;

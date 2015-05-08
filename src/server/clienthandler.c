@@ -70,7 +70,7 @@ int handle( void *args ){
   while( (messagepointer=read_client_message(client->socket))!=NULL){
     D(printf("got something "));
 	  //DEKRYPTERA!!!!
-	  //decrypt_Handler(messagepointer);
+	  decrypt_Handler(messagepointer);
     D(printf("recieved this:  %s\n", messagepointer));
 		fflush(stdout);
 		if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
@@ -96,7 +96,7 @@ int handle( void *args ){
 				  handle_add_user(recieved_obj, client);
 				  fflush(stdout);
 			  }
-			  
+
 			}
 		}
 		free(messagepointer);
@@ -132,7 +132,7 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 	if(username!=NULL && password!=NULL){
 		strusn = json_string_value(username);
 		strpass = json_string_value(password);
-	
+
 		success =login(strusn, strpass);
 	}
 	client->loggin=success;
@@ -159,7 +159,7 @@ void handle_add_user(json_t *recieved_obj, clients_t *client){
 	json_t *writeobj, *password, *username, *json_created_val;
 	char * strpass, *strusn;
 	bool success;
-	
+
 	username = json_object_get(recieved_obj, "username");
 	password = json_object_get(recieved_obj,"password");
 	if(username!=NULL && password!=NULL){
@@ -176,9 +176,9 @@ void handle_add_user(json_t *recieved_obj, clients_t *client){
 	strcpy(sermes.jsonstring,jsonString);
 	sermes.size = strlen(jsonString);
 	write_server_message(&sermes, client->socket);
-	
-		
-}	
+
+
+}
 
 void handle_del_user(json_t *recieved_obj, clients_t *client){
 	json_t *writeobj, *password, *username, *json_deleted_val;
@@ -201,14 +201,14 @@ void handle_del_user(json_t *recieved_obj, clients_t *client){
 	strcpy(sermes.jsonstring,jsonString);
 	sermes.size = strlen(jsonString);
 	write_server_message(&sermes, client->socket);
-		
-}	
+
+}
 
 
 int write_to_client(void *args){
 
   D(printf("gonna write\n"));
-	
+
 	SerializableMessage_t *p  = (SerializableMessage_t *)args;
 	char roomname[ROOM_NAME_SIZE];
 	strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
@@ -253,7 +253,7 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
   for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
     if(roomsArr[index].connected[i]!=sender){
       D(printf("%p and %p are not same", sender, roomsArr[index].connected[i]));
-      write_server_message(sermes,roomsArr[index].connected[i]->socket ); //ändra sermes till krypterad text variabel
+      write_server_message(sermes,roomsArr[index].connected[i]->socket );
     }
     else{
       D(printf("same as sendere\n"));
@@ -283,7 +283,7 @@ char* read_client_message( TCPsocket socket){
 }
 
  void write_server_message( SerializedMessage_t *message, TCPsocket socket){
-
+  encrypt_Handler(message);
   SDLNet_TCP_Send(socket, &(message->size), sizeof(int));
   SDLNet_TCP_Send(socket, message->jsonstring, message->size);
 }

@@ -78,15 +78,15 @@ if(!(sd = SDLNet_TCP_Open(&ip))){
   char *string;
   user_s usr;
   int choice;
-  
+
   int size = sizeof(string);
   Message_s msg;
   json_t *masterobj;
 
     masterobj = json_object();
     SDL_CreateThread(readThread, "reader", &sd);
-    
-    printf("0: login\n 1: new user\n:"); 
+
+    printf("0: login\n 1: new user\n:");
     fscanf(stdin, "%d", &choice);
     switch(choice){
     case 0:
@@ -100,7 +100,7 @@ if(!(sd = SDLNet_TCP_Open(&ip))){
       break;
     }
 
-    
+
     printf("Welcome!\n");
   while(1){
     user_input(msg.message);
@@ -138,7 +138,7 @@ int readThread (void * p){
 		login = true;
 	      }
 	    }
-	    
+
 	  }
 	  message_printer(masterobj);
 	  //printf("gonna free");
@@ -189,7 +189,7 @@ void send_login(json_t * masterobj, user_s *usr, TCPsocket sd){
             }
         }
     }
-  
+
 }
 
 
@@ -207,23 +207,31 @@ void add_user(json_t * masterobj, user_s *usr, TCPsocket sd){
         //printf("cmd\n");
   fflush(stdout);
   write_to_server(masterobj, sd);
-  
-  
-  
+
+
+
 }
 
 
 void write_to_server(json_t *masterobj, TCPsocket socket){
     char *json_s;
-    int len;
+    int len;//,newSize;
     json_s = json_dumps(masterobj, 0);
+    //newSize=(strlen(json_s)/8)+1;
+    //newSize=newSize*8;
+    //realloc(json_s,newSize);
     //kryptera
+    //len= strlen(json_s);
+    //puts(json_s);
+    //printf("len före krypt = %d",len);
     //encrypt_Handler(json_s);
     //puts(json_s);//kontroll
     len = strlen(json_s);
-	//printf("len is %d", len);
+    //printf("len efter krypt = %d",len);
+    encrypt_Handler(json_s);
     SDLNet_TCP_Send(socket, &len, sizeof(int));
 	SDLNet_TCP_Send(socket, json_s, len);
+	//free(json_s);
     //printf("%s", json_s);
 }
 
@@ -236,7 +244,8 @@ char* read_from_server( TCPsocket socket, char *response){
 	response[temp] = '\0';
 	//printf("read response : %s\n",response);
     //dekryptera
-    //decrypt_Handler(response);
+    decrypt_Handler(response);
+
     return response;
 }
 

@@ -1,4 +1,3 @@
-
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
@@ -8,7 +7,6 @@
 #include "misc.h"
 #include "clienthandler.h"
 #include "crypt.h"
-
 
 
 
@@ -26,7 +24,7 @@ void encrypt(unsigned long k[], unsigned long tmp[])
     tmp[0]=y; tmp[1]=z;
 }
 
-void encrypt_Handler(SerializedMessage_t * sermes)
+void encrypt_Handler(SerializedMessage_t * Message)
 {
     unsigned long k[4];
     k[0]=11111111111111;
@@ -34,19 +32,27 @@ void encrypt_Handler(SerializedMessage_t * sermes)
     k[2]=33333333333333;
     k[3]=44444444444444;
     char tmp[8];
-    int numBlock=0,totalBlock=strlen(sermes->jsonstring);
-    totalBlock=(totalBlock/8)+1;
+    int numBlock=0,totalBlock=strlen(Message->jsonstring);
+    /*int pad=8-(totalBlock%8);
+    int msgLenght=totalBlock+pad;
+    int i;
+    for (i=totalBlock;i<msgLenght;i++)
+    {
+        Message->jsonstring[i]=' ';
+    }
+    totalBlock=msgLenght/8;*/
+    totalBlock=totalBlock/8;
+    int i;
     while(numBlock<totalBlock)
     {
-        int i;
         for (i=0;i<8;i++)
         {
-            tmp[i]=sermes->jsonstring[i+(numBlock*8)];
+            tmp[i]=Message->jsonstring[i+(numBlock*8)];
         }
         encrypt(k,(unsigned long *)tmp);
         for (i=0;i<8;i++)
         {
-            sermes->jsonstring[i+(numBlock*8)]=tmp[i];
+            Message->jsonstring[i+(numBlock*8)]=tmp[i];
         }
         numBlock++;
     }
@@ -75,14 +81,7 @@ void decrypt_Handler(char msg[])
     k[2]=33333333333333;
     k[3]=44444444444444;
     int numBlock=0,totalBlock=strlen(msg);
-    if (totalBlock%8==0)
-    {
-        totalBlock=totalBlock/8;
-    }
-    else
-    {
-        totalBlock=(totalBlock/8)+1;
-    }
+    totalBlock=totalBlock/8;
     while(numBlock<totalBlock)
     {
         int i;
