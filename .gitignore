@@ -4,3 +4,5 @@ src/server/server.exe
 src/server/clienthandler.o
 *.o
 *.db
+
+*.orig

@@ -21,6 +21,7 @@
 #include "debug.h"
 #include "main.h"
 #include <algorithm>
+#include "debug.h"
 
 #ifdef __APPLE__
 #include <SDL2_net/SDL_net.h>
@@ -29,7 +30,8 @@
 #endif
 
 bool initClient();
-void send_login(std::string* inputUsernameText, std::string* inputPasswordText);
+void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText);
+extern bool loginCheck;
 
 
 #endif /* defined(__bluewinclient__client__) */

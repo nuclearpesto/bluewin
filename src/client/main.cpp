@@ -165,7 +165,7 @@ public:
     void setPosition(int x,int y);
     //Handles mouse event
     void handleEvent(SDL_Event* e, int* screenShow, Button* button, int i,std::string* inputUsernameText, std::string*
-                     inputPasswordText);
+                     inputPasswordText,json_t *masterobj);
     //Shows button sprite
     void render(int* screenShow, int* element);
     
@@ -576,7 +576,7 @@ void action(int* e){
     }
 }
 
-void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selected,std::string* inputUsernameText, std::string* inputPasswordText){
+void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selected,std::string* inputUsernameText, std::string* inputPasswordText,json_t *masterobj){
     //if mouse event happend
     if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP ) {
         //Get mouse position
@@ -621,26 +621,33 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                                 //Login button
                                 //quit=true;
                                 if (*screenShow==0) {
-                                    send_login(inputUsernameText,inputPasswordText);
+                                    send_login(masterobj,inputUsernameText,inputPasswordText);
                                 }
-                                *screenShow=1;
+                                if (loginCheck) {
+                                    *screenShow=1;
+                                    //loginCheck=false;
+                                }
                                 
                                 break;
                                 
                             case 1://Lost password
+                                field=0;
+                                //printf("Lost password button\n");
+                                break;
+                                
+                            case 2://Create account
+                                field=1;
+                                //printf("Create account button\n");
+                                break;
+                                
+                            case 3://Username text field
+                                //field=0;
                                 printf("Lost password button\n");
                                 break;
                                 
-                            case 2://Username text field
-                                field=0;
-                                break;
-                                
-                            case 3://Password text field
-                                field=1;
-                                break;
-                                
-                            case 4:
-                                field=1;
+                            case 4://Password text field
+                                //field=1;
+                                printf("Create account button\n");
                                 break;
                                 
                             default:
@@ -650,6 +657,7 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                         switch (selected) {
                             case 0:
                                 *screenShow=0;
+                                loginCheck=false;
                                 printf("Logout button\n");
                                 break;
                                 
@@ -887,7 +895,7 @@ bool loadMedia(){
         //Set sprites
         for (int i = 0; i < BUTTON_SPRITE_TOTAL; i++) {
             gLoginSpriteClips[i].x=0;
-            gLoginSpriteClips[i].y=0;
+            gLoginSpriteClips[i].y=i*72;
             gLoginSpriteClips[i].w=BUTTON_WIDTH;
             gLoginSpriteClips[i].h=BUTTON_HEIGHT;
         }
@@ -906,7 +914,7 @@ bool loadMedia(){
         //Set sprites
         for (int i = 0; i < BUTTON_SPRITE_TOTAL; i++) {
             gRoomSpriteClips[i].x=0;
-            gRoomSpriteClips[i].y=0;
+            gRoomSpriteClips[i].y=i*75;
             gRoomSpriteClips[i].w=ROOM_BUTTON_WIDTH;
             gRoomSpriteClips[i].h=ROOM_BUTTON_HEIGHT;
         }
@@ -919,7 +927,7 @@ bool loadMedia(){
         //Set sprites
         for (int i = 0; i < BUTTON_SPRITE_TOTAL; i++) {
             gLogoutSpriteClips[i].x=0;
-            gLogoutSpriteClips[i].y=0;
+            gLogoutSpriteClips[i].y=i*50;
             gLogoutSpriteClips[i].w=150;
             gLogoutSpriteClips[i].h=50;
         }
@@ -1002,7 +1010,7 @@ SDL_Texture* loadTexture(std::string path){
     return newTexture;
 }
 
-void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event e){
+void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event e, json_t *masterobj){
     //Event handler
     //SDL_Event e;
     int totalElements = totalButtons + totalFields;
@@ -1020,9 +1028,9 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
             //Generate all elements in login screen
             for (int i = 0; i< totalElements; i++) {
                 if (i<totalButtons) {
-                    gLoginButtons[i].handleEvent(&e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText);
+                    gLoginButtons[i].handleEvent(&e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText,masterobj);
                 }else if(i<totalButtons+totalFields){
-                    gFieldButtons[i-totalButtons].handleEvent(&e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText);
+                    gFieldButtons[i-totalButtons].handleEvent(&e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText,masterobj);
                 }
             }
         }else if(*screenShow == 1){
@@ -1030,9 +1038,9 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
             //Generate all elements in main screen
             for (int i =0; i<totalElements; i++) {
                 if (i<1) {
-                    gLogoutButton[i].handleEvent(&e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText);
+                    gLogoutButton[i].handleEvent(&e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText,masterobj);
                 }else if (i<totalButtons){
-                    gRoomButtons[(i-1)].handleEvent(&e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText);
+                    gRoomButtons[(i-1)].handleEvent(&e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText,masterobj);
                 }
             }
             
@@ -1081,8 +1089,8 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
 }
 
 void loginScreen(int* totalButtons, int* totalFields,int* screenShow,Screen windowSize,Button loginButton, Button fieldButton,std::string inputUsernameText, std::string inputPasswordText){
-    *totalButtons=2;
-    *totalFields=2;
+    *totalButtons=1;
+    *totalFields=4;
     int element = 0;
     //Render buttons
     for (int i = 0; i < *totalButtons; ++i) {
@@ -1090,7 +1098,8 @@ void loginScreen(int* totalButtons, int* totalFields,int* screenShow,Screen wind
     }
     //Positionate login button
     gLoginButtons[0].setPosition(loginButton.x, loginButton.y);
-    gLoginButtons[1].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 30));
+    //gLoginButtons[1].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 30));
+    //gLoginButtons[2].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 60));
     
     //Render background texture to screen
     gBackgroundTexture.render(0,0);
@@ -1122,8 +1131,13 @@ void loginScreen(int* totalButtons, int* totalFields,int* screenShow,Screen wind
     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,380);
     getText("Lost password",gDefaultFont);
     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 30));
+    gFieldButtons[2].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - gTextTexture.getHeight()));
+    //printf("%d\n",gTextTexture.getHeight());
     getText("Create account",gDefaultFont);
+    gFieldButtons[3].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - gTextTexture.getHeight())-60);
     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 60));
+    //gLoginButtons[2].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - gTextTexture.getHeight())-60);
+    //printf("%d\n",gTextTexture.getHeight());
 }
 
 void mainScreen(int* totalButtons, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide){
@@ -1159,12 +1173,12 @@ void mainScreen(int* totalButtons, int* totalFields,int nrRooms,int* screenShow,
     }
 }
 
-void runingGui(int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event* e){
+void runingGui(int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event* e, json_t *masterobj){
     //Render text flag
     //bool renderText = false;
     
     while( SDL_PollEvent( e ) != 0 ){
-        eventHandler(screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, inputUsernameText, inputPasswordText, outputPasswordText,*e);
+        eventHandler(screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, inputUsernameText, inputPasswordText, outputPasswordText,*e,masterobj);
     }
     
     //Clear screen
@@ -1198,7 +1212,7 @@ int initGui(){
         }else{
             //Connect to server
             if (!initClient()) {
-                printf("Failed to connect to server");
+                printf("Failed to connect to server\n");
                 test=false;
             }
         }
@@ -1230,6 +1244,10 @@ int main(int argc, char *argv[]){
     logoutButton.y=0;
     logoutButton.x=windowSize.w-logoutButton.w;
     
+    json_t *masterobj = json_object();
+    
+    loginCheck = false;
+    
     //Start up SDL and create window
     if( !initGui() ){
         printf( "Failed to initialize!\n" );
@@ -1250,7 +1268,7 @@ int main(int argc, char *argv[]){
             
         //While application is running
         while( !quit ){
-            runingGui(&screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, &inputUsernameText, &inputPasswordText, &outputPasswordText, &e);
+            runingGui(&screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, &inputUsernameText, &inputPasswordText, &outputPasswordText, &e, masterobj);
         }
         //Disable text input
         SDL_StopTextInput();

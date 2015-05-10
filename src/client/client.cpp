@@ -11,7 +11,7 @@
 
 #define READ_BUF_SIZE 1000
 
-bool login = false;
+bool loginCheck = false;
 
 struct Message{
     char message[255];
@@ -27,10 +27,10 @@ IPaddress ip;
 TCPsocket sd;
 
 user_s usr;
-json_t *masterobj = json_object();
+//json_t *masterobj = json_object();
 
 void clear_str(char str[], int size);
-void write_to_server(TCPsocket socket);
+void write_to_server(json_t *masterobj, TCPsocket socket);
 char* read_from_server(TCPsocket socket, char *response);
 void user_input(char* msg);
 void serialize_message(Message_s msg);
@@ -39,7 +39,8 @@ void serialize_password(json_t *masterobj,user_s *usr );
 void serialize_username(json_t *masterobj,user_s *usr );
 void message_printer(json_t *masterobj);
 int readThread (void * p);
-void send_login(std::string* inputUsernameText, std::string* inputPasswordText);
+bool initClient();
+void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText);
 void add_user(json_t * masterobj, user_s *usr, TCPsocket sd);
 void clear_input();
 void string_convert(std::string s,char msg[20]);
@@ -126,13 +127,14 @@ void string_convert(std::string s,char msg[20]);
 
 bool initClient(){
     bool success = true;
+    SDL_Thread *thread;
     //IPaddress ip;
     //TCPsocket sd;
 
     int port=5000;
     char ipen[20]=("130.237.84.200");
 
-    printf("%s",ipen);
+    printf("%s\n",ipen);
     if(SDLNet_Init() < 0){
         printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());
         success=false;
@@ -145,9 +147,16 @@ bool initClient(){
             if(!(sd = SDLNet_TCP_Open(&ip))){
                 fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
                 success=false;
+            }else{
+                thread=SDL_CreateThread(readThread, "reader", &sd);
+                if(thread==NULL){
+                    printf("SDL_CreateThread: %s\n",SDL_GetError());
+                    success=false;
+                }
             }
         }
     }
+    loginCheck=false;
     printf("Connected.\n");
     return success;
 }
@@ -162,7 +171,7 @@ int readThread (void * p){
     while(1){
 
         string = read_from_server(*sd, response);
-        //D(printf("recieved %s\n", string));
+        D(printf("recieved %s\n", response));
         masterobj = json_loads(string, 0, NULL);
         if(masterobj == NULL){
             free(string);
@@ -171,7 +180,7 @@ int readThread (void * p){
             free(string);
             if((keycheckobj = json_object_get(masterobj, "login")) != NULL){
                 if(json_is_true(keycheckobj)==1){
-                    login = true;
+                    loginCheck = true;
                 }
             }
 
@@ -199,9 +208,9 @@ void clear_input(){
 }
 
 
-void send_login(std::string* inputUsernameText,std::string* inputPasswordText){
+void send_login(json_t *masterobj,std::string* inputUsernameText,std::string* inputPasswordText){
     int c;
-    json_t *masterobj = json_object();
+    //json_t *masterobj = json_object();
     usr.username=(char*)inputUsernameText->c_str();
     usr.password=(char*)inputPasswordText->c_str();
     //printf("%s\n",inputUsernameText->c_str());
@@ -216,16 +225,16 @@ void send_login(std::string* inputUsernameText,std::string* inputPasswordText){
         serialize_cmd(masterobj, "login");
         //printf("cmd\n");
         fflush(stdout);
-        write_to_server(sd);
+        write_to_server(masterobj,sd);
 
         c = 0;
       //  while(!login && c<10 ){
             //sleep(1);
             c++;
             //printf("%d\n", c);
-            if(login){
+            //if(login){
             //    break;
-            }
+            //}
         //}
     //}
 
@@ -252,10 +261,9 @@ void add_user(json_t * masterobj, user_s *usr, TCPsocket sd){
 }*/
 
 
-void write_to_server(TCPsocket socket){
+void write_to_server(json_t *masterobj,TCPsocket socket){
     char *json_s;
     unsigned int len;
-    std::string kankan = "hejsan";
     json_s = json_dumps(masterobj, 0);
     //printf("%p",json_s);
     //json_s = "hej\0";
@@ -291,8 +299,6 @@ void user_input(char* msg){
 }
 
 void serialize_message(json_t *masterobj, Message_s msg){
-    char str1[10];
-    int ret;
     json_t *string;
     /*    strcpy(str1, "exit\n");
      ret = strcmp(msg.message, str1);
@@ -345,4 +351,4 @@ void serialize_cmd(json_t *masterobj, char *cmd ){
 void collect_rooms(json_t *masterobj, int *rooms, TCPsocket socket){
     serialize_cmd(masterobj, "get rooms");
     write_to_server(masterobj, socket);
-}*/
+}
