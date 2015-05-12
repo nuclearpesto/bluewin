@@ -98,6 +98,7 @@ int handle( void *args ){
 			    D(printf("found logou\n"));
 				  handle_logout( client);
 				  fflush(stdout);
+				  return 0;
 			  }
 
 			  else if(strcmp("get rooms", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
@@ -355,6 +356,7 @@ void handle_logout(clients_t *client){
   client->loggin=false;
   leave_room( client);
   remove_Client(client);
+  
     /*TODO MAKE CLIENT SEND RESPONS BEFORE LOGGIN OUT*/
 
 }
