@@ -31,85 +31,17 @@ Screen windowSize = {windowSize.w=400 , windowSize.h=800};
 const int BUTTON_WIDTH = 200;
 const int BUTTON_HEIGHT = 75;
 const int TOTAL_BUTTONS = 1;
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
 
 //Room button constants
 const int ROOM_BUTTON_WIDTH = 400;
 const int ROOM_BUTTON_HEIGHT = 75;
 const int ROOM_BUTTON_TOTAL = 1;
-const int TOTAL_WINDOWS = 1;
 
 enum LButtonSprite{
     BUTTON_SPRITE_MOUSE_DEFAULT = 0,
     BUTTON_SPRITE_MOUSE_PRESS = 1,
     BUTTON_SPRITE_TOTAL = 2
 };
-class LWindow{
-public:
-    //Intializes internals
-    LWindow();
-    
-    //Creates window
-    bool init();
-    
-    //Handles window events
-    void handleEvent( SDL_Event& e );
-    
-    //Focuses on window
-    void focus();
-    
-    //Shows windows contents
-    void render();
-    
-    //Deallocates internals
-    void free();
-    
-    //Window dimensions
-    int getWidth();
-    int getHeight();
-    
-    //Window focii
-    bool hasMouseFocus();
-    bool hasKeyboardFocus();
-    bool isMinimized();
-    bool isShown();
-    
-private:
-    //Window data
-    SDL_Window* mWindow;
-    SDL_Renderer* mRenderer;
-    int mWindowID;
-    
-    //Window dimensions
-    int mWidth;
-    int mHeight;
-
-    //Window focus
-    bool mMouseFocus;
-    bool mKeyboardFocus;
-    bool mFullScreen;
-    bool mMinimized;
-    bool mShown;
-};
-
-//Our custom windows
-LWindow gWindows[ TOTAL_WINDOWS ];
-
-LWindow::LWindow(){
-    //Initialize non-existant window
-    mWindow = NULL;
-    mRenderer = NULL;
-    
-    mMouseFocus = false;
-    mKeyboardFocus = false;
-    mFullScreen = false;
-    mShown = false;
-    mWindowID = -1;
-    
-    mWidth = 0;
-    mHeight = 0;
-}
 
 //Texture wrapper class
 class LTexture{
@@ -178,190 +110,6 @@ private:
     bool focusText;
 };
 
-bool LWindow::init(){
-    //Create window
-    mWindow = SDL_CreateWindow( "SDL Tutoriall", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
-    if( mWindow != NULL )
-    {
-        mMouseFocus = true;
-        mKeyboardFocus = true;
-        mWidth = SCREEN_WIDTH;
-        mHeight = SCREEN_HEIGHT;
-        
-        //Create renderer for window
-        mRenderer = SDL_CreateRenderer( mWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
-        if( mRenderer == NULL )
-        {
-            printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
-            SDL_DestroyWindow( mWindow );
-            mWindow = NULL;
-        }
-        else
-        {
-            //Initialize renderer color
-            SDL_SetRenderDrawColor( mRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
-            
-            //Grab window identifier
-            mWindowID = SDL_GetWindowID( mWindow );
-            
-            //Flag as opened
-            mShown = true;
-        }
-    }
-    else
-    {
-        printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
-    }
-
-    return mWindow != NULL && mRenderer != NULL;
-}
-
-void LWindow::handleEvent( SDL_Event& e ){
-    //If an event was detected for this window
-    if( e.type == SDL_WINDOWEVENT && e.window.windowID == mWindowID )
-    {
-        //Caption update flag
-        bool updateCaption = false;
-        
-        switch( e.window.event )
-        {
-                //Window appeared
-            case SDL_WINDOWEVENT_SHOWN:
-                mShown = true;
-                break;
-                
-                //Window disappeared
-            case SDL_WINDOWEVENT_HIDDEN:
-                mShown = false;
-                break;
-                
-                //Get new dimensions and repaint
-            case SDL_WINDOWEVENT_SIZE_CHANGED:
-                mWidth = e.window.data1;
-                mHeight = e.window.data2;
-                SDL_RenderPresent( mRenderer );
-                break;
-                
-                //Repaint on expose
-            case SDL_WINDOWEVENT_EXPOSED:
-                SDL_RenderPresent( mRenderer );
-                break;
-                
-                //Mouse enter
-            case SDL_WINDOWEVENT_ENTER:
-                mMouseFocus = true;
-                updateCaption = true;
-                break;
-                
-                //Mouse exit
-            case SDL_WINDOWEVENT_LEAVE:
-                mMouseFocus = false;
-                updateCaption = true;
-                break;
-                
-                //Keyboard focus gained
-            case SDL_WINDOWEVENT_FOCUS_GAINED:
-                mKeyboardFocus = true;
-                updateCaption = true;
-                break;
-                
-                //Keyboard focus lost
-            case SDL_WINDOWEVENT_FOCUS_LOST:
-                mKeyboardFocus = false;
-                updateCaption = true;
-                break;
-                
-                //Window minimized
-            case SDL_WINDOWEVENT_MINIMIZED:
-                mMinimized = true;
-                break;
-                
-                //Window maxized
-            case SDL_WINDOWEVENT_MAXIMIZED:
-                mMinimized = false;
-                break;
-                
-                //Window restored
-            case SDL_WINDOWEVENT_RESTORED:
-                mMinimized = false;
-                break;
-                
-                //Hide on close
-            case SDL_WINDOWEVENT_CLOSE:
-                SDL_DestroyWindow(mWindow);
-                //SDL_HideWindow( mWindow );
-                break;
-        }
-        
-        //Update window caption with new data
-        if( updateCaption )
-        {
-            std::stringstream caption;
-            caption << "SDL Tutorial - ID: " << mWindowID << " MouseFocus:" << ( ( mMouseFocus ) ? "On" : "Off" ) << " KeyboardFocus:" << ( ( mKeyboardFocus ) ? "On" : "Off" );
-            SDL_SetWindowTitle( mWindow, caption.str().c_str() );
-        }
-    }
-}
-
-void LWindow::focus(){
-    //Restore window if needed
-    if( !mShown )
-    {
-        SDL_ShowWindow( mWindow );
-    }
-
-    //Move window forward
-    SDL_RaiseWindow( mWindow );
-}
-
-void LWindow::render(){
-    if( !mMinimized )
-    {
-        //Clear screen
-        SDL_SetRenderDrawColor( mRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
-        SDL_RenderClear( mRenderer );
-        
-        //Update screen
-        SDL_RenderPresent( mRenderer );
-    }
-}
-
-void LWindow::free(){
-    if( mWindow != NULL )
-    {
-        SDL_DestroyWindow( mWindow );
-    }
-
-    mMouseFocus = false;
-    mKeyboardFocus = false;
-    mWidth = 0;
-    mHeight = 0;
-}
-
-int LWindow::getWidth(){
-    return mWidth;
-}
-
-int LWindow::getHeight(){
-    return mHeight;
-}
-
-bool LWindow::hasMouseFocus(){
-    return mMouseFocus;
-}
-
-bool LWindow::hasKeyboardFocus(){
-    return mKeyboardFocus;
-}
-
-bool LWindow::isMinimized(){
-    return mMinimized;
-}
-
-bool LWindow::isShown(){
-    return mShown;
-}
-
 //Starts up SDL and creates window
 bool init();
 
@@ -402,8 +150,10 @@ LTexture gTextTexture;
 LTexture gFooTexture;
 LTexture gBackgroundTexture;
 LTexture gMainTexture;
+LTexture gChattroomTexture;
 LTexture gUsernameTextTexture;
 LTexture gPasswordTextTexture;
+LTexture gMessageTextTexture;
 
 //Login button sprites
 SDL_Rect gLoginSpriteClips[ BUTTON_SPRITE_TOTAL ];
@@ -420,7 +170,7 @@ LButton gLoginButtons[TOTAL_BUTTONS];
 LButton gLogoutButton[TOTAL_BUTTONS];
 LButton gRoomButtons[ROOM_BUTTON_TOTAL];
 LButton gFieldButtons[2];
-
+LButton gMessageFieldButton[1];
 
 LTexture::LTexture(){
     //Initialize
@@ -562,17 +312,22 @@ void LButton::setPosition(int x, int y){
     mPosition.y = y;
 }
 
-void action(int* e){
-    if (*e == 0) {
-        printf("Hej 0\n");
-        *e=1;
-    }else if (*e == 1){
-        printf("Hej 1\n");
-        *e=0;
-        //Initialize the rest of the windows
-        for( int i = 0; i < TOTAL_WINDOWS; ++i ){
-            gWindows[ i ].init();
+void sendLogin(int* screenShow,std::string* inputUsernameText,std::string* inputPasswordText,json_t* masterobj){
+    int c=0;
+    if (*screenShow==0) {
+        send_login(masterobj,inputUsernameText,inputPasswordText);
+    }
+    while(!loginCheck && c<10 ){
+        //Sleep(1);
+        c++;
+        //printf("%d\n", c);
+        if(loginCheck){
+            break;
         }
+    }
+    if (loginCheck) {
+        *screenShow=1;
+        //loginCheck=false;
     }
 }
 
@@ -617,44 +372,23 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                     }
                     if (*screenShow==0) {
                         switch (selected) {
-                            case 0:
-                                //Login button
-                                //quit=true;
-                                if (*screenShow==0) {
-                                    send_login(masterobj,inputUsernameText,inputPasswordText);
-                                }
-                                while(!loginCheck && c<10 ){
-                                    //Sleep(1);
-                                    c++;
-                                    //printf("%d\n", c);
-                                    if(loginCheck){
-                                        break;
-                                    }
-                                }
-                                if (loginCheck) {
-                                    *screenShow=1;
-                                    //loginCheck=false;
-                                }
-                                
+                            case 0://Login button
+                                sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj);
                                 break;
                                 
-                            case 1://Lost password
+                            case 1://Username text field
                                 field=0;
-                                //printf("Lost password button\n");
                                 break;
                                 
-                            case 2://Create account
+                            case 2://Password text field
                                 field=1;
-                                //printf("Create account button\n");
                                 break;
                                 
-                            case 3://Username text field
-                                //field=0;
+                            case 3://Lost password
                                 printf("Lost password button\n");
                                 break;
                                 
-                            case 4://Password text field
-                                //field=1;
+                            case 4://Create account
                                 printf("Create account button\n");
                                 break;
                                 
@@ -663,50 +397,48 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                         }
                     }else if (*screenShow==1){
                         switch (selected) {
-                            case 0:
+                            case 0://Logout button
                                 *screenShow=0;
                                 loginCheck=false;
                                 printf("Logout button\n");
                                 break;
                                 
-                            case 1:
-                                printf("Room 1 button\n");
-                                gWindows[ 0 ].init();
+                            case 1://Message text field
+                                field=2;
+                                printf("Message text field button\n");
                                 break;
                                 
                             case 2:
-                                printf("Room 2 button\n");
+                                printf("Room 1 button\n");
                                 break;
                                 
                             case 3:
-                                printf("Room 3 button\n");
+                                printf("Room 2 button\n");
                                 break;
                                 
                             case 4:
-                                printf("Room 4 button\n");
+                                printf("Room 3 button\n");
                                 break;
                                 
                             case 5:
-                                printf("Room 5 button\n");
+                                printf("Room 4 button\n");
                                 break;
                                 
                             case 6:
-                                printf("Room 6 button\n");
+                                printf("Room 5 button\n");
                                 break;
                                 
                             case 7:
-                                printf("Room 7 button\n");
+                                printf("Room 6 button\n");
                                 break;
                                 
+                            
                             default:
                                 break;
                         }
                     }
-                    //screenView=false;
-                    //focusText=true;
-                    //action(screenShow);
                     
-                    break;
+                break;
             }
         }
     }
@@ -748,6 +480,12 @@ void getPromptText(std::string text, TTF_Font* gFont, int select){
         if (!gPasswordTextTexture.loadFromRenderedText(text, textColor, gFont)) {
             printf("Failed to render Password text texture!\n");
         }
+    }else if (select==2){
+        //Get prompt text
+        SDL_Color textColor = {0,0,0};
+        if (!gMessageTextTexture.loadFromRenderedText(text, textColor, gFont)) {
+            printf("Failed to render Password text texture!\n");
+        }
     }
 }
 
@@ -760,7 +498,7 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std:
         //Handle backspace
         if (e.key.keysym.sym == SDLK_BACKSPACE && inputText->length()>0) {
             //Lop off character
-            if(field==0){
+            if(field==0 || field==2){
                 inputText->pop_back();
             }else if (field==1) {
                 inputText->pop_back();
@@ -772,7 +510,7 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std:
             
         }//Handle copy
         else if (e.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL){
-            if (field==0) {
+            if (field==0 || field==2) {
                 SDL_SetClipboardText(inputText->c_str());
             }else if (field==1) {
                 SDL_SetClipboardText(inputText->c_str());
@@ -780,7 +518,7 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std:
             }
         }//Handle paste
         else if (e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL){
-            if (field==0) {
+            if (field==0 || field==2) {
                 *inputText = SDL_GetClipboardText();
             }else if (field==1) {
                 *inputText = SDL_GetClipboardText();
@@ -793,7 +531,7 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std:
         //Not copy or pasting
         if (!((e.text.text[0]=='c' || e.text.text[0]=='C') && (e.text.text[0]=='v' || e.text.text[0]=='V') && SDL_GetModState() & KMOD_CTRL) ) {
             //Append character
-            if (field==0) {
+            if (field==0 || field==2) {
                 *inputText += e.text.text;
             }else if (field==1) {
                 *password += "*";
@@ -813,19 +551,25 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std:
                 //Render new text, username
                 inputText->erase(std::remove(inputText->begin(), inputText->end(), ' '), inputText->end());
                 gUsernameTextTexture.loadFromRenderedText(inputText->c_str(), textColor, gDefaultFont);
-            }else{
+            }else if(field==1){
                 //Render new text, passw0rd
                 password->erase(std::remove(password->begin(), password->end(), ' '), password->end());
                 gPasswordTextTexture.loadFromRenderedText(password->c_str(), textColor, gDefaultFont);
+            }else if (field==2){
+                //Render new text, message
+                gMessageTextTexture.loadFromRenderedText(inputText->c_str(), textColor, gDefaultFont);
             }
         }//Text is empty
         else{
             if (field==0) {
                 //Render space texture, username
-                gUsernameTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
-            }else{
+                gTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
+            }else if(field==1){
                 //Render space texture, password
                 gPasswordTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
+            }else if (field==2){
+                //Render space texture, message
+                gMessageTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
             }
         }
     }
@@ -883,6 +627,7 @@ bool loadMedia(){
     //Loading success flag
     bool success = true;
     
+    //Get all the images that should be on login screen
     //Load Login texture
     if (!gBackgroundTexture.loadFromFile("bluewinimg/login.png")) {
         printf("Failed to load login texture image!\n");
@@ -909,6 +654,7 @@ bool loadMedia(){
         }
     }
     
+    //Get all the images that should be on main screen
     //Load rooms texture
     if (!gFooTexture.loadFromFile("bluewinimg/main.png")) {
         printf("Failed to load main texture");
@@ -941,6 +687,12 @@ bool loadMedia(){
         }
     }
 
+    //Get all the images that should be on the chatt screen
+    if (!gChattroomTexture.loadFromFile("bluewinimg/chatroom.png")) {
+        printf("Failed to load chatroom texture");
+        success=false;
+    }
+    
     //Open the font
     gDefaultFont = TTF_OpenFont("fonts/quicksand/quicksand-regular.otf", 20);
     if (gDefaultFont == NULL) {
@@ -963,10 +715,6 @@ bool loadMedia(){
 
 void close(){
     //Free loaded image
-    for( int i = 0; i < TOTAL_WINDOWS; ++i )
-    {
-        gWindows[ i ].free();
-    }
     SDL_DestroyTexture(gTexture);
     gTexture = NULL;
     gLoginButtonSpriteSheetTexture.free();
@@ -974,6 +722,7 @@ void close(){
     gFooTexture.free();
     gBackgroundTexture.free();
     gMainTexture.free();
+    gChattroomTexture.free();
     gTextTexture.free();
     gUsernameTextTexture.free();
     gPasswordTextTexture.free();
@@ -1018,10 +767,10 @@ SDL_Texture* loadTexture(std::string path){
     return newTexture;
 }
 
-void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event e, json_t *masterobj){
+void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,std::string* inputMessageText,SDL_Event e, json_t *masterobj){
     //Event handler
     //SDL_Event e;
-    int totalElements = totalButtons + totalFields;
+    int totalElements = totalButtons + totalFields,c=0;
     
     //Set text color as black
     SDL_Color textColor = {0,0,0,0xff};
@@ -1041,34 +790,44 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
                     gFieldButtons[i-totalButtons].handleEvent(&e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText,masterobj);
                 }
             }
+            if( e.type == SDL_KEYDOWN ){
+                switch( e.key.keysym.sym ){
+                    case SDLK_TAB:
+                        if (field==0) {
+                            field=1;
+                        }else if (field==1){
+                            field=0;
+                        }
+                        break;
+                        
+                    case SDLK_RETURN:
+                        sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj);
+                        break;
+                        
+                    default:
+                        break;
+                }
+            }
         }else if(*screenShow == 1){
             totalElements=1+totalButtons;
             //Generate all elements in main screen
             for (int i =0; i<totalElements; i++) {
                 if (i<1) {
                     gLogoutButton[i].handleEvent(&e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText,masterobj);
+                }else if(i<1+totalFields){
+                    gMessageFieldButton[i-1].handleEvent(&e, screenShow, &messageButton, i, inputUsernameText, inputPasswordText, masterobj);
                 }else if (i<totalButtons){
-                    gRoomButtons[(i-1)].handleEvent(&e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText,masterobj);
+                    gRoomButtons[i-1-totalFields].handleEvent(&e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText,masterobj);
                 }
             }
-            
-            //Handle window events
-            for( int i = 0; i < TOTAL_WINDOWS; ++i ){
-                gWindows[ i ].handleEvent( e );
-            }
-            //Pull up window
             if( e.type == SDL_KEYDOWN ){
                 switch( e.key.keysym.sym ){
-                    case SDLK_1:
-                        //gWindows[ 0 ].focus();
+                    case SDLK_RETURN:
+                        printf("You sent a message!\n");
+                        
                         break;
                         
-                    case SDLK_2:
-                        gWindows[ 1 ].focus();
-                        break;
-                        
-                    case SDLK_3:
-                        gWindows[ 2 ].focus();
+                    default:
                         break;
                 }
             }
@@ -1078,19 +837,8 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
                 getTextString(inputUsernameText,e,textColor,outputPasswordText);
             }else if (field==1){
                 getTextString(inputPasswordText, e, textColor,outputPasswordText);
-            }
-        }
-        //Update all windows
-        for( int i = 0; i < TOTAL_WINDOWS; ++i ){
-            gWindows[ i ].render();
-        }
-        
-        //Check all windows
-        bool allWindowsClosed = true;
-        for( int i = 0; i < TOTAL_WINDOWS; ++i ){
-            if( gWindows[ i ].isShown() ){
-                allWindowsClosed = false;
-                break;
+            }else if (field==2){
+                getTextString(inputMessageText, e, textColor, outputPasswordText);
             }
         }
     //}
@@ -1100,14 +848,14 @@ void loginScreen(int* totalButtons, int* totalFields,int* screenShow,Screen wind
     *totalButtons=1;
     *totalFields=4;
     int element = 0;
+    SDL_SetWindowSize(gWindow, windowSize.w, windowSize.h);
     //Render buttons
     for (int i = 0; i < *totalButtons; ++i) {
         gLoginButtons[i].render(screenShow,&element);
     }
+    
     //Positionate login button
     gLoginButtons[0].setPosition(loginButton.x, loginButton.y);
-    //gLoginButtons[1].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 30));
-    //gLoginButtons[2].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 60));
     
     //Render background texture to screen
     gBackgroundTexture.render(0,0);
@@ -1119,16 +867,18 @@ void loginScreen(int* totalButtons, int* totalFields,int* screenShow,Screen wind
     if (inputUsernameText=="" || inputUsernameText==" ") {
         getPromptText("Username", gDefaultFont,0);
         gUsernameTextTexture.render(fieldButton.x+10,320);
+    }else{
+        //Render text texture
+        gUsernameTextTexture.render(fieldButton.x+10, 320);
     }
-    
+
     if (inputPasswordText=="" || inputPasswordText==" ") {
         getPromptText("Password", gDefaultFont,1);
         gPasswordTextTexture.render(fieldButton.x+10, 440);
+    }else{
+        //Render text texture
+        gPasswordTextTexture.render(fieldButton.x+10, 440);
     }
-    
-    //Render text texture
-    gUsernameTextTexture.render(fieldButton.x+10, 320);
-    gPasswordTextTexture.render(fieldButton.x+10, 440);
     
     //Render current frame
     getText("BlueWin", gLargeBoldFont);
@@ -1148,13 +898,16 @@ void loginScreen(int* totalButtons, int* totalFields,int* screenShow,Screen wind
     //printf("%d\n",gTextTexture.getHeight());
 }
 
-void mainScreen(int* totalButtons, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide){
+void mainScreen(int* totalButtons, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,std::string inputMessageText){
     int buttX=0,buttY=200,element;
     *totalButtons=1+nrRooms;
-    *totalFields=0;
+    *totalFields=1;
+    //std::string inputMessageText="";
     
+    SDL_SetWindowSize(gWindow, windowSize.w+640, windowSize.h);
     //Render rooms texture to screen
     gFooTexture.render(0, 0);
+    gChattroomTexture.render(windowSize.w, 0);
     
     //Render Username
     gUsernameTextTexture.render(10, 10);
@@ -1167,7 +920,16 @@ void mainScreen(int* totalButtons, int* totalFields,int nrRooms,int* screenShow,
     gTextTexture.render((windowSize.w - logoutButton.w)+((logoutButton.w - gTextTexture.getWidth())/2)-3, (logoutButton.h - gTextTexture.getHeight())/2);
     
     element=1;
-    //Render buttons
+    gMessageFieldButton[0].setPosition(messageButton.x,messageButton.y);
+    
+    if (inputMessageText=="" || inputMessageText==" ") {
+        getPromptText("Message", gDefaultFont, 2);
+        gMessageTextTexture.render(messageButton.x,messageButton.y);
+    }else{
+        gMessageTextTexture.render(messageButton.x, messageButton.y);
+    }
+    
+    //Render room buttons
     for (int i = 0; i < nrRooms; ++i) {
         gRoomButtons[i].render(screenShow,&element);
         //Positionate room buttons
@@ -1181,12 +943,12 @@ void mainScreen(int* totalButtons, int* totalFields,int nrRooms,int* screenShow,
     }
 }
 
-void runingGui(int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event* e, json_t *masterobj){
+void runingGui(int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,std::string* inputMessageText,SDL_Event* e, json_t *masterobj){
     //Render text flag
     //bool renderText = false;
     
     while( SDL_PollEvent( e ) != 0 ){
-        eventHandler(screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, inputUsernameText, inputPasswordText, outputPasswordText,*e,masterobj);
+        eventHandler(screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, inputUsernameText, inputPasswordText, outputPasswordText,inputMessageText,*e,masterobj);
     }
     
     //Clear screen
@@ -1199,7 +961,7 @@ void runingGui(int* screenShow,int* totalButtons, int* totalFields,int nrRooms,S
     if(*screenShow==0){
         loginScreen(totalButtons, totalFields, screenShow, windowSize, loginButton, fieldButton, *inputUsernameText, *inputPasswordText);
     }else{
-        mainScreen(totalButtons, totalFields, nrRooms, screenShow, windowSize, logoutButton, buttonTypeWide);
+        mainScreen(totalButtons, totalFields, nrRooms, screenShow, windowSize, logoutButton, buttonTypeWide,messageButton,*inputMessageText);
     }
     
     //Update screen
@@ -1230,12 +992,13 @@ int initGui(){
 
 int main(int argc, char *argv[]){
     //Initialize varibles
-    int screenShow = 0,totalButtons=0,totalFields=0,nrRooms=8;//,field = 0;
+    int screenShow = 0,totalButtons=0,totalFields=0,nrRooms=3;//,field = 0;
     Screen windowSize;
     windowSize.w=400;
     windowSize.h=800;
+    screenShow=1;
     
-    Button buttonTypeSmall,buttonTypeWide,fieldButton,loginButton,logoutButton;
+    Button buttonTypeSmall,buttonTypeWide,fieldButton,loginButton,logoutButton,messageButton;
     buttonTypeSmall.w=200;
     buttonTypeSmall.h=75;
     buttonTypeWide.w=400;
@@ -1251,6 +1014,10 @@ int main(int argc, char *argv[]){
     logoutButton.h=50;
     logoutButton.y=0;
     logoutButton.x=windowSize.w-logoutButton.w;
+    messageButton.h=80;
+    messageButton.w=460;
+    messageButton.x=windowSize.w+90;
+    messageButton.y=685;
     
     json_t *masterobj = json_object();
     
@@ -1270,13 +1037,14 @@ int main(int argc, char *argv[]){
         std::string inputUsernameText = "";
         std::string inputPasswordText = "";
         std::string outputPasswordText = "";
+        std::string inputMessageText = "";
             
         //Enable text input
         SDL_StartTextInput();
             
         //While application is running
         while( !quit ){
-            runingGui(&screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, &inputUsernameText, &inputPasswordText, &outputPasswordText, &e, masterobj);
+            runingGui(&screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, &inputUsernameText, &inputPasswordText, &outputPasswordText,&inputMessageText, &e, masterobj);
         }
         //Disable text input
         SDL_StopTextInput();
