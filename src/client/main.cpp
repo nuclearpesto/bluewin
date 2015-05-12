@@ -624,7 +624,7 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                                     send_login(masterobj,inputUsernameText,inputPasswordText);
                                 }
                                 while(!loginCheck && c<10 ){
-                                    Sleep(1);
+                                    //Sleep(1);
                                     c++;
                                     //printf("%d\n", c);
                                     if(loginCheck){
