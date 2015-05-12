@@ -53,7 +53,7 @@ void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* i
 
 void clear_str(char str[], int size);
 void write_to_server(json_t *masterobj, TCPsocket *socket);
-char* read_from_server(TCPsocket socket, char *response);
+char* read_from_server(TCPsocket socket, char *response, int *numBytesRead);
 void user_input(char* msg);
 void serialize_message(Message_s msg);
 void serialize_cmd(json_t *masterobj, char *cmd);

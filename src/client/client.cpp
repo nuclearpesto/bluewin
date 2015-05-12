@@ -158,13 +158,14 @@ int readThread (void * p){
 	json_t *globalUsersInRoomArr = r->globalUsersInRoomArr;
 	json_t *globalRoomArr=r->globalRoomArr;
 	json_t *messageArr=r->messageArr;
+	int numBytesRead = 1;
 	SDL_mutex * mesageArrMutex = r->messageArrMutex;
 	json_error_t error;
     masterobj = json_object();
 	//printf("socket is %d", *sd);
-    while(1){
+    while(numBytesRead>0){
 
-        string = read_from_server(socket, response);
+        string = read_from_server(socket, response, &numBytesRead);
         D(printf("recieved %s\n", response));
         masterobj = json_loads(string, 0, &error);
         if(masterobj == NULL){
@@ -208,6 +209,9 @@ int readThread (void * p){
         //printf("gonna free");
         //printf("freed\n");
     }
+	//disconnected
+	SDLNet_TCP_Close(socket);
+	return 1;
 }
 
 
@@ -269,11 +273,11 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
     printf("SENT %s", json_s);
 }
 
-char* read_from_server( TCPsocket socket, char *response){
+char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 	
     int temp=0,  res;
 	printf("reading");
-    res = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
+    *numBytesRead = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
 	//printf("gonna read %d bytes : %d\n",temp);
     
     response = (char *)malloc(temp+1);
