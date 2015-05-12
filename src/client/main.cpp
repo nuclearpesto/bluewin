@@ -580,7 +580,7 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
     //if mouse event happend
     if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP ) {
         //Get mouse position
-        int x,y;
+        int x,y,c=0;
         SDL_GetMouseState(&x, &y);
         //Check if mouse is in button
         bool inside = true;
@@ -622,6 +622,14 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                                 //quit=true;
                                 if (*screenShow==0) {
                                     send_login(masterobj,inputUsernameText,inputPasswordText);
+                                }
+                                while(!loginCheck && c<10 ){
+                                    Sleep(1);
+                                    c++;
+                                    //printf("%d\n", c);
+                                    if(loginCheck){
+                                        break;
+                                    }
                                 }
                                 if (loginCheck) {
                                     *screenShow=1;
