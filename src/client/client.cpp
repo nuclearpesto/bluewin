@@ -38,7 +38,7 @@ void serialize_password(json_t *masterobj,user_s *usr );
 void serialize_username(json_t *masterobj,user_s *usr );
 void message_printer(json_t *masterobj);
 int readThread (void * p);
-TCPsocket initClient();
+TCPsocket initClient(bool *loginCheck);
 void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText, TCPsocket sd);
 void add_user(json_t * masterobj, user_s *usr, TCPsocket sd);
 void clear_input();
@@ -124,10 +124,13 @@ void string_convert(std::string s,char msg[20]);
     }
 }*/
 
-TCPsocket initClient(){
+TCPsocket initClient(bool * loginCheck){
     bool success = true;
     SDL_Thread *thread;
 	TCPsocket sd = NULL;
+	*loginCheck = false;
+	Readstruct readstruct;
+	
     //IPaddress ip;
     //TCPsocket sd;
 
@@ -149,7 +152,9 @@ TCPsocket initClient(){
                 success=false;
             }else{
 				printf("socket is : %d\n",sd);
-                thread=SDL_CreateThread(readThread, "reader", &sd);
+				readstruct.sd = sd;
+				readstruct.loginCheck = loginCheck;
+				thread=SDL_CreateThread(readThread, "reader", &readstruct);
 				
 				printf("socket is after thread : %d\n",sd);
 			  if(thread==NULL){
@@ -159,33 +164,35 @@ TCPsocket initClient(){
             }
         }
     }
-    loginCheck=false;
     printf("Connected.\n");
     return sd;
 }
 
 int readThread (void * p){
-    TCPsocket *sd = (TCPsocket *) p;
-    TCPsocket socket = *sd;
+   Readstruct *r = (Readstruct *) p;
+    TCPsocket socket = r->sd;
+	bool *loginCheck = r->loginCheck;
 	char *response;
     char *string;
     json_t *masterobj;
     json_t *keycheckobj;
+	json_error_t error;
     masterobj = json_object();
-	printf("socket is %d", *sd);
+	//printf("socket is %d", *sd);
     while(1){
 
         string = read_from_server(socket, response);
         D(printf("recieved %s\n", response));
-        masterobj = json_loads(string, 0, NULL);
+        masterobj = json_loads(string, 0, &error);
         if(masterobj == NULL){
+			printf("jsonerror %s",error.text);
             free(string);
         }
         else{
             free(string);
             if((keycheckobj = json_object_get(masterobj, "login")) != NULL){
                 if(json_is_true(keycheckobj)==1){
-                    loginCheck = true;
+                    *(loginCheck) = true;
                 }
             }
 

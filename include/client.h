@@ -29,7 +29,13 @@
 #include <SDL2/SDL_net.h>
 #endif
 
-TCPsocket initClient();
+struct Readstruct{
+	TCPsocket sd;
+	bool *loginCheck;
+	
+};typedef struct Readstruct Readstruct;
+
+TCPsocket initClient(bool *loginCheck);
 void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText, TCPsocket *sd);
 
 
