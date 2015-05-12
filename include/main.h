@@ -29,5 +29,4 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #endif
-
 #endif /* defined(__bluewin_gui__main__) */

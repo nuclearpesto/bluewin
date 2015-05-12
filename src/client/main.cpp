@@ -5,7 +5,6 @@
 //  Created by Rasmus Jansson on 05/05/15.
 //  Copyright (c) 2015 Rasmus Jansson. All rights reserved.
 //
-
 #include "main.h"
 
 bool writeText = false;
@@ -96,7 +95,7 @@ public:
     //Set top left position
     void setPosition(int x,int y);
     //Handles mouse event
-    void handleEvent(SDL_Event* e, int* screenShow, Button* button, int i,std::string* inputUsernameText, std::string*
+    void handleEvent(bool *loginCheck, TCPsocket *sd, SDL_Event* e, int* screenShow, Button* button, int i,std::string* inputUsernameText, std::string*
                      inputPasswordText,json_t *masterobj);
     //Shows button sprite
     void render(int* screenShow, int* element);
@@ -312,7 +311,7 @@ void LButton::setPosition(int x, int y){
     mPosition.y = y;
 }
 
-void sendLogin(int* screenShow,std::string* inputUsernameText,std::string* inputPasswordText,json_t* masterobj){
+void sendLogin(int* screenShow,std::string* inputUsernameText,std::string* inputPasswordText,json_t* masterobj,bool* loginCheck){
     int c=0;
     if (*screenShow==0) {
         send_login(masterobj,inputUsernameText,inputPasswordText);
@@ -331,7 +330,7 @@ void sendLogin(int* screenShow,std::string* inputUsernameText,std::string* input
     }
 }
 
-void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selected,std::string* inputUsernameText, std::string* inputPasswordText,json_t *masterobj){
+void LButton::handleEvent(bool *loginCheck, TCPsocket *sd, SDL_Event* e,int* screenShow, Button* button,int selected,std::string* inputUsernameText, std::string* inputPasswordText,json_t *masterobj){
     //if mouse event happend
     if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP ) {
         //Get mouse position
@@ -373,7 +372,7 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                     if (*screenShow==0) {
                         switch (selected) {
                             case 0://Login button
-                                sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj);
+                                sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj,loginCheck);
                                 break;
                                 
                             case 1://Username text field
@@ -399,7 +398,7 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                         switch (selected) {
                             case 0://Logout button
                                 *screenShow=0;
-                                loginCheck=false;
+                                *loginCheck=false;
                                 printf("Logout button\n");
                                 break;
                                 
@@ -563,8 +562,8 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std:
         else{
             if (field==0) {
                 //Render space texture, username
-                gTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
-            }else if(field==1){
+                gUsernameTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
+            }else{
                 //Render space texture, password
                 gPasswordTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
             }else if (field==2){
@@ -767,7 +766,7 @@ SDL_Texture* loadTexture(std::string path){
     return newTexture;
 }
 
-void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,std::string* inputMessageText,SDL_Event e, json_t *masterobj){
+void eventHandler(bool *loginCheck, TCPsocket *sd, int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,std::string inputMessageText,SDL_Event e, json_t *masterobj){
     //Event handler
     //SDL_Event e;
     int totalElements = totalButtons + totalFields,c=0;
@@ -785,9 +784,9 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
             //Generate all elements in login screen
             for (int i = 0; i< totalElements; i++) {
                 if (i<totalButtons) {
-                    gLoginButtons[i].handleEvent(&e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText,masterobj);
+                    gLoginButtons[i].handleEvent(loginCheck, sd, &e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText,masterobj);
                 }else if(i<totalButtons+totalFields){
-                    gFieldButtons[i-totalButtons].handleEvent(&e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText,masterobj);
+                    gFieldButtons[i-totalButtons].handleEvent(loginCheck, sd, &e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText,masterobj);
                 }
             }
             if( e.type == SDL_KEYDOWN ){
@@ -801,7 +800,7 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
                         break;
                         
                     case SDLK_RETURN:
-                        sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj);
+                        sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj,loginCheck);
                         break;
                         
                     default:
@@ -813,11 +812,11 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
             //Generate all elements in main screen
             for (int i =0; i<totalElements; i++) {
                 if (i<1) {
-                    gLogoutButton[i].handleEvent(&e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText,masterobj);
+                    gLogoutButton[i].handleEvent(loginCheck, sd, &e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText,masterobj);
                 }else if(i<1+totalFields){
                     gMessageFieldButton[i-1].handleEvent(&e, screenShow, &messageButton, i, inputUsernameText, inputPasswordText, masterobj);
                 }else if (i<totalButtons){
-                    gRoomButtons[i-1-totalFields].handleEvent(&e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText,masterobj);
+                    gRoomButtons[i-1-totalFields].handleEvent(loginCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText,masterobj);
                 }
             }
             if( e.type == SDL_KEYDOWN ){
@@ -844,7 +843,7 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
     //}
 }
 
-void loginScreen(int* totalButtons, int* totalFields,int* screenShow,Screen windowSize,Button loginButton, Button fieldButton,std::string inputUsernameText, std::string inputPasswordText){
+void loginScreen( int* totalButtons, int* totalFields,int* screenShow,Screen windowSize,Button loginButton, Button fieldButton,std::string inputUsernameText, std::string inputPasswordText){
     *totalButtons=1;
     *totalFields=4;
     int element = 0;
@@ -943,12 +942,12 @@ void mainScreen(int* totalButtons, int* totalFields,int nrRooms,int* screenShow,
     }
 }
 
-void runingGui(int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,std::string* inputMessageText,SDL_Event* e, json_t *masterobj){
+void runingGui(bool* loginCheck, TCPsocket* sd,int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,std::string* inputMessageText,SDL_Event* e, json_t *masterobj){
     //Render text flag
     //bool renderText = false;
     
     while( SDL_PollEvent( e ) != 0 ){
-        eventHandler(screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, inputUsernameText, inputPasswordText, outputPasswordText,inputMessageText,*e,masterobj);
+        eventHandler(loginCheck, sd, screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, inputUsernameText, inputPasswordText, outputPasswordText,inputMessageText,*e,masterobj);
     }
     
     //Clear screen
@@ -968,7 +967,7 @@ void runingGui(int* screenShow,int* totalButtons, int* totalFields,int nrRooms,S
     SDL_RenderPresent(gRenderer);
 }
 
-int initGui(){
+int initGui(TCPsocket * sd, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
     bool test=true;
     //Start up SDL and create window
     if( !init(windowSize) ){
@@ -981,7 +980,7 @@ int initGui(){
             test=false;
         }else{
             //Connect to server
-            if (!initClient()) {
+            if (!((*sd)=initClient(loginCheck,globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex ))) {
                 printf("Failed to connect to server\n");
                 test=false;
             }
@@ -992,6 +991,7 @@ int initGui(){
 
 int main(int argc, char *argv[]){
     //Initialize varibles
+	TCPsocket sd;
     int screenShow = 0,totalButtons=0,totalFields=0,nrRooms=3;//,field = 0;
     Screen windowSize;
     windowSize.w=400;
@@ -1020,11 +1020,14 @@ int main(int argc, char *argv[]){
     messageButton.y=685;
     
     json_t *masterobj = json_object();
-    
-    loginCheck = false;
+	json_t *globalUsersInRoomArr =json_array();
+	json_t *globalRoomArr=json_array();
+	json_t *messageArr=json_array();
+	SDL_mutex *messageArrMutex = SDL_CreateMutex(); 
+    bool loginCheck = false;
     
     //Start up SDL and create window
-    if( !initGui() ){
+    if( !initGui(&sd, &loginCheck, globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex) ){
         printf( "Failed to initialize!\n" );
     }else{
         //Main loop flag
@@ -1044,7 +1047,7 @@ int main(int argc, char *argv[]){
             
         //While application is running
         while( !quit ){
-            runingGui(&screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, &inputUsernameText, &inputPasswordText, &outputPasswordText,&inputMessageText, &e, masterobj);
+            runingGui(&loginCheck, &sd, &screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, &inputUsernameText, &inputPasswordText, &outputPasswordText,&inputMessageText, &e, masterobj);
         }
         //Disable text input
         SDL_StopTextInput();
