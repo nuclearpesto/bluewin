@@ -855,11 +855,11 @@ void loginScreen( int* totalButtons, int* totalFields,int* screenShow,Screen win
         gLoginButtons[i].render(screenShow,&element);
     }
     
-    //Positionate login button
-    gLoginButtons[0].setPosition(loginButton.x, loginButton.y);
-    
     //Render background texture to screen
     gBackgroundTexture.render(0,0);
+    
+    //Positionate login button
+    gLoginButtons[0].setPosition(loginButton.x, loginButton.y);
     
     //Positionate text fields
     gFieldButtons[0].setPosition(fieldButton.x,300);
