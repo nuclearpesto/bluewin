@@ -1,5 +1,5 @@
 
-CFLAGS=-c -std=c++11 $(INC_DIR)
+CFLAGS=-c -g -std=c++11 $(INC_DIR)
 
 DEPS=*.h
 BIN_DIR=../../bin/

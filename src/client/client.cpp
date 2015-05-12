@@ -166,7 +166,8 @@ TCPsocket initClient(){
 
 int readThread (void * p){
     TCPsocket *sd = (TCPsocket *) p;
-    char *response;
+    TCPsocket socket = *sd;
+	char *response;
     char *string;
     json_t *masterobj;
     json_t *keycheckobj;
@@ -174,7 +175,7 @@ int readThread (void * p){
 	printf("socket is %d", *sd);
     while(1){
 
-        string = read_from_server(*sd, response);
+        string = read_from_server(socket, response);
         D(printf("recieved %s\n", response));
         masterobj = json_loads(string, 0, NULL);
         if(masterobj == NULL){
@@ -275,11 +276,11 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
 }
 
 char* read_from_server( TCPsocket socket, char *response){
-
-    int temp=0;
+	
+    int temp=0,  res;
 	printf("reading");
-    SDLNet_TCP_Recv(socket, &temp, sizeof(int));
-    printf("gonna read %d bytes : %d\n",temp);
+    res = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
+	printf("gonna read %d bytes : %d\n",temp);
     
     response = (char *)malloc(temp+1);
 	SDLNet_TCP_Recv(socket,response, temp );

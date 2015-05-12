@@ -621,7 +621,7 @@ void LButton::handleEvent(TCPsocket *sd, SDL_Event* e,int* screenShow, Button* b
                                 //Login button
                                 //quit=true;
                                 if (*screenShow==0) {
-									loginCheck=false;
+									//loginCheck=false;
 									send_login(masterobj,inputUsernameText,inputPasswordText, sd);
                                 }
                                 while(!loginCheck && c<10 ){
