@@ -234,7 +234,7 @@ void write_to_server(json_t *masterobj, TCPsocket socket){
     //puts(json_s);//kontroll
     len = strlen(json_s);
     //printf("len efter krypt = %d",len);
-    encrypt_Handler(json_s);
+    //encrypt_Handler(json_s);
     SDLNet_TCP_Send(socket, &len, sizeof(int));
 	SDLNet_TCP_Send(socket, json_s, len);
 	//free(json_s);
@@ -250,7 +250,7 @@ char* read_from_server( TCPsocket socket, char *response){
 	response[temp] = '\0';
 	//printf("read response : %s\n",response);
     //dekryptera
-    decrypt_Handler(response);
+    //decrypt_Handler(response);
 
     return response;
 }

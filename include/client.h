@@ -29,9 +29,9 @@
 #include <SDL2/SDL_net.h>
 #endif
 
-bool initClient();
-void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText);
-extern bool loginCheck;
+TCPsocket initClient();
+void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText, TCPsocket *sd);
+
 
 
 #endif /* defined(__bluewinclient__client__) */

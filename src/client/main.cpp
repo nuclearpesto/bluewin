@@ -164,7 +164,7 @@ public:
     //Set top left position
     void setPosition(int x,int y);
     //Handles mouse event
-    void handleEvent(SDL_Event* e, int* screenShow, Button* button, int i,std::string* inputUsernameText, std::string*
+    void handleEvent(TCPsocket *sd, SDL_Event* e, int* screenShow, Button* button, int i,std::string* inputUsernameText, std::string*
                      inputPasswordText,json_t *masterobj);
     //Shows button sprite
     void render(int* screenShow, int* element);
@@ -576,7 +576,7 @@ void action(int* e){
     }
 }
 
-void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selected,std::string* inputUsernameText, std::string* inputPasswordText,json_t *masterobj){
+void LButton::handleEvent(TCPsocket *sd, SDL_Event* e,int* screenShow, Button* button,int selected,std::string* inputUsernameText, std::string* inputPasswordText,json_t *masterobj){
     //if mouse event happend
     if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP ) {
         //Get mouse position
@@ -621,12 +621,13 @@ void LButton::handleEvent(SDL_Event* e,int* screenShow, Button* button,int selec
                                 //Login button
                                 //quit=true;
                                 if (*screenShow==0) {
-                                    send_login(masterobj,inputUsernameText,inputPasswordText);
+									loginCheck=false;
+									send_login(masterobj,inputUsernameText,inputPasswordText, sd);
                                 }
                                 while(!loginCheck && c<10 ){
                                     //Sleep(1);
                                     c++;
-                                    //printf("%d\n", c);
+                                    printf("%d\n", c);
                                     if(loginCheck){
                                         break;
                                     }
@@ -1018,7 +1019,7 @@ SDL_Texture* loadTexture(std::string path){
     return newTexture;
 }
 
-void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event e, json_t *masterobj){
+void eventHandler(TCPsocket *sd, int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event e, json_t *masterobj){
     //Event handler
     //SDL_Event e;
     int totalElements = totalButtons + totalFields;
@@ -1036,9 +1037,9 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
             //Generate all elements in login screen
             for (int i = 0; i< totalElements; i++) {
                 if (i<totalButtons) {
-                    gLoginButtons[i].handleEvent(&e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText,masterobj);
+                    gLoginButtons[i].handleEvent(sd, &e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText,masterobj);
                 }else if(i<totalButtons+totalFields){
-                    gFieldButtons[i-totalButtons].handleEvent(&e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText,masterobj);
+                    gFieldButtons[i-totalButtons].handleEvent(sd, &e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText,masterobj);
                 }
             }
         }else if(*screenShow == 1){
@@ -1046,9 +1047,9 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
             //Generate all elements in main screen
             for (int i =0; i<totalElements; i++) {
                 if (i<1) {
-                    gLogoutButton[i].handleEvent(&e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText,masterobj);
+                    gLogoutButton[i].handleEvent(sd, &e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText,masterobj);
                 }else if (i<totalButtons){
-                    gRoomButtons[(i-1)].handleEvent(&e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText,masterobj);
+                    gRoomButtons[(i-1)].handleEvent(sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText,masterobj);
                 }
             }
             
@@ -1096,7 +1097,7 @@ void eventHandler(int* screenShow,int totalButtons, int totalFields, Button fiel
     //}
 }
 
-void loginScreen(int* totalButtons, int* totalFields,int* screenShow,Screen windowSize,Button loginButton, Button fieldButton,std::string inputUsernameText, std::string inputPasswordText){
+void loginScreen( int* totalButtons, int* totalFields,int* screenShow,Screen windowSize,Button loginButton, Button fieldButton,std::string inputUsernameText, std::string inputPasswordText){
     *totalButtons=1;
     *totalFields=4;
     int element = 0;
@@ -1181,12 +1182,12 @@ void mainScreen(int* totalButtons, int* totalFields,int nrRooms,int* screenShow,
     }
 }
 
-void runingGui(int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event* e, json_t *masterobj){
+void runingGui(TCPsocket *sd, int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,SDL_Event* e, json_t *masterobj){
     //Render text flag
     //bool renderText = false;
     
     while( SDL_PollEvent( e ) != 0 ){
-        eventHandler(screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, inputUsernameText, inputPasswordText, outputPasswordText,*e,masterobj);
+        eventHandler(sd, screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, inputUsernameText, inputPasswordText, outputPasswordText,*e,masterobj);
     }
     
     //Clear screen
@@ -1206,7 +1207,7 @@ void runingGui(int* screenShow,int* totalButtons, int* totalFields,int nrRooms,S
     SDL_RenderPresent(gRenderer);
 }
 
-int initGui(){
+int initGui(TCPsocket * sd){
     bool test=true;
     //Start up SDL and create window
     if( !init(windowSize) ){
@@ -1219,7 +1220,7 @@ int initGui(){
             test=false;
         }else{
             //Connect to server
-            if (!initClient()) {
+            if (!((*sd)=initClient())) {
                 printf("Failed to connect to server\n");
                 test=false;
             }
@@ -1230,6 +1231,7 @@ int initGui(){
 
 int main(int argc, char *argv[]){
     //Initialize varibles
+	TCPsocket sd;
     int screenShow = 0,totalButtons=0,totalFields=0,nrRooms=8;//,field = 0;
     Screen windowSize;
     windowSize.w=400;
@@ -1257,7 +1259,7 @@ int main(int argc, char *argv[]){
     loginCheck = false;
     
     //Start up SDL and create window
-    if( !initGui() ){
+    if( !initGui(&sd) ){
         printf( "Failed to initialize!\n" );
     }else{
         //Main loop flag
@@ -1276,7 +1278,7 @@ int main(int argc, char *argv[]){
             
         //While application is running
         while( !quit ){
-            runingGui(&screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, &inputUsernameText, &inputPasswordText, &outputPasswordText, &e, masterobj);
+            runingGui(&sd, &screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall, &inputUsernameText, &inputPasswordText, &outputPasswordText, &e, masterobj);
         }
         //Disable text input
         SDL_StopTextInput();

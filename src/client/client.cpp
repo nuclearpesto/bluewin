@@ -24,13 +24,12 @@ typedef struct User{
 }user_s;
 
 IPaddress ip;
-TCPsocket sd;
 
 user_s usr;
 //json_t *masterobj = json_object();
 
 void clear_str(char str[], int size);
-void write_to_server(json_t *masterobj, TCPsocket socket);
+void write_to_server(json_t *masterobj, TCPsocket *socket);
 char* read_from_server(TCPsocket socket, char *response);
 void user_input(char* msg);
 void serialize_message(Message_s msg);
@@ -39,8 +38,8 @@ void serialize_password(json_t *masterobj,user_s *usr );
 void serialize_username(json_t *masterobj,user_s *usr );
 void message_printer(json_t *masterobj);
 int readThread (void * p);
-bool initClient();
-void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText);
+TCPsocket initClient();
+void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText, TCPsocket sd);
 void add_user(json_t * masterobj, user_s *usr, TCPsocket sd);
 void clear_input();
 void string_convert(std::string s,char msg[20]);
@@ -125,9 +124,10 @@ void string_convert(std::string s,char msg[20]);
     }
 }*/
 
-bool initClient(){
+TCPsocket initClient(){
     bool success = true;
     SDL_Thread *thread;
+	TCPsocket sd = NULL;
     //IPaddress ip;
     //TCPsocket sd;
 
@@ -148,8 +148,11 @@ bool initClient(){
                 fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
                 success=false;
             }else{
+				printf("socket is : %d\n",sd);
                 thread=SDL_CreateThread(readThread, "reader", &sd);
-                if(thread==NULL){
+				
+				printf("socket is after thread : %d\n",sd);
+			  if(thread==NULL){
                     printf("SDL_CreateThread: %s\n",SDL_GetError());
                     success=false;
                 }
@@ -158,7 +161,7 @@ bool initClient(){
     }
     loginCheck=false;
     printf("Connected.\n");
-    return success;
+    return sd;
 }
 
 int readThread (void * p){
@@ -168,6 +171,7 @@ int readThread (void * p){
     json_t *masterobj;
     json_t *keycheckobj;
     masterobj = json_object();
+	printf("socket is %d", *sd);
     while(1){
 
         string = read_from_server(*sd, response);
@@ -208,13 +212,12 @@ void clear_input(){
 }
 
 
-void send_login(json_t *masterobj,std::string* inputUsernameText,std::string* inputPasswordText){
+void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string* inputPasswordText, TCPsocket *sd){
     int c;
-    //json_t *masterobj = json_object();
+    json_t *masterobj = json_object();
     usr.username=(char*)inputUsernameText->c_str();
     usr.password=(char*)inputPasswordText->c_str();
     //printf("%s\n",inputUsernameText->c_str());
-    //while(!login){
         //printf("%s", usr.username);
         serialize_username(masterobj,&usr);
         printf("user\n");
@@ -223,20 +226,10 @@ void send_login(json_t *masterobj,std::string* inputUsernameText,std::string* in
         //printf("pass\n");
         fflush(stdout);
         serialize_cmd(masterobj, "login");
-        //printf("cmd\n");
+        printf("sd: %d\n", sd);
         fflush(stdout);
         write_to_server(masterobj,sd);
 
-        c = 0;
-      //  while(!login && c<10 ){
-            //sleep(1);
-            c++;
-            //printf("%d\n", c);
-            //if(login){
-            //    break;
-            //}
-        //}
-    //}
 
 }
 
@@ -261,31 +254,37 @@ void add_user(json_t * masterobj, user_s *usr, TCPsocket sd){
 }*/
 
 
-void write_to_server(json_t *masterobj,TCPsocket socket){
+void write_to_server(json_t *masterobj,TCPsocket *socket){
     char *json_s;
-    unsigned int len;
+	int len, result=0;
     json_s = json_dumps(masterobj, 0);
     //printf("%p",json_s);
     //json_s = "hej\0";
     //kryptera
     //encrypt_Handler(json_s);
     //puts(json_s);//kontroll
-    printf("%s\n",json_s);
+    //printf("%s\n",json_s);
     len = strlen(json_s);
-    //printf("len is %d", len);
-    SDLNet_TCP_Send(socket, &len, sizeof(int));
-    SDLNet_TCP_Send(socket, json_s, len);
-    //printf("%s", json_s);
+    SDLNet_TCP_Send(*socket, &len, sizeof(int));
+    result= SDLNet_TCP_Send(*socket, json_s, len);
+	if( result < len ) {
+    printf( "SDLNet_TCP_Send: %s, result is %d\n", SDLNet_GetError(), result );
+    // It may be good to disconnect sock because it is likely invalid now.
+	}
+    printf("SENT %s", json_s);
 }
 
 char* read_from_server( TCPsocket socket, char *response){
 
-    int temp;
+    int temp=0;
+	printf("reading");
     SDLNet_TCP_Recv(socket, &temp, sizeof(int));
+    printf("gonna read %d bytes : %d\n",temp);
+    
     response = (char *)malloc(temp+1);
-    SDLNet_TCP_Recv(socket,response, temp );
+	SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';
-    //printf("read response : %s\n",response);
+    printf("read response : %s\n",response);
     //dekryptera
     //decrypt_Handler(response);
     return response;
@@ -348,7 +347,7 @@ void serialize_cmd(json_t *masterobj, char *cmd ){
     json_object_set(masterobj, "cmd", string);
 }
 
-void collect_rooms(json_t *masterobj, int *rooms, TCPsocket socket){
+void collect_rooms(json_t *masterobj, int *rooms, TCPsocket *socket){
     serialize_cmd(masterobj, "get rooms");
     write_to_server(masterobj, socket);
 }
