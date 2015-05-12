@@ -1206,7 +1206,7 @@ void runingGui(bool *loginCheck, TCPsocket *sd, int* screenShow,int* totalButton
     SDL_RenderPresent(gRenderer);
 }
 
-int initGui(TCPsocket * sd, bool *loginCheck){
+int initGui(TCPsocket * sd, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
     bool test=true;
     //Start up SDL and create window
     if( !init(windowSize) ){
@@ -1219,7 +1219,7 @@ int initGui(TCPsocket * sd, bool *loginCheck){
             test=false;
         }else{
             //Connect to server
-            if (!((*sd)=initClient(loginCheck))) {
+            if (!((*sd)=initClient(loginCheck,globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex ))) {
                 printf("Failed to connect to server\n");
                 test=false;
             }
@@ -1254,11 +1254,14 @@ int main(int argc, char *argv[]){
     logoutButton.x=windowSize.w-logoutButton.w;
     
     json_t *masterobj = json_object();
-    
+	json_t *globalUsersInRoomArr =json_array();
+	json_t *globalRoomArr=json_array();
+	json_t *messageArr=json_array();
+	SDL_mutex *messageArrMutex = SDL_CreateMutex(); 
     bool loginCheck = false;
     
     //Start up SDL and create window
-    if( !initGui(&sd, &loginCheck) ){
+    if( !initGui(&sd, &loginCheck, globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex) ){
         printf( "Failed to initialize!\n" );
     }else{
         //Main loop flag
