@@ -399,6 +399,7 @@ void LButton::handleEvent(bool *loginCheck, TCPsocket *sd, SDL_Event* e,int* scr
                             case 0://Logout button
                                 *screenShow=0;
                                 *loginCheck=false;
+								logout(masterobj, sd);
                                 printf("Logout button\n");
                                 break;
                                 

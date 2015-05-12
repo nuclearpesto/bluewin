@@ -71,7 +71,7 @@ int handle( void *args ){
   while( (messagepointer=read_client_message(client->socket))!=NULL){
     D(printf("got something "));
 	  //DEKRYPTERA!!!!
-	  decrypt_Handler(messagepointer);
+	  //decrypt_Handler(messagepointer);
     D(printf("recieved this:  %s\n", messagepointer));
 		fflush(stdout);
 		if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
@@ -94,7 +94,7 @@ int handle( void *args ){
 				  fflush(stdout);
 			  }
 
-			  else if(strcmp("log out",json_string_value(recv_json_cmd)) == 0 && client->loggin ==true){
+			  else if(strcmp("logout",json_string_value(recv_json_cmd)) == 0 && client->loggin ==true){
 			    D(printf("found logou\n"));
 				  handle_logout( client);
 				  fflush(stdout);
@@ -446,7 +446,7 @@ char* read_client_message( TCPsocket socket){
 }
 
  void write_server_message( SerializedMessage_t *message, TCPsocket socket){
-  encrypt_Handler(message);
+  //encrypt_Handler(message);
   SDLNet_TCP_Send(socket, &(message->size), sizeof(int));
   SDLNet_TCP_Send(socket, message->jsonstring, message->size);
 

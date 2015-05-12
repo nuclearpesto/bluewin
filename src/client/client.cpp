@@ -338,12 +338,12 @@ void serialize_message(json_t *masterobj, Message_s msg){
     json_object_set_new(masterobj, "message", string);
 }
 
-void collect_rooms(json_t *masterobj, int *rooms, TCPsocket *socket){
+void collect_rooms(json_t *masterobj, char *rooms, TCPsocket *socket){
     serialize_cmd(masterobj, "get rooms");
     write_to_server(masterobj, socket);
 }
 
-void logout(json_t *masterobj, int *rooms, TCPsocket *socket){
+void logout(json_t *masterobj, TCPsocket *socket){
     serialize_cmd(masterobj, "logout");
     write_to_server(masterobj, socket);
 }
@@ -353,19 +353,19 @@ void get_users_in_room(json_t *masterobj, char *room,  int *rooms, TCPsocket *so
     write_to_server(masterobj, socket);
 }
 
-void add_room(json_t *masterobj, char *room,  int *rooms, TCPsocket *socket){
+void add_room(json_t *masterobj, char *room,  char *rooms, TCPsocket *socket){
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "add room");
     write_to_server(masterobj, socket);
 }
 
-void delete_room(json_t *masterobj, char *room,  int *rooms, TCPsocket *socket){
+void delete_room(json_t *masterobj, char *room,  char *rooms, TCPsocket *socket){
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "delete room");
     write_to_server(masterobj, socket);
 }
 
-void switch_room(json_t *masterobj, char *room,  int *rooms, TCPsocket *socket){
+void switch_room(json_t *masterobj, char *room,  char *rooms, TCPsocket *socket){
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "switch room");
     write_to_server(masterobj, socket);
