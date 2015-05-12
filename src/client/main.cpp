@@ -311,20 +311,20 @@ void LButton::setPosition(int x, int y){
     mPosition.y = y;
 }
 
-void sendLogin(int* screenShow,std::string* inputUsernameText,std::string* inputPasswordText,json_t* masterobj,bool* loginCheck){
+void sendLogin(int* screenShow,std::string* inputUsernameText,std::string* inputPasswordText,json_t* masterobj,bool* loginCheck,TCPsocket* sd){
     int c=0;
     if (*screenShow==0) {
-        send_login(masterobj,inputUsernameText,inputPasswordText);
+        send_login(masterobj,inputUsernameText,inputPasswordText,sd);
     }
-    while(!loginCheck && c<10 ){
+    while(!*loginCheck && c<10 ){
         //Sleep(1);
         c++;
         //printf("%d\n", c);
-        if(loginCheck){
+        if(*loginCheck){
             break;
         }
     }
-    if (loginCheck) {
+    if (*loginCheck) {
         *screenShow=1;
         //loginCheck=false;
     }
@@ -334,7 +334,7 @@ void LButton::handleEvent(bool *loginCheck, TCPsocket *sd, SDL_Event* e,int* scr
     //if mouse event happend
     if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP ) {
         //Get mouse position
-        int x,y,c=0;
+        int x,y;
         SDL_GetMouseState(&x, &y);
         //Check if mouse is in button
         bool inside = true;
@@ -372,7 +372,7 @@ void LButton::handleEvent(bool *loginCheck, TCPsocket *sd, SDL_Event* e,int* scr
                     if (*screenShow==0) {
                         switch (selected) {
                             case 0://Login button
-                                sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj,loginCheck);
+                                sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj,loginCheck,sd);
                                 break;
                                 
                             case 1://Username text field
@@ -563,7 +563,7 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std:
             if (field==0) {
                 //Render space texture, username
                 gUsernameTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
-            }else{
+            }else if(field==1){
                 //Render space texture, password
                 gPasswordTextTexture.loadFromRenderedText(" ", textColor, gDefaultFont);
             }else if (field==2){
@@ -725,6 +725,7 @@ void close(){
     gTextTexture.free();
     gUsernameTextTexture.free();
     gPasswordTextTexture.free();
+    gMessageTextTexture.free();
     
     //Free global font
     TTF_CloseFont(gDefaultFont);
@@ -766,10 +767,10 @@ SDL_Texture* loadTexture(std::string path){
     return newTexture;
 }
 
-void eventHandler(bool *loginCheck, TCPsocket *sd, int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,std::string inputMessageText,SDL_Event e, json_t *masterobj){
+void eventHandler(bool *loginCheck, TCPsocket *sd, int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* outputPasswordText,std::string* inputMessageText,SDL_Event e, json_t *masterobj){
     //Event handler
     //SDL_Event e;
-    int totalElements = totalButtons + totalFields,c=0;
+    int totalElements = totalButtons + totalFields;
     
     //Set text color as black
     SDL_Color textColor = {0,0,0,0xff};
@@ -800,7 +801,7 @@ void eventHandler(bool *loginCheck, TCPsocket *sd, int* screenShow,int totalButt
                         break;
                         
                     case SDLK_RETURN:
-                        sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj,loginCheck);
+                        sendLogin(screenShow, inputUsernameText, inputPasswordText, masterobj,loginCheck,sd);
                         break;
                         
                     default:
@@ -814,7 +815,7 @@ void eventHandler(bool *loginCheck, TCPsocket *sd, int* screenShow,int totalButt
                 if (i<1) {
                     gLogoutButton[i].handleEvent(loginCheck, sd, &e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText,masterobj);
                 }else if(i<1+totalFields){
-                    gMessageFieldButton[i-1].handleEvent(&e, screenShow, &messageButton, i, inputUsernameText, inputPasswordText, masterobj);
+                    gMessageFieldButton[i-1].handleEvent(loginCheck,sd,&e, screenShow, &messageButton, i, inputUsernameText, inputPasswordText, masterobj);
                 }else if (i<totalButtons){
                     gRoomButtons[i-1-totalFields].handleEvent(loginCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText,masterobj);
                 }
@@ -996,7 +997,7 @@ int main(int argc, char *argv[]){
     Screen windowSize;
     windowSize.w=400;
     windowSize.h=800;
-    screenShow=1;
+    //screenShow=1;
     
     Button buttonTypeSmall,buttonTypeWide,fieldButton,loginButton,logoutButton,messageButton;
     buttonTypeSmall.w=200;

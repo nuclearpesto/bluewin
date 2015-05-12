@@ -128,12 +128,12 @@ TCPsocket initClient(bool *loginCheck, json_t * globalUsersInRoomArr, json_t *gl
                 fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
                 success=false;
             }else{
-				printf("socket is : %d\n",sd);
+				//printf("socket is : %d\n",sd);
 				readstruct.sd = sd;
 				readstruct.loginCheck = loginCheck;
 				thread=SDL_CreateThread(readThread, "reader", &readstruct);
 				
-				printf("socket is after thread : %d\n",sd);
+				//printf("socket is after thread : %d\n",sd);
 			  if(thread==NULL){
                     printf("SDL_CreateThread: %s\n",SDL_GetError());
                     success=false;
@@ -228,7 +228,6 @@ void clear_input(){
 
 
 void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string* inputPasswordText, TCPsocket *sd){
-    int c;
     json_t *masterobj = json_object();
     usr.username=(char*)inputUsernameText->c_str();
     usr.password=(char*)inputPasswordText->c_str();
@@ -241,7 +240,7 @@ void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string
         //printf("pass\n");
         fflush(stdout);
         serialize_cmd(masterobj, "login");
-        printf("sd: %d\n", sd);
+        //printf("sd: %d\n", sd);
         fflush(stdout);
         write_to_server(masterobj,sd);
 
@@ -275,7 +274,7 @@ char* read_from_server( TCPsocket socket, char *response){
     int temp=0,  res;
 	printf("reading");
     res = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
-	printf("gonna read %d bytes : %d\n",temp);
+	//printf("gonna read %d bytes : %d\n",temp);
     
     response = (char *)malloc(temp+1);
 	SDLNet_TCP_Recv(socket,response, temp );
