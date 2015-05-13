@@ -408,7 +408,7 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
   //encrypt_Handler(sermes);
   int index=find_index_of_room(roomname, THREAD_COUNT);
   D(printf("found room index %d\n", index));
-  if(index){
+  if(index>-1){
     int i =0;
     D(printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns));
     SDL_LockMutex(roomsStackMutex);
