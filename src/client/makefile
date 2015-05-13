@@ -14,7 +14,7 @@ LIBPATHS= -L/usr/lib -L/usr/local/lib
 else
 UNAME_S:=$(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-LIBS= -lSDL2 -lSDL2_net -ljansson
+LIBS= -lSDL2 -lSDL2_net -lSDL2_image -lSDL2_ttf
 INC_DIR=-I../../include
 endif
 ifeq ($(UNAME_s),Darwin)

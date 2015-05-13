@@ -83,7 +83,7 @@ int handle( void *args ){
 				  handle_message(recieved_obj, client);
 				  fflush(stdout);
 			  }
-			  else if(strcmp("login", json_string_value(recv_json_cmd)) == 0){
+			  else if(strcmp("login", json_string_value(recv_json_cmd)) == 0  && client->loggin==false){
 			    D(printf("found login\n"));
 				  handle_login(recieved_obj, client);
 				  fflush(stdout);
@@ -220,7 +220,7 @@ void handle_get_users_in_room(json_t * recieved_obj, clients_t *client){
   room = json_object_get(recieved_obj,"roomname");
   strroom = json_string_value(room);
   if((usersarr=get_users_in_room(strroom))!=NULL){
-    json_object_set_new(writeobj,"usersArr", usersarr);   
+    json_object_set_new(writeobj,"usersArr", usersarr);
     json_success = json_boolean(1);
     json_object_set_new(writeobj,"get users in room", json_success);
 
@@ -240,7 +240,7 @@ void handle_get_users_in_room(json_t * recieved_obj, clients_t *client){
   write_server_message(&sermes, client->socket);
    D(printf("wrote\n "));
     fflush(stdout);
- 
+
 }
 
 
@@ -356,7 +356,7 @@ void handle_logout(clients_t *client){
   client->loggin=false;
   leave_room( client);
   remove_Client(client);
-  
+
     /*TODO MAKE CLIENT SEND RESPONS BEFORE LOGGIN OUT*/
 
 }
@@ -408,7 +408,7 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
   //encrypt_Handler(sermes);
   int index=find_index_of_room(roomname, THREAD_COUNT);
   D(printf("found room index %d\n", index));
-  if(index){
+  if(index>-1){
     int i =0;
     D(printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns));
     SDL_LockMutex(roomsStackMutex);

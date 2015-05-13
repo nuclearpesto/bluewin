@@ -132,7 +132,7 @@ int readThread (void * p){
 	while(1){
 
 	  string = read_from_server(*sd, response);
-	  //D(printf("recieved %s\n", string));
+	  D(printf("recieved %s\n", string));
 	  masterobj = json_loads(string, 0, NULL);
 	  if(masterobj == NULL){
 	    free(string);
