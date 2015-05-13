@@ -220,7 +220,7 @@ void handle_get_users_in_room(json_t * recieved_obj, clients_t *client){
   room = json_object_get(recieved_obj,"roomname");
   strroom = json_string_value(room);
   if((usersarr=get_users_in_room(strroom))!=NULL){
-    json_object_set_new(writeobj,"usersArr", usersarr);   
+    json_object_set_new(writeobj,"usersArr", usersarr);
     json_success = json_boolean(1);
     json_object_set_new(writeobj,"get users in room", json_success);
 
@@ -240,7 +240,7 @@ void handle_get_users_in_room(json_t * recieved_obj, clients_t *client){
   write_server_message(&sermes, client->socket);
    D(printf("wrote\n "));
     fflush(stdout);
- 
+
 }
 
 
@@ -356,7 +356,7 @@ void handle_logout(clients_t *client){
   client->loggin=false;
   leave_room( client);
   remove_Client(client);
-  
+
     /*TODO MAKE CLIENT SEND RESPONS BEFORE LOGGIN OUT*/
 
 }

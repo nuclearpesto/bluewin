@@ -7,6 +7,7 @@
 //
 
 #include "client.h"
+#include "clientcrypt.h"
 
 
 #define READ_BUF_SIZE 1000
@@ -132,7 +133,7 @@ TCPsocket initClient(bool *loginCheck, json_t * globalUsersInRoomArr, json_t *gl
 				readstruct.sd = sd;
 				readstruct.loginCheck = loginCheck;
 				thread=SDL_CreateThread(readThread, "reader", &readstruct);
-				
+
 				//printf("socket is after thread : %d\n",sd);
 			  if(thread==NULL){
                     printf("SDL_CreateThread: %s\n",SDL_GetError());
@@ -179,7 +180,7 @@ int readThread (void * p){
                     *(loginCheck) = true;
                 }
             }
-			
+
            else if((keycheckobj = json_object_get(masterobj, "message")) != NULL){
                 //add mesage to global message arr
 				buildingblock = json_object();
@@ -191,15 +192,15 @@ int readThread (void * p){
 				json_array_append_new(messageArr, buildingblock);
 				SDL_UnlockMutex(mesageArrMutex);
             }
-			
+
            else if((keycheckobj = json_object_get(masterobj, "get users in room")) != NULL){
                 //add users to global users arr
             }
-			 
+
             else if((keycheckobj = json_object_get(masterobj, "get rooms")) != NULL){
 				// add rooms to global rooms arr
             }
-			
+
             else if((keycheckobj = json_object_get(masterobj, "add user")) != NULL){
 					//give user message if it worked or not
 			}
@@ -260,10 +261,11 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
     //printf("%p",json_s);
     //json_s = "hej\0";
     //kryptera
+    len = strlen(json_s);
     //encrypt_Handler(json_s);
     //puts(json_s);//kontroll
     //printf("%s\n",json_s);
-    len = strlen(json_s);
+    //len = strlen(json_s);
     SDLNet_TCP_Send(*socket, &len, sizeof(int));
     result= SDLNet_TCP_Send(*socket, json_s, len);
 	if( result < len ) {
@@ -274,12 +276,12 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
 }
 
 char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
-	
+
     int temp=0,  res;
 	printf("reading");
     *numBytesRead = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
 	//printf("gonna read %d bytes : %d\n",temp);
-    
+
     response = (char *)malloc(temp+1);
 	SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';
