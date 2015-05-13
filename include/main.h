@@ -15,12 +15,17 @@
 #include "client.h"
 #include <algorithm>
 #include "debug.h"
+#include <stdlib.h>
+#include <errno.h>
+#include <jansson.h>
 
 #ifdef __APPLE__
 //If you are on mac
 #include <SDL2/SDL.h>
 #include <SDL2_image/SDL_image.h>
 #include <SDL2_ttf/SDL_ttf.h>
+#include <SDL2/SDL_thread.h>
+#include <SDL2_net/SDL_net.h>
 #endif
 
 #ifdef __MINGW32__
@@ -28,5 +33,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_thread.h>
+#include <SDL2/SDL_net.h>
 #endif
+
 #endif /* defined(__bluewin_gui__main__) */

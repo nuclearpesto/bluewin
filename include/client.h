@@ -9,6 +9,7 @@
 #ifndef __bluewinclient__client__
 #define __bluewinclient__client__
 
+#include "main.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -19,7 +20,6 @@
 #include <SDL2/SDL_thread.h>
 #include <stdbool.h>
 #include "debug.h"
-#include "main.h"
 #include <algorithm>
 #include "debug.h"
 
@@ -37,8 +37,8 @@ struct Readstruct{
 };typedef struct Readstruct Readstruct;
 
 struct Message{
-    char message[255];
-	char room[255];
+    char *message;
+	char *room;
 
 };typedef struct Message Message_s;
 
@@ -68,6 +68,7 @@ void add_user(json_t * masterobj, user_s *usr, TCPsocket sd);
 void clear_input();
 void string_convert(std::string s,char msg[20]);
 void collect_rooms(json_t *masterobj, int *rooms, TCPsocket socket);
+void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket);
 
 
 #endif /* defined(__bluewinclient__client__) */

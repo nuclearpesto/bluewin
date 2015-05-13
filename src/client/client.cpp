@@ -181,11 +181,12 @@ int readThread (void * p){
             }
 			
            else if((keycheckobj = json_object_get(masterobj, "message")) != NULL){
+               printf("Kandukaban\n");
                 //add mesage to global message arr
 				buildingblock = json_object();
-				current = json_object_get(buildingblock, "username");
+				current = json_object_get(masterobj, "username");
 				json_object_set_new(buildingblock, "username" ,current);
-				current = json_object_get(buildingblock, "message");
+				current = json_object_get(masterobj, "message");
 				json_object_set_new(buildingblock, "message" ,current);
 				SDL_LockMutex(mesageArrMutex);
 				json_array_append_new(messageArr, buildingblock);
@@ -382,9 +383,10 @@ void add_user(json_t * masterobj, user_s *usr, TCPsocket *sd){
     write_to_server(masterobj, sd);
 }
 
-void write_messsage(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket){
+void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket){
 	serialize_username(masterobj, usr);
 	serialize_room(masterobj, msg.room);
 	serialize_message(masterobj, msg);
+    serialize_cmd(masterobj, "msg");
 	write_to_server(masterobj, socket);
 }
