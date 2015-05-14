@@ -182,7 +182,6 @@ int readThread (void * p){
             }
 
            else if((keycheckobj = json_object_get(masterobj, "message")) != NULL){
-               printf("Kandukaban\n");
                 //add mesage to global message arr
 				buildingblock = json_object();
 				current = json_object_get(masterobj, "username");
@@ -279,7 +278,7 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
 char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 
     int temp=0,  res;
-	printf("reading");
+	printf("reading\n");
     *numBytesRead = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
 	//printf("gonna read %d bytes : %d\n",temp);
 
