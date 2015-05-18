@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include "misc.h"
 #include "debug.h"
-
-
+//Toturial taken from here
+//http://www.thelearningpoint.net/computer-science/data-structures-stacks--with-c-program-source-code
 
 void createstack(stack *s,int capacity)
 {
@@ -20,7 +20,7 @@ int push(stack *s, int nr)
       D( printf("Stack overflow"));
         return 1;
     }
-    
+
     //printf("pushing %d to stack\n", nr);
     *(s->current_place) = nr;
     s->size++;
