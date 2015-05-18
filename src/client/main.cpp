@@ -1424,14 +1424,15 @@ int main(int argc, char *argv[]){
 	SDL_mutex *messageArrMutex = SDL_CreateMutex();
     bool loginCheck = false;
     bool createCheck = true;
-
+	//set default room at start so that client correctly sends messages
+	
     //Start up SDL and create window
     if( !initGui(&createCheck, &sd, &loginCheck, globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex) ){
         printf( "Failed to initialize!\n" );
     }else{
         //Main loop flag
         //bool quit = false;
-
+		
         //Event handler
         SDL_Event e;
 
@@ -1444,7 +1445,6 @@ int main(int argc, char *argv[]){
         std::string inputMessageText = "";
         std::string outputMessageOtherText = "";
         std::string outputMessageText = "";
-
         //Enable text input
         SDL_StartTextInput();
 
