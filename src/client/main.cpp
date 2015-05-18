@@ -506,6 +506,14 @@ void LButton::handleEvent(bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL
                             case 7:
                                 printf("Room 6 button\n");
                                 break;
+                                
+                            case 8:
+                                printf("Room 7 button\n");
+                                break;
+                                
+                            case 9:
+                                printf("Room 8 button\n");
+                                break;
 
 
                             default:
@@ -881,6 +889,7 @@ void append_messageArr(json_t* messageArr, user_s * usr, std::string *text, SDL_
 	json_array_append_new(messageArr, buildingblock);
 	SDL_UnlockMutex(mesageArrMutex);
 }
+
 void eventHandler(json_t * messageArr ,SDL_mutex *mesageArrMutex, bool *loginCheck,bool* createCheck, TCPsocket *sd, int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,SDL_Event e, json_t *masterobj){
     //Event handler
     //SDL_Event e;
@@ -982,10 +991,9 @@ void eventHandler(json_t * messageArr ,SDL_mutex *mesageArrMutex, bool *loginChe
                 }else if(i<1+totalFields){
                     gMessageFieldButton[i-1].handleEvent(loginCheck,createCheck,sd,&e, screenShow, &messageButton, i, inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText, masterobj);
                 }else if (i<totalButtons){
-                    gRoomButtons[i-1-totalFields].handleEvent(loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,masterobj);
+                    gRoomButtons[i+2].handleEvent(loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,masterobj);
                 }
             }
-            
             if (writeText) {
                 if (field==2) {
                     getTextString(inputMessageText,e,textColor,outputPasswordText);
@@ -999,17 +1007,13 @@ void eventHandler(json_t * messageArr ,SDL_mutex *mesageArrMutex, bool *loginChe
                             printf("Cant send empty message\n");
                         }else{
                             printf("You sent a message!\n");
-                            //printf("Inte innan det hära,1\n");
                             *outputMessageText=*inputMessageText;
                             *inputMessageText=" ";
-                            //printf("Inte innan det hära,2\n");
                             printf("%s\n",outputMessageText->c_str());
 							append_messageArr(messageArr, &clientUsr, outputMessageText, mesageArrMutex);
                             msg.message=(char*)outputMessageText->c_str();
                             msg.room=(char*)"default";
-                            //printf("Inte innan det hära,3\n");
                             write_message(masterobj, &clientUsr, msg, sd);
-                            //printf("Inte innan det hära,4\n");
                         }
                         break;
 
@@ -1018,16 +1022,6 @@ void eventHandler(json_t * messageArr ,SDL_mutex *mesageArrMutex, bool *loginChe
                 }
             }
         }
-        /*if (writeText) {
-            if (field==0) {
-                getTextString(inputUsernameText,e,textColor,outputPasswordText);
-            }else if (field==1){
-                getTextString(inputPasswordText, e, textColor,outputPasswordText);
-            }else if (field==2){
-                getTextString(inputMessageText, e, textColor, outputPasswordText);
-            }
-        }*/
-    //}
 }
 
 
@@ -1188,7 +1182,7 @@ void createAccountScreen(int* totalButtons, int* totalFields,int* screenShow,Scr
 
 void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,std::string inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText){
     int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530;
-    *totalButtons=1+nrRooms;
+    *totalButtons=1+nrRooms+1;
     *totalFields=1;
     char* cmd;
     bool newMessage = false;
@@ -1212,9 +1206,9 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
     getText("Logout", gLargeFont);
     gTextTexture.render((windowSize.w - logoutButton.w)+((logoutButton.w - gTextTexture.getWidth())/2)-3, (logoutButton.h - gTextTexture.getHeight())/2);
     
+    
+    gMessageFieldButton[0].setPosition(windowSize.w+90,685);
     element=1;
-    gMessageFieldButton[0].setPosition(messageButton.x,messageButton.y);
-
     if (inputMessageText=="" || inputMessageText==" ") {
         inputMessageText=" ";
         getPromptText("Message", gDefaultFont, 2);
@@ -1233,33 +1227,8 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
         getText(*outputMessageText, gLargeFont);
         gTextTexture.render(windowSize.w+400, windowSize.h-200);
     }*/
-    //printf("%d\n",nrMessages);
-    
-    /*for (int i = 0; i < MAXMESSAGES; i++) {
-        cmd="message";
-        //printf("Någon stans mellan\n");
-        tmp=getInfoJson(messageArr,cmd,nrMessages);
-        //printf("och här\n");
-        if (tmp.compare(messages[i])==0) {
-            printf("They are same\n");
-            continue;
-        }else{
-            messages[i]= tmp;*/
-            nrMessages=json_array_size(messageArr);
-            /*if (nrMessages>MAXMESSAGES) {
-                nrMessages=MAXMESSAGES;
-            }
-            fill_message_arr(messages,tmp);
-            cmd="username";
-            username[i]=getInfoJson(messageArr,cmd,nrMessages);
-            cmd="";
-            nrMessages=json_array_size(messageArr);
-            //printf("%d\n",nrMessages);
-            //printf("hej\n");
-            break;
-        }
-    }*/
-    //printf("hej\n");
+
+    nrMessages=json_array_size(messageArr);
     //When user recives message
     box=0;
     if ((*outputMessageOtherText=="" || *outputMessageOtherText==" ")){// || (otherUser=="" || otherUser==" ")) {
@@ -1274,48 +1243,27 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
             space+=box;
         }
     }
-    
-    //while (1) {
-    int mult=0;
-    //printf("%d,\n",nrMessages);
     for (int i = nrMessages-1; i>=0; i--) {
         cmd="message";
         *outputMessageOtherText=getInfoJson(messageArr,cmd,i);
         cmd="username";
         otherUser=getInfoJson(messageArr,cmd,i);
-        if ((*outputMessageOtherText=="" || *outputMessageOtherText==" ")){// || (otherUser=="" || otherUser==" ")) {
-            *outputMessageOtherText=" ";
-            otherUser=" ";
-        }else{
-            box=0;
-            getText(*outputMessageOtherText, gLargeFont);
-            box+=gTextTexture.getHeight();
-            getText(otherUser, gDefaultFont);
-            box+=gTextTexture.getHeight();
-            if ((box+space)<=messageAreaSize) {
-                //space+=box;
-            }
-        }
-        if(space<=messageAreaSize) {
-            //*outputMessageOtherText=messages[i];
-            //otherUser=username[i];
+        if(space<=messageAreaSize){
             if (*outputMessageOtherText=="" || *outputMessageOtherText==" ") {
                 *outputMessageOtherText=" ";
+                otherUser=" ";
             }else{
                 if (clientUsr.username==otherUser) {
                     getText(*outputMessageOtherText, gLargeFont);
                     gTextTexture.render(windowSize.w+400, ((windowSize.h-100)-gTextTexture.getHeight())-(space));
                     getText(clientUsr.username, gDefaultFont);
-                    gTextTexture.render(windowSize.w+400, ((windowSize.h-100)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-(space));
+                    gTextTexture.render(windowSize.w+400, ((windowSize.h-100)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-space);
                 }else{
                     getText(*outputMessageOtherText, gLargeFont);
                     gTextTexture.render(windowSize.w+3, ((windowSize.h-100)-gTextTexture.getHeight())-(space));
                     getText(otherUser, gDefaultFont);
-                    gTextTexture.render(windowSize.w+3, ((windowSize.h-100)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-(space));
+                    gTextTexture.render(windowSize.w+3, ((windowSize.h-100)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-space);
                 }
-                mult++;
-                //(printf("%d\n",mult);
-                //}
                 space+=box;
             }
         }else{
@@ -1325,22 +1273,19 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
     
     //Render room buttons
     for (int i = 0; i < nrRooms; ++i) {
-        gRoomButtons[i].render(screenShow,&element);
+        gRoomButtons[i+4].render(screenShow,&element);
         //Positionate room buttons
-        gRoomButtons[i].setPosition(buttX, (buttY+(buttonTypeWide.h*i)));
+        gRoomButtons[i+4].setPosition(0, (buttY+(75*i)));
         //Get text on button
         std::ostringstream stream;
         stream << "Chat room " << i+1;
         std::string text = stream.str();
         getText(text, gLargeFont);
-        gTextTexture.render((buttX+((buttonTypeWide.w - gTextTexture.getWidth())/2)), (buttY+((buttonTypeWide.h - gTextTexture.getHeight())/2)+(buttonTypeWide.h*i)));
+        gTextTexture.render((0+((buttonTypeWide.w - gTextTexture.getWidth())/2)), (buttY+((buttonTypeWide.h - gTextTexture.getHeight())/2)+(buttonTypeWide.h*i)));
     }
-    //printf("hej\n");
 }
 
 void runingGui(SDL_mutex *mesageArrMutex, json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket* sd,int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,SDL_Event* e, json_t *masterobj){
-    //Render text flag
-    //bool renderText = false;
 
     while( SDL_PollEvent( e ) != 0 ){
         eventHandler(messageArr, mesageArrMutex, loginCheck,createCheck, sd, screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, inputUsernameText, inputPasswordText,inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,inputMessageText,outputMessageText,*e,masterobj);
@@ -1390,7 +1335,7 @@ int initGui( bool *createCheck, TCPsocket * sd, bool *loginCheck, json_t * globa
 int main(int argc, char *argv[]){
     //Initialize varibles
 	TCPsocket sd;
-    int screenShow = 0,totalButtons=0,totalFields=0,nrRooms=3;//,field = 0;
+    int screenShow = 0,totalButtons=0,totalFields=0,nrRooms=8;//,field = 0;
     Screen windowSize;
     windowSize.w=400;
     windowSize.h=800;
