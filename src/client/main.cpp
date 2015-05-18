@@ -1336,7 +1336,7 @@ void runingGui(json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket*
     SDL_RenderPresent(gRenderer);
 }
 
-int initGui(TCPsocket * sd, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
+int initGui( bool *createCheck, TCPsocket * sd, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
     bool test=true;
     //Start up SDL and create window
     if( !init(windowSize) ){
@@ -1349,7 +1349,7 @@ int initGui(TCPsocket * sd, bool *loginCheck, json_t * globalUsersInRoomArr, jso
             test=false;
         }else{
             //Connect to server
-            if (!((*sd)=initClient(loginCheck,globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex ))) {
+            if (!((*sd)=initClient(createCheck, loginCheck,globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex ))) {
                 printf("Failed to connect to server\n");
                 test=false;
             }
@@ -1397,7 +1397,7 @@ int main(int argc, char *argv[]){
     bool createCheck = true;
 
     //Start up SDL and create window
-    if( !initGui(&sd, &loginCheck, globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex) ){
+    if( !initGui(&createCheck, &sd, &loginCheck, globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex) ){
         printf( "Failed to initialize!\n" );
     }else{
         //Main loop flag

@@ -31,7 +31,7 @@
 
 struct Readstruct{
 	TCPsocket sd;
-	bool *loginCheck;
+	bool *loginCheck, *createCheck;
 	json_t * globalUsersInRoomArr, *globalRoomArr, *messageArr;
 	SDL_mutex *messageArrMutex;
 };typedef struct Readstruct Readstruct;
@@ -47,7 +47,7 @@ typedef struct User{
     char *password;
 }user_s;
 
-TCPsocket initClient(bool *loginCheck);
+//TCPsocket initClient(bool *loginCheck);
 void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText, TCPsocket *sd);
 
 void clear_str(char str[], int size);
@@ -61,7 +61,7 @@ void serialize_username(json_t *masterobj,user_s *usr );
 void message_printer(json_t *masterobj);
 void logout(json_t *masterobj, TCPsocket *socket);
 int readThread (void * p);
-TCPsocket initClient(bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex * messageArrMutex);
+TCPsocket initClient(bool *createCheck,  bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex * messageArrMutex);
 void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText, TCPsocket sd);
 void add_user(json_t * masterobj, user_s *usr, TCPsocket* sd);
 void clear_input();

@@ -324,6 +324,8 @@ void handle_add_user(json_t *recieved_obj, clients_t *client){
 	json_object_set_new(writeobj, "add user", json_created_val);
 	json_object_set_new(writeobj, "username",username);
 	char * jsonString = json_dumps(writeobj, 0);
+	
+	D(printf("gonnar write tis response to client:%s\n", jsonString));
 	SerializedMessage_t sermes = create_serialized_message(jsonString);
 	write_server_message(&sermes, client->socket);
 
