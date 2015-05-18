@@ -870,8 +870,18 @@ SDL_Texture* loadTexture(std::string path){
     }
     return newTexture;
 }
-
-void eventHandler(bool *loginCheck,bool* createCheck, TCPsocket *sd, int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,SDL_Event e, json_t *masterobj){
+void append_messageArr(json_t* messageArr, user_s * usr, std::string *text, SDL_mutex *mesageArrMutex){
+	json_t * buildingblock, *current;
+	buildingblock = json_object();
+	current = json_string(usr->username);
+	json_object_set_new(buildingblock, "username" ,current);
+	current = json_string(text->c_str());
+	json_object_set_new(buildingblock, "message" ,current);
+	SDL_LockMutex(mesageArrMutex);
+	json_array_append_new(messageArr, buildingblock);
+	SDL_UnlockMutex(mesageArrMutex);
+}
+void eventHandler(json_t * messageArr ,SDL_mutex *mesageArrMutex, bool *loginCheck,bool* createCheck, TCPsocket *sd, int* screenShow,int totalButtons, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,SDL_Event e, json_t *masterobj){
     //Event handler
     //SDL_Event e;
     int totalElements = totalButtons + totalFields;
@@ -994,6 +1004,7 @@ void eventHandler(bool *loginCheck,bool* createCheck, TCPsocket *sd, int* screen
                             *inputMessageText=" ";
                             //printf("Inte innan det hära,2\n");
                             printf("%s\n",outputMessageText->c_str());
+							append_messageArr(messageArr, &clientUsr, outputMessageText, mesageArrMutex);
                             msg.message=(char*)outputMessageText->c_str();
                             msg.room=(char*)"default";
                             //printf("Inte innan det hära,3\n");
@@ -1018,6 +1029,7 @@ void eventHandler(bool *loginCheck,bool* createCheck, TCPsocket *sd, int* screen
         }*/
     //}
 }
+
 
 std::string getInfoJson(json_t *messageArr,char* cmd,int i){
     //Försöka få användarnamnet
@@ -1312,12 +1324,12 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
     //printf("hej\n");
 }
 
-void runingGui(json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket* sd,int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,SDL_Event* e, json_t *masterobj){
+void runingGui(SDL_mutex *mesageArrMutex, json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket* sd,int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,SDL_Event* e, json_t *masterobj){
     //Render text flag
     //bool renderText = false;
 
     while( SDL_PollEvent( e ) != 0 ){
-        eventHandler(loginCheck,createCheck, sd, screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, inputUsernameText, inputPasswordText,inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,inputMessageText,outputMessageText,*e,masterobj);
+        eventHandler(messageArr, mesageArrMutex, loginCheck,createCheck, sd, screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, inputUsernameText, inputPasswordText,inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,inputMessageText,outputMessageText,*e,masterobj);
     }
 
     //Clear screen
@@ -1424,7 +1436,7 @@ int main(int argc, char *argv[]){
 
         //While application is running
         while( !quit ){
-            runingGui(messageArr,&loginCheck,&createCheck, &sd, &screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, &inputUsernameText, &inputPasswordText, &inputRetypePasswordText, &outputPasswordText,&outputRetypePasswordText,&inputMessageText,&outputMessageText,&outputMessageOtherText, &e, masterobj);
+            runingGui(messageArrMutex,messageArr,&loginCheck,&createCheck, &sd, &screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, &inputUsernameText, &inputPasswordText, &inputRetypePasswordText, &outputPasswordText,&outputRetypePasswordText,&inputMessageText,&outputMessageText,&outputMessageOtherText, &e, masterobj);
         }
         //Disable text input
         SDL_StopTextInput();
