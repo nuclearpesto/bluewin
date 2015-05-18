@@ -1224,7 +1224,7 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
     }
 
     //When user send message
-    if (*outputMessageText=="" || *outputMessageText==" ") {
+    /*if (*outputMessageText=="" || *outputMessageText==" ") {
         //printf("There are no user messages\n");
         *outputMessageText=" ";
     }else{
@@ -1232,7 +1232,7 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
         gTextTexture.render(windowSize.w+400, (windowSize.h-200)-gUsernameTextTexture.getHeight());
         getText(*outputMessageText, gLargeFont);
         gTextTexture.render(windowSize.w+400, windowSize.h-200);
-    }
+    }*/
     //printf("%d\n",nrMessages);
     
     /*for (int i = 0; i < MAXMESSAGES; i++) {
@@ -1302,16 +1302,17 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
             if (*outputMessageOtherText=="" || *outputMessageOtherText==" ") {
                 *outputMessageOtherText=" ";
             }else{
-                //if (otherUser=="" || otherUser==" ") {
-                    //otherUser=" ";
-                //}else{
+                if (clientUsr.username==otherUser) {
+                    getText(*outputMessageOtherText, gLargeFont);
+                    gTextTexture.render(windowSize.w+400, ((windowSize.h-100)-gTextTexture.getHeight())-(space));
+                    getText(clientUsr.username, gDefaultFont);
+                    gTextTexture.render(windowSize.w+400, ((windowSize.h-100)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-(space));
+                }else{
                     getText(*outputMessageOtherText, gLargeFont);
                     gTextTexture.render(windowSize.w+3, ((windowSize.h-100)-gTextTexture.getHeight())-(space));
-                    //box+=gTextTexture.getHeight();
                     getText(otherUser, gDefaultFont);
                     gTextTexture.render(windowSize.w+3, ((windowSize.h-100)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-(space));
-                    //box+=gTextTexture.getHeight();
-                    //space+=box;
+                }
                 mult++;
                 //(printf("%d\n",mult);
                 //}
