@@ -198,13 +198,13 @@ int readThread (void * p){
 
            else if((keycheckobj = json_object_get(masterobj, "get users in room")) != NULL){
 				if(json_is_true(keycheckobj)){
-					globalUsersInRoomArr = json_get_obj(masterobj, "users");
+					globalUsersInRoomArr = json_object_get(masterobj, "users");
 				}
             }
 
             else if((keycheckobj = json_object_get(masterobj, "get rooms")) != NULL){
 				if(json_is_true(keycheckobj)){
-					globalRoomArr = json_get_obj(masterobj, "rooms");
+					globalRoomArr = json_object_get(masterobj, "rooms");
 				}
             }
 
