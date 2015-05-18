@@ -1264,8 +1264,10 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
     }
     
     //while (1) {
-    for (int i = 0; i<nrMessages; i++) {
-        int mult=1;
+    int mult=0;
+    //printf("%d,\n",nrMessages);
+    for (int i = nrMessages-1; i>=0; i--) {
+        
         if(space<=messageAreaSize) {
             cmd="message";
             *outputMessageOtherText=getInfoJson(messageArr,cmd,i);
@@ -1280,13 +1282,14 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
                     //otherUser=" ";
                 //}else{
                     getText(*outputMessageOtherText, gLargeFont);
-                    gTextTexture.render(windowSize.w+3, ((windowSize.h-150)-gTextTexture.getHeight())+(space*mult));
+                    gTextTexture.render(windowSize.w+3, ((windowSize.h-150)-gTextTexture.getHeight())-(space*mult));
                     //box+=gTextTexture.getHeight();
                     getText(otherUser, gDefaultFont);
-                    gTextTexture.render(windowSize.w+3, ((windowSize.h-150)-gTextTexture.getHeight()-box)+(space*mult));
+                    gTextTexture.render(windowSize.w+3, ((windowSize.h-150)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-(space*mult));
                     //box+=gTextTexture.getHeight();
                     //space+=box;
                 mult++;
+                printf("%d\n",mult);
                 //}
             }
         }else{
