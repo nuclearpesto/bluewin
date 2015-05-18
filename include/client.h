@@ -64,7 +64,7 @@ void logout(json_t *masterobj, TCPsocket *socket);
 int readThread (void * p);
 TCPsocket initClient(bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex * messageArrMutex);
 void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText, TCPsocket sd);
-void add_user(json_t * masterobj, user_s *usr, TCPsocket sd);
+void add_user(json_t * masterobj, user_s *usr, TCPsocket *sd);
 void clear_input();
 void string_convert(std::string s,char msg[20]);
 void collect_rooms(json_t *masterobj, int *rooms, TCPsocket socket);

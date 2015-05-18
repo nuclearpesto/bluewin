@@ -347,7 +347,7 @@ void createUser(int* screenShow,std::string* inputUsernameText,std::string* inpu
     clientUsr.password=(char*)inputPasswordText->c_str();
     if (*screenShow==1) {
         //Undefined symbols
-        //add_user(masterobj,&clientUsr,*sd);
+        add_user(masterobj,&clientUsr, sd);
     }
     while(!*createCheck && c<10){
         system("sleep(1)");

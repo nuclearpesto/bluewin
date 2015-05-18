@@ -1,0 +1,8 @@
+user connects
+gets added to clients list, username is "" ipaddress is 0 loggin = FALSE
+client sends login request
+server loads userarr
+server checks login and username
+success[server sets client login to true and adds user to default room];
+failure[server sets client login to false]
+server issues login false or login true.
