@@ -99,16 +99,18 @@ user_s usr;
     }
 }*/
 
-TCPsocket initClient(bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
+TCPsocket initClient(bool * createCheck, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
     bool success = true;
     SDL_Thread *thread;
 	TCPsocket sd = NULL;
 	*loginCheck = false;
+	*createCheck  =false;
 	Readstruct readstruct;
 	readstruct.globalUsersInRoomArr = globalUsersInRoomArr;
 	readstruct.globalRoomArr = globalRoomArr;
 	readstruct.messageArr = messageArr;
 	readstruct.messageArrMutex = messageArrMutex;
+	readstruct.createCheck = createCheck;
     //IPaddress ip;
     //TCPsocket sd;
 
@@ -150,6 +152,7 @@ int readThread (void * p){
    Readstruct *r = (Readstruct *) p;
     TCPsocket socket = r->sd;
 	bool *loginCheck = r->loginCheck;
+	bool *createCheck = r->createCheck;
 	char *response;
     char *string;
     json_t *masterobj;
@@ -202,7 +205,7 @@ int readThread (void * p){
             }
 
             else if((keycheckobj = json_object_get(masterobj, "add user")) != NULL){
-					//give user message if it worked or not
+					*createCheck = true;
 			}
 
         }
@@ -280,7 +283,7 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
     int temp=0,  res;
 	printf("reading\n");
     *numBytesRead = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
-	//printf("gonna read %d bytes : %d\n",temp);
+	printf("gonna read %d bytes : %d\n",temp);
 
     response = (char *)malloc(temp+1);
 	SDLNet_TCP_Recv(socket,response, temp );
