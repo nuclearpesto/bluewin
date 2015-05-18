@@ -1279,12 +1279,24 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
     int mult=0;
     //printf("%d,\n",nrMessages);
     for (int i = nrMessages-1; i>=0; i--) {
-        
+        cmd="message";
+        *outputMessageOtherText=getInfoJson(messageArr,cmd,i);
+        cmd="username";
+        otherUser=getInfoJson(messageArr,cmd,i);
+        if ((*outputMessageOtherText=="" || *outputMessageOtherText==" ")){// || (otherUser=="" || otherUser==" ")) {
+            *outputMessageOtherText=" ";
+            otherUser=" ";
+        }else{
+            box=0;
+            getText(*outputMessageOtherText, gLargeFont);
+            box+=gTextTexture.getHeight();
+            getText(otherUser, gDefaultFont);
+            box+=gTextTexture.getHeight();
+            if ((box+space)<=messageAreaSize) {
+                //space+=box;
+            }
+        }
         if(space<=messageAreaSize) {
-            cmd="message";
-            *outputMessageOtherText=getInfoJson(messageArr,cmd,i);
-            cmd="username";
-            otherUser=getInfoJson(messageArr,cmd,i);
             //*outputMessageOtherText=messages[i];
             //otherUser=username[i];
             if (*outputMessageOtherText=="" || *outputMessageOtherText==" ") {
@@ -1294,15 +1306,16 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
                     //otherUser=" ";
                 //}else{
                     getText(*outputMessageOtherText, gLargeFont);
-                    gTextTexture.render(windowSize.w+3, ((windowSize.h-150)-gTextTexture.getHeight())-(space*mult));
+                    gTextTexture.render(windowSize.w+3, ((windowSize.h-100)-gTextTexture.getHeight())-(space));
                     //box+=gTextTexture.getHeight();
                     getText(otherUser, gDefaultFont);
-                    gTextTexture.render(windowSize.w+3, ((windowSize.h-150)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-(space*mult));
+                    gTextTexture.render(windowSize.w+3, ((windowSize.h-100)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-(space));
                     //box+=gTextTexture.getHeight();
                     //space+=box;
                 mult++;
-                printf("%d\n",mult);
+                //(printf("%d\n",mult);
                 //}
+                space+=box;
             }
         }else{
             break;
