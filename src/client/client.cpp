@@ -197,15 +197,21 @@ int readThread (void * p){
             }
 
            else if((keycheckobj = json_object_get(masterobj, "get users in room")) != NULL){
-                //add users to global users arr
+				if(json_is_true(keycheckobj)){
+					globalUsersInRoomArr = json_get_obj(masterobj, "users");
+				}
             }
 
             else if((keycheckobj = json_object_get(masterobj, "get rooms")) != NULL){
-				// add rooms to global rooms arr
+				if(json_is_true(keycheckobj)){
+					globalRoomArr = json_get_obj(masterobj, "rooms");
+				}
             }
 
             else if((keycheckobj = json_object_get(masterobj, "add user")) != NULL){
+			if(json_is_true(keycheckobj)){
 					*createCheck = true;
+				}
 			}
 
         }

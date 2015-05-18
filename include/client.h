@@ -61,7 +61,7 @@ void serialize_username(json_t *masterobj,user_s *usr );
 void message_printer(json_t *masterobj);
 void logout(json_t *masterobj, TCPsocket *socket);
 int readThread (void * p);
-TCPsocket initClient(bool *createCheck,  bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex * messageArrMutex);
+TCPsocket initClient(json_t* globalRoomArr, json_t* globalUsersInRoomArr, bool *createCheck,  bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex * messageArrMutex);
 void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* inputPasswordText, TCPsocket sd);
 void add_user(json_t * masterobj, user_s *usr, TCPsocket* sd);
 void clear_input();
