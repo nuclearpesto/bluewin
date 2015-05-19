@@ -272,7 +272,7 @@ void handle_add_room(json_t * recieved_obj, clients_t *client){
   json_t *writeobj, *room;
   bool success = false;
   char *strroom;
-  room = json_object_get(recieved_obj, "roomname");
+  room = json_object_get(recieved_obj, "room");
   if(room!=NULL){
     strroom = json_string_value(room);
     add_room(strroom);

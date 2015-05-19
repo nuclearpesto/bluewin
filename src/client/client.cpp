@@ -368,24 +368,24 @@ void logout(json_t *masterobj, TCPsocket *socket){
     write_to_server(masterobj, socket);
 }
 
-void get_users_in_room(json_t *masterobj, char *room,  int *rooms, TCPsocket *socket){
+void get_users_in_room(json_t *masterobj, char *room, TCPsocket *socket){
     serialize_cmd(masterobj, "get users in room");
     write_to_server(masterobj, socket);
 }
 
-void add_room(json_t *masterobj, char *room,  char *rooms, TCPsocket *socket){
+void add_room(json_t *masterobj, char *room, TCPsocket *socket){
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "add room");
     write_to_server(masterobj, socket);
 }
 
-void delete_room(json_t *masterobj, char *room,  char *rooms, TCPsocket *socket){
+void delete_room(json_t *masterobj, char *room, TCPsocket *socket){
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "delete room");
     write_to_server(masterobj, socket);
 }
 
-void switch_room(json_t *masterobj, char *room,  char *rooms, TCPsocket *socket){
+void switch_room(json_t *masterobj, char *room ,TCPsocket *socket){
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "switch room");
     write_to_server(masterobj, socket);

@@ -45,7 +45,7 @@ struct Message{
 typedef struct User{
     char *username;
     char *password;
-	std::string currentRoom;
+	std::string room;
 }user_s;
 
 //TCPsocket initClient(bool *loginCheck);
@@ -68,6 +68,8 @@ void add_user(json_t * masterobj, user_s *usr, TCPsocket* sd);
 void clear_input();
 void string_convert(std::string s,char msg[20]);
 void collect_rooms(json_t *masterobj, TCPsocket *socket);
+void switch_room(json_t *masterobj, char *room,  TCPsocket *socket);
+void add_room(json_t *masterobj, char *room, TCPsocket *socket);
 void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket);
 
 
