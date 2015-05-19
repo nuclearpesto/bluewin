@@ -43,7 +43,7 @@ const int TOTAL_BUTTONS = 1;
 //Room button constants
 const int ROOM_BUTTON_WIDTH = 400;
 const int ROOM_BUTTON_HEIGHT = 75;
-const int ROOM_BUTTON_TOTAL = 1;
+const int ROOM_BUTTON_TOTAL = 8;
 
 enum LButtonSprite{
     BUTTON_SPRITE_MOUSE_DEFAULT = 0,
@@ -991,7 +991,7 @@ void eventHandler(json_t * messageArr ,SDL_mutex *mesageArrMutex, bool *loginChe
                 }else if(i<1+totalFields){
                     gMessageFieldButton[i-1].handleEvent(loginCheck,createCheck,sd,&e, screenShow, &messageButton, i, inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText, masterobj);
                 }else if (i<totalButtons){
-                    gRoomButtons[i+2].handleEvent(loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,masterobj);
+                    gRoomButtons[i-2].handleEvent(loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,masterobj);
                 }
             }
             if (writeText) {
@@ -1273,9 +1273,9 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
     
     //Render room buttons
     for (int i = 0; i < nrRooms; ++i) {
-        gRoomButtons[i+4].render(screenShow,&element);
+        gRoomButtons[i].render(screenShow,&element);
         //Positionate room buttons
-        gRoomButtons[i+4].setPosition(0, (buttY+(75*i)));
+        gRoomButtons[i].setPosition(0, (buttY+(75*i)));
         //Get text on button
         std::ostringstream stream;
         stream << "Chat room " << i+1;
