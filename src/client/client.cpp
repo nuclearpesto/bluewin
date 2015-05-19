@@ -203,8 +203,13 @@ int readThread (void * p){
             }
 
             else if((keycheckobj = json_object_get(masterobj, "get rooms")) != NULL){
-				if(json_is_true(keycheckobj)){
-					globalRoomArr = json_object_get(masterobj, "rooms");
+				printf("collect rooms response");
+				if(json_is_true(keycheckobj)){	
+					printf("found rooms arr");
+					buildingblock= json_object_get(masterobj, "roomsArr");
+					json_array_clear(globalRoomArr);
+					json_array_extend(globalRoomArr, buildingblock);
+					//free (buildingblock);
 				}
             }
 
@@ -353,7 +358,7 @@ void serialize_message(json_t *masterobj, Message_s msg){
     json_object_set_new(masterobj, "message", string);
 }
 
-void collect_rooms(json_t *masterobj, char *rooms, TCPsocket *socket){
+void collect_rooms(json_t *masterobj, TCPsocket *socket){
     serialize_cmd(masterobj, "get rooms");
     write_to_server(masterobj, socket);
 }

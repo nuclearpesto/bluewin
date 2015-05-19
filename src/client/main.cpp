@@ -335,6 +335,7 @@ void sendLogin(int* screenShow,std::string* inputUsernameText,std::string* input
         }
     }
     if (*loginCheck) {
+		collect_rooms(masterobj, sd);
         *screenShow=2;
         clientUsr.username=(char*)inputUsernameText->c_str();
         clientUsr.password=(char*)inputPasswordText->c_str();
@@ -485,6 +486,7 @@ void LButton::handleEvent(bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL
 
                             case 2:
                                 printf("Room 1 button\n");
+								collect_rooms(masterobj, sd);
                                 break;
 
                             case 3:
@@ -1049,6 +1051,30 @@ std::string getInfoJson(json_t *messageArr,char* cmd,int i){
     //printf("kan vara här\n");
     return info;
 }
+std::string getInfoJsonRoom(json_t *roomArr,int i){
+    //Försöka få användarnamnet
+    std::string info=" ";
+    const char* hej;
+    const json_t* stuffInfo;
+    json_t* stuff;
+    int size;
+    size=json_array_size(roomArr);
+    //printf("%d\n",size);
+    stuff=json_array_get(roomArr, i);
+	hej = json_string_value(stuff);
+    //printf("kan vara här\n");
+    //printf("%s\n",hej);
+    if (hej!=NULL) {
+        std::string tmp(hej);
+        info=tmp;
+        //printf("Username: %s\n",info.c_str());
+    }else{
+        info=" ";
+    }
+    //printf("kan vara här\n");
+    return info;
+}
+
 
 void fill_message_arr(std::string messages[],std::string newMessage){
     std::string tmp;
@@ -1180,7 +1206,7 @@ void createAccountScreen(int* totalButtons, int* totalFields,int* screenShow,Scr
     
 }
 
-void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,std::string inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText){
+void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *messageArr,int* totalButtons, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,std::string inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText){
     int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530;
     *totalButtons=1+nrRooms+1;
     *totalFields=1;
@@ -1272,20 +1298,22 @@ void mainScreen(json_t *messageArr,int* totalButtons, int* totalFields,int nrRoo
     }
     
     //Render room buttons
+	nrRooms = json_array_size(globalRoomArr);
     for (int i = 0; i < nrRooms; ++i) {
         gRoomButtons[i].render(screenShow,&element);
         //Positionate room buttons
         gRoomButtons[i].setPosition(0, (buttY+(75*i)));
         //Get text on button
         std::ostringstream stream;
-        stream << "Chat room " << i+1;
-        std::string text = stream.str();
-        getText(text, gLargeFont);
+        //stream << "Chat room " << i+1;
+        //std::string text = stream.str();
+        std::string text = getInfoJsonRoom(globalRoomArr, i);
+		getText(text, gLargeFont);
         gTextTexture.render((0+((buttonTypeWide.w - gTextTexture.getWidth())/2)), (buttY+((buttonTypeWide.h - gTextTexture.getHeight())/2)+(buttonTypeWide.h*i)));
     }
 }
 
-void runingGui(SDL_mutex *mesageArrMutex, json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket* sd,int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,SDL_Event* e, json_t *masterobj){
+void runingGui(json_t* globalUsersInRoomArr, json_t *globalRoomArr, SDL_mutex *mesageArrMutex, json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket* sd,int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,SDL_Event* e, json_t *masterobj){
 
     while( SDL_PollEvent( e ) != 0 ){
         eventHandler(messageArr, mesageArrMutex, loginCheck,createCheck, sd, screenShow, *totalButtons, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, inputUsernameText, inputPasswordText,inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,inputMessageText,outputMessageText,*e,masterobj);
@@ -1303,7 +1331,7 @@ void runingGui(SDL_mutex *mesageArrMutex, json_t *messageArr,bool* loginCheck,bo
     }else if (*screenShow==1){
         createAccountScreen(totalButtons, totalFields, screenShow, windowSize, loginButton, fieldButton,logoutButton, *inputUsernameText, *inputPasswordText, *inputRetypePasswordText);
     }else{
-        mainScreen(messageArr,totalButtons, totalFields, nrRooms, screenShow, windowSize, logoutButton, buttonTypeWide,messageButton,*inputMessageText,outputMessageText,outputMessageOtherText);
+        mainScreen(globalRoomArr, globalUsersInRoomArr, messageArr,totalButtons, totalFields, nrRooms, screenShow, windowSize, logoutButton, buttonTypeWide,messageButton,*inputMessageText,outputMessageText,outputMessageOtherText);
     }
 
     //Update screen
@@ -1335,7 +1363,7 @@ int initGui( bool *createCheck, TCPsocket * sd, bool *loginCheck, json_t * globa
 int main(int argc, char *argv[]){
     //Initialize varibles
 	TCPsocket sd;
-    int screenShow = 0,totalButtons=0,totalFields=0,nrRooms=8;//,field = 0;
+    int screenShow = 0,totalButtons=0,totalFields=0,nrRooms=1;//,field = 0;
     Screen windowSize;
     windowSize.w=400;
     windowSize.h=800;
@@ -1395,7 +1423,7 @@ int main(int argc, char *argv[]){
 
         //While application is running
         while( !quit ){
-            runingGui(messageArrMutex,messageArr,&loginCheck,&createCheck, &sd, &screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, &inputUsernameText, &inputPasswordText, &inputRetypePasswordText, &outputPasswordText,&outputRetypePasswordText,&inputMessageText,&outputMessageText,&outputMessageOtherText, &e, masterobj);
+            runingGui(globalUsersInRoomArr, globalRoomArr,messageArrMutex,messageArr,&loginCheck,&createCheck, &sd, &screenShow, &totalButtons, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton, &inputUsernameText, &inputPasswordText, &inputRetypePasswordText, &outputPasswordText,&outputRetypePasswordText,&inputMessageText,&outputMessageText,&outputMessageOtherText, &e, masterobj);
         }
         //Disable text input
         SDL_StopTextInput();

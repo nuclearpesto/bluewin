@@ -67,7 +67,7 @@ void send_login(json_t *masterobj,std::string* inputUsernameText, std::string* i
 void add_user(json_t * masterobj, user_s *usr, TCPsocket* sd);
 void clear_input();
 void string_convert(std::string s,char msg[20]);
-void collect_rooms(json_t *masterobj, int *rooms, TCPsocket socket);
+void collect_rooms(json_t *masterobj, TCPsocket *socket);
 void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket);
 
 
