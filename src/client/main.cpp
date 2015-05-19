@@ -43,7 +43,7 @@ const int TOTAL_BUTTONS = 1;
 //Room button constants
 const int ROOM_BUTTON_WIDTH = 400;
 const int ROOM_BUTTON_HEIGHT = 75;
-const int ROOM_BUTTON_TOTAL = 8;
+const int ROOM_BUTTON_TOTAL = 100;
 
 enum LButtonSprite{
     BUTTON_SPRITE_MOUSE_DEFAULT = 0,
@@ -1288,9 +1288,14 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
         //stream << "Chat room " << i+1;
         //std::string text = stream.str();
         std::string text = getInfoJsonRoom(globalRoomArr, i);
+		
+		if(!clientUsr.room.compare(text)){
+			text += " (current)";
+		}
 		getText(text, gLargeFont);
-        gTextTexture.render((0+((buttonTypeWide.w - gTextTexture.getWidth())/2)), (buttY+((buttonTypeWide.h - gTextTexture.getHeight())/2)+(buttonTypeWide.h*i)));
-    }
+		gTextTexture.render((0+((buttonTypeWide.w - gTextTexture.getWidth())/2)), (buttY+((buttonTypeWide.h - gTextTexture.getHeight())/2)+(buttonTypeWide.h*i)));	
+		
+   }
 }
 
 void runingGui(json_t* globalUsersInRoomArr, json_t *globalRoomArr, SDL_mutex *mesageArrMutex, json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket* sd,int* screenShow,int* totalButtons, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,SDL_Event* e, json_t *masterobj){
