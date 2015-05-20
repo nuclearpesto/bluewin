@@ -304,9 +304,10 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
     response = (char *)malloc(temp+1);
 	SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';
+    //decrypt_Handler(response);
     printf("read response : %s\n",response);
     //dekryptera
-    //decrypt_Handler(response);
+    
     return response;
 }
 

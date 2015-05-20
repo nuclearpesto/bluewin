@@ -14,7 +14,7 @@ void encrypt_cli(unsigned long k[], unsigned long tmp[])
     tmp[0]=y; tmp[1]=z;
 }
 
-void encrypt_Handler(char msg[])
+void encrypt_Handler(char* msg)
 {
     unsigned long k[4];
     k[0]=11111111111111;
@@ -62,7 +62,7 @@ void decrypt(unsigned long k[], unsigned long tmp[])
     tmp[0]=y;tmp[1]=z;
 }
 
-void decrypt_Handler(char msg[])
+void decrypt_Handler(char* msg)
 {
     char tmp[8];
     unsigned long k[4];
