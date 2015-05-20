@@ -1040,10 +1040,10 @@ void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesage
                     gCreateRoomButton[i-1].handleEvent(globalRoomArr, loginCheck, createCheck, sd, &e, screenShow,&createRoomButton , i, inputUsernameText, inputPasswordText, inputRetypePasswordText, outputPasswordText, outputRetypePasswordText,newRoomNameText, masterobj);
                 }else if (i<3){
                     gCreateRoomNameFieldButton[i-2].handleEvent(globalRoomArr, loginCheck, createCheck, sd, &e, screenShow, &createRoomFieldButton, i, inputUsernameText, inputPasswordText, inputRetypePasswordText, outputPasswordText, outputRetypePasswordText,newRoomNameText, masterobj);
-                }else if(i<3+totalFields){
+                }else if(i<2+totalFields){
                     gMessageFieldButton[i-3].handleEvent(globalRoomArr,loginCheck,createCheck,sd,&e, screenShow, &messageButton, i, inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText, masterobj);
                 }else if (i<totalButtons){
-                    gRoomButtons[i-4-totalFields].handleEvent(globalRoomArr,loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gRoomButtons[i-2-totalFields].handleEvent(globalRoomArr,loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
                 }
             }
             if (writeText) {
@@ -1241,8 +1241,8 @@ void createAccountScreen(int* totalButtons, int* totalFields,int* screenShow,Scr
 void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *messageArr,int* totalButtons, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,Button createRoomButton,Button createRoomFieldButton,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText){
     int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530;
 	nrRooms = json_array_size(globalRoomArr);   
-    *totalButtons=1+nrRooms+1+1;
-    *totalFields=1;
+    *totalButtons=1+nrRooms+1+1+1;
+    *totalFields=1+1;
     //clientUsr.username="Hejsan";
     char* cmd;
     bool newMessage = false;
