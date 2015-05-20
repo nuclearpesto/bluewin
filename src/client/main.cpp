@@ -164,6 +164,7 @@ LTexture gPasswordTextTexture;
 LTexture gRetypePasswordTexture;
 LTexture gMessageTextTexture;
 LTexture gCreateRoomNameTextTexture;
+LTexture gUserInRoomTexture;
 
 //Login button sprites
 SDL_Rect gLoginSpriteClips[ BUTTON_SPRITE_TOTAL ];
@@ -879,6 +880,7 @@ void close(){
     gPasswordTextTexture.free();
     gMessageTextTexture.free();
     gCreateRoomNameTextTexture.free();
+    gUserInRoomTexture.free();
 
     //Free global font
     TTF_CloseFont(gDefaultFont);
@@ -1232,7 +1234,7 @@ void createAccountScreen(int* totalButtons, int* totalFields,int* screenShow,Scr
 }
 
 void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *messageArr,int* totalButtons, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,Button createRoomButton,Button createRoomFieldButton,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText){
-    int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530;
+    int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530,userInRoom=4,originSizeWidth=0,originSizeHeight=0;
 	nrRooms = json_array_size(globalRoomArr);   
     *totalButtons=1+nrRooms+1+1+1;
     *totalFields=1+1;
@@ -1247,7 +1249,6 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
     //Everyting on the list side(left)
     //Render rooms texture to screen
     gFooTexture.render(0, 0);
-    gChattroomTexture.render(windowSize.w, 0);
 
     //Render Username
     std::string user(clientUsr.username);
@@ -1297,6 +1298,26 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
     //Render chattroom background
     gChattroomTexture.render(windowSize.w, 0);
     
+    //getText(clientUsr.username, gDefaultFont);
+    //gTextTexture.render(windowSize.w + 20, 20);
+    for (int i = 0; i < userInRoom; i++) {
+        std::ostringstream stream;
+        if (i==0) {
+            stream << "• " << clientUsr.username;
+            std::string usernameClient = stream.str();
+            getText(usernameClient, gDefaultFont);
+            gTextTexture.render(windowSize.w + 20, 20);
+            printf("%s\n",usernameClient.c_str());
+            originSizeWidth=gTextTexture.getWidth();
+            originSizeHeight=gTextTexture.getHeight();
+        }else if (i>0){
+            stream << "• " << otherUser;
+            std::string usernameOther = stream.str();
+            getText(usernameOther, gDefaultFont);
+            gTextTexture.render((windowSize.w + 20)+(i*(originSizeWidth+50)), 20);
+            originSizeWidth+=gTextTexture.getWidth();
+        }
+    }
     
     gMessageFieldButton[0].setPosition(windowSize.w+90,685);
     if (*inputMessageText=="" || *inputMessageText==" ") {
@@ -1318,6 +1339,8 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
         gTextTexture.render(windowSize.w+400, windowSize.h-200);
     }*/
 
+    
+    
     nrMessages=json_array_size(messageArr);
     //When user recives message
     box=0;
