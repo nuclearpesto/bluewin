@@ -217,7 +217,7 @@ void handle_get_users_in_room(json_t * recieved_obj, clients_t *client){
   writeobj = json_object();
   D(printf("getting users from room\n"));
   fflush(stdout);
-  room = json_object_get(recieved_obj,"roomname");
+  room = json_object_get(recieved_obj,"room");
   strroom = json_string_value(room);
   if((usersarr=get_users_in_room(strroom))!=NULL){
     json_object_set_new(writeobj,"usersArr", usersarr);

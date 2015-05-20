@@ -170,7 +170,7 @@ bool users_init(){
 		fp = fopen(USERS_DB_FILE, "w");
 		D(printf("writing %s to file\n", dbstr));
 		fprintf(fp,"%d", strlen(dbstr) );
-		fprintf(fp,"%s", dbstr );	
+		fprintf(fp,"%s", dbstr );
 		D(printf("wrote file"));
 		fclose(fp);
 	}
