@@ -104,7 +104,7 @@ public:
     //Set top left position
     void setPosition(int x,int y);
     //Handles mouse event
-    void handleEvent(json_t* globalRoomArr,bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL_Event* e, int* screenShow, Button* button, int i,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* newRoomNameText,json_t *masterobj);
+    void handleEvent(json_t * messageArr, SDL_mutex *mesageArrMutex, json_t* globalRoomArr,bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL_Event* e, int* screenShow, Button* button, int i,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* newRoomNameText,json_t *masterobj);
     //Shows button sprite
     void render(int* screenShow, int* element);
 
@@ -187,6 +187,16 @@ LButton gFieldButtons[2];
 LButton gMessageFieldButton[1];
 LButton gCreateRoomButton[1];
 LButton gCreateRoomNameFieldButton[1];
+
+void clear_messages(json_t *messageArr, SDL_mutex *mesageArrMutex){
+	SDL_LockMutex(mesageArrMutex);
+	json_array_clear(messageArr);
+	SDL_UnlockMutex(mesageArrMutex);
+}
+
+
+
+
 
 LTexture::LTexture(){
     //Initialize
@@ -396,7 +406,7 @@ void createUser(int* screenShow,std::string* inputUsernameText,std::string* inpu
     }
 }
 
-void LButton::handleEvent(json_t *globalRoomArr, bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL_Event* e,int* screenShow, Button* button,int selected,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* newRoomNameText,json_t *masterobj){
+void LButton::handleEvent(json_t * messageArr, SDL_mutex *mesageArrMutex, json_t *globalRoomArr, bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL_Event* e,int* screenShow, Button* button,int selected,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* newRoomNameText,json_t *masterobj){
     //if mouse event happend
     if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP ) {
         //Get mouse position
@@ -530,6 +540,7 @@ void LButton::handleEvent(json_t *globalRoomArr, bool *loginCheck,bool* createCh
                                 break;
                             default:
                                 printf("Room %d button\n", selected -4);
+								clear_messages(messageArr, mesageArrMutex);
 								switch_room(masterobj,(char *)getInfoJsonRoom(globalRoomArr, selected-4).c_str(), sd);
 								clientUsr.room=getInfoJsonRoom(globalRoomArr,selected-4);
 								get_users_in_room(masterobj, (char * )clientUsr.room.c_str(), sd);
@@ -953,9 +964,9 @@ void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesage
             //Generate all elements in login screen
             for (int i = 0; i< totalElements; i++) {
                 if (i<totalButtons) {
-                    gLoginButtons[i].handleEvent(globalRoomArr, loginCheck,createCheck, sd, &e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gLoginButtons[i].handleEvent(messageArr, mesageArrMutex,globalRoomArr, loginCheck,createCheck, sd, &e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
                 }else if(i<totalButtons+totalFields){
-                    gFieldButtons[i-totalButtons].handleEvent(globalRoomArr, loginCheck,createCheck, sd, &e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gFieldButtons[i-totalButtons].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck,createCheck, sd, &e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
                 }
             }
             //Get user input text
@@ -989,11 +1000,11 @@ void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesage
             //Generate all elements in login screen
             for (int i = 0; i< totalElements; i++) {
                 if (i<1) {
-                    gLoginButtons[i].handleEvent(globalRoomArr,loginCheck,createCheck, sd, &e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gLoginButtons[i].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e,screenShow,&buttonTypeSmall,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
                 }else if (i<totalButtons){
-                    gLogoutButton[i].handleEvent(globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &logoutButton, i, inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText, masterobj);
+                    gLogoutButton[i].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &logoutButton, i, inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText, masterobj);
                 }else if(i<totalButtons+totalFields){
-                    gFieldButtons[i-totalButtons].handleEvent(globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gFieldButtons[i-totalButtons].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &fieldButton,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
                 }
             }
             
@@ -1032,15 +1043,15 @@ void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesage
             //Generate all elements in main screen
             for (int i =0; i<totalElements; i++) {
                 if (i<1) {
-                    gLogoutButton[i].handleEvent(globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gLogoutButton[i].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &logoutButton, i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
                 }else if(i<2){
-                    gCreateRoomButton[i-1].handleEvent(globalRoomArr, loginCheck, createCheck, sd, &e, screenShow,&createRoomButton , i, inputUsernameText, inputPasswordText, inputRetypePasswordText, outputPasswordText, outputRetypePasswordText,newRoomNameText, masterobj);
+                    gCreateRoomButton[i-1].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck, createCheck, sd, &e, screenShow,&createRoomButton , i, inputUsernameText, inputPasswordText, inputRetypePasswordText, outputPasswordText, outputRetypePasswordText,newRoomNameText, masterobj);
                 }else if (i<3){
-                    gCreateRoomNameFieldButton[i-2].handleEvent(globalRoomArr, loginCheck, createCheck, sd, &e, screenShow, &createRoomFieldButton, i, inputUsernameText, inputPasswordText, inputRetypePasswordText, outputPasswordText, outputRetypePasswordText,newRoomNameText, masterobj);
+                    gCreateRoomNameFieldButton[i-2].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck, createCheck, sd, &e, screenShow, &createRoomFieldButton, i, inputUsernameText, inputPasswordText, inputRetypePasswordText, outputPasswordText, outputRetypePasswordText,newRoomNameText, masterobj);
                 }else if(i<2+totalFields){
-                    gMessageFieldButton[i-3].handleEvent(globalRoomArr,loginCheck,createCheck,sd,&e, screenShow, &messageButton, i, inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText, masterobj);
+                    gMessageFieldButton[i-3].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck,sd,&e, screenShow, &messageButton, i, inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText, masterobj);
                 }else if (i<totalButtons){
-                    gRoomButtons[i-2-totalFields].handleEvent(globalRoomArr,loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gRoomButtons[i-2-totalFields].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
                 }
             }
             if (writeText) {
