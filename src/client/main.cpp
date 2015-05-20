@@ -514,6 +514,7 @@ void LButton::handleEvent(json_t *globalRoomArr, bool *loginCheck,bool* createCh
                                 printf("Create room button\n");
                                 //char* room = (char*)newRoomNameText->c_str();
                                 add_room(masterobj,(char*)newRoomNameText->c_str(), sd);
+								collect_rooms(masterobj, sd);
                                 *newRoomNameText=" ";
                                 break;
                                 
@@ -524,13 +525,14 @@ void LButton::handleEvent(json_t *globalRoomArr, bool *loginCheck,bool* createCh
                                 
                             case 3://Message text field
                                 field=2;
-								collect_rooms(masterobj, sd);
+								//collect_rooms(masterobj, sd);
                                 printf("Message text field button\n");
                                 break;
                             default:
                                 printf("Room %d button\n", selected -4);
 								switch_room(masterobj,(char *)getInfoJsonRoom(globalRoomArr, selected-4).c_str(), sd);
 								clientUsr.room=getInfoJsonRoom(globalRoomArr,selected-4);
+								get_users_in_room(masterobj, (char * )clientUsr.room.c_str(), sd);
 								break;
                         }
                     }
@@ -1234,7 +1236,7 @@ void createAccountScreen(int* totalButtons, int* totalFields,int* screenShow,Scr
 }
 
 void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *messageArr,int* totalButtons, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,Button createRoomButton,Button createRoomFieldButton,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText){
-    int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530,userInRoom=4,originSizeWidth=0,originSizeHeight=0;
+    int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530,userInRoom=json_array_size(globalUsersInRoomArr),originSizeWidth=0,originSizeHeight=0;
 	nrRooms = json_array_size(globalRoomArr);   
     *totalButtons=1+nrRooms+1+1+1;
     *totalFields=1+1;
@@ -1303,15 +1305,15 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
     for (int i = 0; i < userInRoom; i++) {
         std::ostringstream stream;
         if (i==0) {
-            stream << "• " << clientUsr.username;
+            stream << "* " << getInfoJsonRoom(globalUsersInRoomArr, i);
             std::string usernameClient = stream.str();
             getText(usernameClient, gDefaultFont);
             gTextTexture.render(windowSize.w + 20, 20);
-            printf("%s\n",usernameClient.c_str());
+            //printf("%s\n",usernameClient.c_str());
             originSizeWidth=gTextTexture.getWidth();
             originSizeHeight=gTextTexture.getHeight();
         }else if (i>0){
-            stream << "• " << otherUser;
+            stream << "* " << getInfoJsonRoom(globalUsersInRoomArr, i);
             std::string usernameOther = stream.str();
             getText(usernameOther, gDefaultFont);
             gTextTexture.render((windowSize.w + 20)+(i*(originSizeWidth+50)), 20);
@@ -1407,7 +1409,7 @@ void runingGui(int * refreshCounter, json_t* globalUsersInRoomArr, json_t *globa
 		//printf("%d\n", *refreshCounter);
 		if(*refreshCounter>REFRESHTIME){
 			collect_rooms(masterobj, sd);
-			//getusersinroom();
+			get_users_in_room(masterobj, (char *)clientUsr.room.c_str(), sd);
 			*refreshCounter=0;
 		}
 		mainScreen(globalRoomArr, globalUsersInRoomArr, messageArr,totalButtons, totalFields, nrRooms, screenShow, windowSize, logoutButton, buttonTypeWide,messageButton,createRoomButton,createRoomFieldButton,inputMessageText,outputMessageText,outputMessageOtherText,newRoomNameText);

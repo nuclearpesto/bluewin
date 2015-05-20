@@ -200,7 +200,7 @@ int readThread (void * p){
 				if(json_is_true(keycheckobj)){
 
 					printf("found users arr");
-					buildingblock= json_object_get(masterobj, "roomsArr");
+					buildingblock= json_object_get(masterobj, "usersArr");
 					json_array_clear(globalUsersInRoomArr);
 					json_array_extend(globalUsersInRoomArr, buildingblock);
 					free(buildingblock);
@@ -376,7 +376,8 @@ void logout(json_t *masterobj, TCPsocket *socket){
 
 void get_users_in_room(json_t *masterobj, char *room, TCPsocket *socket){
     serialize_cmd(masterobj, "get users in room");
-    write_to_server(masterobj, socket);
+    serialize_room(masterobj, room);
+	write_to_server(masterobj, socket);
 }
 
 void add_room(json_t *masterobj, char *room, TCPsocket *socket){

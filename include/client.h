@@ -71,6 +71,6 @@ void collect_rooms(json_t *masterobj, TCPsocket *socket);
 void switch_room(json_t *masterobj, char *room,  TCPsocket *socket);
 void add_room(json_t *masterobj, char *room, TCPsocket *socket);
 void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket);
-
+void get_users_in_room(json_t *masterobj, char *room, TCPsocket *socket);
 
 #endif /* defined(__bluewinclient__client__) */
