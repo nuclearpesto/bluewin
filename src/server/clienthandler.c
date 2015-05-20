@@ -276,7 +276,7 @@ void handle_add_room(json_t * recieved_obj, clients_t *client){
   if(room!=NULL){
     strroom = json_string_value(room);
     add_room(strroom);
-    switch_room( strroom, client);
+   // switch_room( strroom, client);
 
   }
 
