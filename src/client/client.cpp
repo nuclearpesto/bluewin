@@ -198,18 +198,18 @@ int readThread (void * p){
 
            else if((keycheckobj = json_object_get(masterobj, "get users in room")) != NULL){
 				if(json_is_true(keycheckobj)){
-					
+
 					printf("found users arr");
 					buildingblock= json_object_get(masterobj, "roomsArr");
 					json_array_clear(globalUsersInRoomArr);
-					json_array_extend(globalUsersRoomArr, buildingblock);
+					json_array_extend(globalUsersInRoomArr, buildingblock);
 					free(buildingblock);
 					}
             }
 
             else if((keycheckobj = json_object_get(masterobj, "get rooms")) != NULL){
 				printf("collect rooms response");
-				if(json_is_true(keycheckobj)){	
+				if(json_is_true(keycheckobj)){
 					printf("found rooms arr");
 					buildingblock= json_object_get(masterobj, "roomsArr");
 					json_array_clear(globalRoomArr);
