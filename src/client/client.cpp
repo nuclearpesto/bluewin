@@ -118,8 +118,8 @@ TCPsocket initClient(bool * createCheck, bool *loginCheck, json_t * globalUsersI
     char ipen[20]=("130.237.84.200");
 
     printf("%s\n",ipen);
-    if(SDLNet_Init() < 0){
-        printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());
+    if(SDLNet_Init() < 0){                                      //SDL Tutorial taken from
+        printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError()); //http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
         success=false;
     }else{
         printf("Trying to connect...\n");
@@ -307,7 +307,7 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
     //decrypt_Handler(response);
     printf("read response : %s\n",response);
     //dekryptera
-    
+
     return response;
 }
 
