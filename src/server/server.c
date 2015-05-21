@@ -81,12 +81,6 @@ int main(int argc, char **argv){
 	  exit(2);
 	}
 	
-	
-	
-	if(SDLNet_ResolveHost(&ip,NULL,9999)==-1) {
-	  printf("SDLNet_ResolveHost: %s\n", SDLNet_GetError());
-	  exit(1);
-	}
 	SDLNet_TCP_AddSocket(set, servsock);
 	//print pid to file forrt killscript
 	pid=getpid();
