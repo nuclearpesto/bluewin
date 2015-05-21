@@ -411,4 +411,5 @@ void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *soc
 	serialize_message(masterobj, msg);
     serialize_cmd(masterobj, "msg");
 	write_to_server(masterobj, socket);
+	json_object_clear(masterobj);
 }
