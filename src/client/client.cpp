@@ -116,10 +116,11 @@ TCPsocket initClient(bool * createCheck, bool *loginCheck, json_t * globalUsersI
 
     int port=5000;
     char ipen[20]=("130.237.84.200");
+   //char ipen[20]=("127.0.0.1");
 
     printf("%s\n",ipen);
-    if(SDLNet_Init() < 0){
-        printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());
+    if(SDLNet_Init() < 0){                                      //SDL Tutorial taken from
+        printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError()); //http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
         success=false;
     }else{
         printf("Trying to connect...\n");
@@ -280,9 +281,12 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
     //printf("%p",json_s);
     //json_s = "hej\0";
     //kryptera
-    len = strlen(json_s);
-    //encrypt_Handler(json_s);
+    //len = strlen(json_s);
+    len=encrypt_Handler(json_s);
     //puts(json_s);//kontroll
+    printf("encrypted string: %s\n",json_s);
+    //decrypt_Handler(json_s, len);
+    //printf("decrypted string: %s\n",json_s);
     //printf("%s\n",json_s);
     //len = strlen(json_s);
     SDLNet_TCP_Send(*socket, &len, sizeof(int));
@@ -302,12 +306,12 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 	printf("gonna read %d bytes : %d\n",temp);
 
     response = (char *)malloc(temp+1);
-	SDLNet_TCP_Recv(socket,response, temp );
+	*numBytesRead =SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';
-    //decrypt_Handler(response);
+    decrypt_Handler(response,*numBytesRead);
     printf("read response : %s\n",response);
     //dekryptera
-    
+
     return response;
 }
 
@@ -342,7 +346,14 @@ void serialize_username(json_t *masterobj,user_s *usr ){
 
 void serialize_password(json_t *masterobj,user_s *usr ){
     json_t *string;
-    string = json_string(usr->password);
+    char tmpPassword[PASSWORDSIZE]={'\0'};
+    strcpy(tmpPassword,usr->password);
+    printf("copied password : %s\n",tmpPassword);
+    //int len=encrypt_Handler(tmpPassword);
+    //printf("encrypted password : %s\n",tmpPassword);
+    //decrypt_Handler(tmpPassword,len);
+    //printf("decrypted password : %s\n",tmpPassword);
+    string = json_string(tmpPassword);
     json_object_set_new(masterobj, "password", string);
 }
 
@@ -411,4 +422,5 @@ void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *soc
 	serialize_message(masterobj, msg);
     serialize_cmd(masterobj, "msg");
 	write_to_server(masterobj, socket);
+	json_object_clear(masterobj);
 }

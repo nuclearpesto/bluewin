@@ -34,7 +34,10 @@ int main(int argc, char **argv){
     exit(1);
   }
 
-  port=atoi(argv[1]);
+  port=atoi(argv[1]); 
+  
+		 //SDL Tutorial taken from
+		//http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
 	 if(SDL_Init(0)==-1) {
 		printf("SDL_Init: %s\n", SDL_GetError());
 		exit(1);
@@ -69,7 +72,9 @@ int main(int argc, char **argv){
 	}
 	D(printf("checked db"));
   
-	set = SDLNet_AllocSocketSet(1);
+	set = SDLNet_AllocSocketSet(1); 
+		 //SDL Tutorial taken from
+//http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
 	if(SDLNet_ResolveHost(&ip,NULL,port)==-1) {
 	  printf("SDLNet_ResolveHost: %s\n", SDLNet_GetError());
 	  exit(1);
@@ -81,12 +86,6 @@ int main(int argc, char **argv){
 	  exit(2);
 	}
 	
-	
-	
-	if(SDLNet_ResolveHost(&ip,NULL,9999)==-1) {
-	  printf("SDLNet_ResolveHost: %s\n", SDLNet_GetError());
-	  exit(1);
-	}
 	SDLNet_TCP_AddSocket(set, servsock);
 	//print pid to file forrt killscript
 	pid=getpid();
@@ -101,9 +100,7 @@ int main(int argc, char **argv){
 			printf("SDLNet_TCP_Accept: %s\n", SDLNet_GetError());
 		}
 		else {
-			// communicate over new_tcpsock
-
-		  D(printf("adding a client\n"));
+			D(printf("adding a client\n"));
 			fflush(stdout);
 			add_Client(acceptsock, &availableClientNr);
 			D(printf("created thread\n"));
