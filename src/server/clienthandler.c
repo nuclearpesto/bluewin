@@ -71,7 +71,6 @@ int handle( void *args ){
   while( (messagepointer=read_client_message(client->socket))!=NULL){
     D(printf("got something "));
 	  //DEKRYPTERA!!!!
-	  //decrypt_Handler(messagepointer);
     D(printf("recieved this:  %s\n", messagepointer));
 		fflush(stdout);
 		if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
@@ -324,7 +323,7 @@ void handle_add_user(json_t *recieved_obj, clients_t *client){
 	json_object_set_new(writeobj, "add user", json_created_val);
 	json_object_set_new(writeobj, "username",username);
 	char * jsonString = json_dumps(writeobj, 0);
-	
+
 	D(printf("gonnar write tis response to client:%s\n", jsonString));
 	SerializedMessage_t sermes = create_serialized_message(jsonString);
 	write_server_message(&sermes, client->socket);
@@ -441,6 +440,7 @@ char* read_client_message( TCPsocket socket){
       D(printf("gonna read %d bytes\n", tmp_buf));
       tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
       D(printf("read %d bytes\n", tmp_buf));
+      decrypt_Handler(p, tmp_buf);
       *(p+tmp_buf)='\0';
       return p;
     }
@@ -451,7 +451,7 @@ char* read_client_message( TCPsocket socket){
 }
 
  void write_server_message( SerializedMessage_t *message, TCPsocket socket){
-  //encrypt_Handler(message);
+  encrypt_Handler(message);
 	//inspired by http://stackoverflow.com/questions/21579867/variable-length-message-over-tcp-socket-in-c answer 1 written by user John Dibling
   SDLNet_TCP_Send(socket, &(message->size), sizeof(int));
   SDLNet_TCP_Send(socket, message->jsonstring, message->size);
