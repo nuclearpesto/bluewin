@@ -1171,9 +1171,8 @@ void loginScreen( int* totalButtons, int* totalFields,int* screenShow,Screen win
     getText("BlueWin", gLargeBoldFont);
     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,100);
     getText("Username",gLargeBoldFont);
-    gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,230);
+    gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,250);
     getText("Password",gLargeBoldFont);
-    gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,380);
     getText("Lost password",gDefaultFont);
     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 30));
     gFieldButtons[2].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - gTextTexture.getHeight()));
