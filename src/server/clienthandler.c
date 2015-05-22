@@ -359,7 +359,7 @@ void handle_logout(clients_t *client){
   leave_room( client);
   remove_Client(client);
 
-    /*TODO MAKE CLIENT SEND RESPONS BEFORE LOGGIN OUT*/
+    /*TODO MAKE CLIENT SEND RESPONS BEFORE LOGGING OUT*/
 
 }
 
@@ -430,7 +430,8 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
 
 
 char* read_client_message( TCPsocket socket){
-  int tmp_buf=0;
+	//inspired by http://stackoverflow.com/questions/21579867/variable-length-message-over-tcp-socket-in-c answer 1 written by user John Dibling
+ int tmp_buf=0;
   char* p;
   D(printf("reading\n"));
   fflush(stdout);
@@ -451,6 +452,7 @@ char* read_client_message( TCPsocket socket){
 
  void write_server_message( SerializedMessage_t *message, TCPsocket socket){
   //encrypt_Handler(message);
+	//inspired by http://stackoverflow.com/questions/21579867/variable-length-message-over-tcp-socket-in-c answer 1 written by user John Dibling
   SDLNet_TCP_Send(socket, &(message->size), sizeof(int));
   SDLNet_TCP_Send(socket, message->jsonstring, message->size);
 
