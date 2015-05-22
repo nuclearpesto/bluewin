@@ -32,17 +32,19 @@ void encrypt_Handler(SerializedMessage_t * Message)
     k[2]=33333333333333;
     k[3]=44444444444444;
     char tmp[8];
-    int numBlock=0,totalBlock=strlen(Message->jsonstring);
-    /*int pad=8-(totalBlock%8);
+    int numBlock=0,totalBlock=strlen(Message->jsonstring)+1;
+    int pad=8-(totalBlock%8);
     int msgLenght=totalBlock+pad;
+    Message->size=msgLenght;
+    realloc(Message->jsonstring,msgLenght);
     int i;
     for (i=totalBlock;i<msgLenght;i++)
     {
         Message->jsonstring[i]=' ';
     }
-    totalBlock=msgLenght/8;*/
-    totalBlock=totalBlock/8;
-    int i;
+    totalBlock=msgLenght/8;
+    //totalBlock=totalBlock/8;
+    //int i;
     while(numBlock<totalBlock)
     {
         for (i=0;i<8;i++)
@@ -72,15 +74,16 @@ void decrypt(unsigned long k[], unsigned long tmp[])
     tmp[0]=y;tmp[1]=z;
 }
 
-void decrypt_Handler(char msg[])
+void decrypt_Handler(char* msg, int size)
 {
+    printf("decrypting \n");
     char tmp[8];
     unsigned long k[4];
     k[0]=11111111111111;
     k[1]=22222222222222;
     k[2]=33333333333333;
     k[3]=44444444444444;
-    int numBlock=0,totalBlock=strlen(msg);
+    int numBlock=0,totalBlock=size;
     totalBlock=totalBlock/8;
     while(numBlock<totalBlock)
     {
@@ -96,4 +99,5 @@ void decrypt_Handler(char msg[])
         }
         numBlock++;
     }
+    printf("decrypted string: %s \n",msg);
 }

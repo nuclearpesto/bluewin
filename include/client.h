@@ -28,6 +28,7 @@
 #else
 #include <SDL2/SDL_net.h>
 #endif
+#define PASSWORDSIZE 250
 
 struct Readstruct{
 	TCPsocket sd;

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 void encrypt_cli(unsigned long k[], unsigned long tmp[])
 {
@@ -14,7 +15,7 @@ void encrypt_cli(unsigned long k[], unsigned long tmp[])
     tmp[0]=y; tmp[1]=z;
 }
 
-void encrypt_Handler(char* msg)
+int encrypt_Handler(char* msg)
 {
     unsigned long k[4];
     k[0]=11111111111111;
@@ -23,16 +24,18 @@ void encrypt_Handler(char* msg)
     k[3]=44444444444444;
     char tmp[8];
     int numBlock=0,totalBlock=strlen(msg);
-    /*int msgLenght=strlen(msg),pad=msgLenght%8;
-    msgLenght=msgLenght+pad;
+    int msgLenght=strlen(msg)+1,pad=msgLenght%8;
+    msgLenght=msgLenght+8-pad;
+    realloc(msg, msgLenght);
     int i;
     for (i=totalBlock;i<msgLenght;i++)
     {
         msg[i]=' ';
+
     }
-    totalBlock=msgLenght/8;*/
-    totalBlock=totalBlock/8;
-    int i;
+    totalBlock=msgLenght/8;
+    //totalBlock=totalBlock/8;
+   // int i;
     while(numBlock<totalBlock)
     {
         for (i=0;i<8;i++)
@@ -46,6 +49,7 @@ void encrypt_Handler(char* msg)
         }
         numBlock++;
     }
+    return totalBlock*8;
 }
 
 void decrypt(unsigned long k[], unsigned long tmp[])
@@ -62,7 +66,7 @@ void decrypt(unsigned long k[], unsigned long tmp[])
     tmp[0]=y;tmp[1]=z;
 }
 
-void decrypt_Handler(char* msg)
+void decrypt_Handler(char* msg, int size)
 {
     char tmp[8];
     unsigned long k[4];
@@ -70,7 +74,7 @@ void decrypt_Handler(char* msg)
     k[1]=22222222222222;
     k[2]=33333333333333;
     k[3]=44444444444444;
-    int numBlock=0,totalBlock=strlen(msg);
+    int numBlock=0,totalBlock=size;
     totalBlock=totalBlock/8;
     while(numBlock<totalBlock)
     {
