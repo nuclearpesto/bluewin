@@ -173,7 +173,7 @@ int readThread (void * p){
         D(printf("recieved %s\n", response));
         masterobj = json_loads(string, 0, &error);
         if(masterobj == NULL){
-			printf("jsonerror %s",error.text);
+			printf("jsonerror %s\n",error.text);
             free(string);
         }
         else{
@@ -199,7 +199,7 @@ int readThread (void * p){
            else if((keycheckobj = json_object_get(masterobj, "get users in room")) != NULL){
 				if(json_is_true(keycheckobj)){
 
-					printf("found users arr");
+					printf("found users arr\n");
 					buildingblock= json_object_get(masterobj, "usersArr");
 					json_array_clear(globalUsersInRoomArr);
 					json_array_extend(globalUsersInRoomArr, buildingblock);
@@ -208,9 +208,9 @@ int readThread (void * p){
             }
 
             else if((keycheckobj = json_object_get(masterobj, "get rooms")) != NULL){
-				printf("collect rooms response");
+				printf("collect rooms response\n");
 				if(json_is_true(keycheckobj)){
-					printf("found rooms arr");
+					printf("found rooms arr\n");
 					buildingblock= json_object_get(masterobj, "roomsArr");
 					json_array_clear(globalRoomArr);
 					json_array_extend(globalRoomArr, buildingblock);
@@ -291,7 +291,7 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
     printf( "SDLNet_TCP_Send: %s, result is %d\n", SDLNet_GetError(), result );
     // It may be good to disconnect sock because it is likely invalid now.
 	}
-    printf("SENT %s", json_s);
+    printf("SENT %s \n", json_s);
 }
 
 char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){

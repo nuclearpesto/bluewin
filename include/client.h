@@ -46,6 +46,7 @@ typedef struct User{
     char *username;
     char *password;
 	std::string room;
+    int currentRoom;
 }user_s;
 
 //TCPsocket initClient(bool *loginCheck);
