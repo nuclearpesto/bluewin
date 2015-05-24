@@ -286,7 +286,7 @@ void handle_delete_room(json_t * recieved_obj, clients_t *client){
   json_t *writeobj, *room;
   bool success = false;
   char *strroom;
-  room = json_object_get(recieved_obj, "roomname");
+  room = json_object_get(recieved_obj, "room");
   if(room!=NULL){
     strroom = json_string_value(room);
     delete_room(strroom);
@@ -294,9 +294,21 @@ void handle_delete_room(json_t * recieved_obj, clients_t *client){
 
 }
 void handle_add_call(json_t * recieved_obj, clients_t *client){
-
-  //TODO IMPLEMENT
-
+	
+	json_t* aduio, room, call;
+	char* strroom;
+	room=json_get_obj(recieved_obj, "room");
+	call = json_string("call")
+	if(room!=NULL){
+		strroom = json_string_value(room);
+		json_object_del(recieved_obj, "cmd");
+		json_object_set_new("call", call)
+		SerializedMessage_t sermes = create_serialized_message(json_dumps(recieved_obj));
+		write_to_room(strroom, sermes, client);
+		
+	}
+	
+	
 
 }
 
