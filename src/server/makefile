@@ -1,4 +1,4 @@
-CFLAGS=-c
+CFLAGS= -g -c
 
 DEPS=*.h
 BIN_DIR=../../bin/

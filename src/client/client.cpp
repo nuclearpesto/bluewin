@@ -25,7 +25,7 @@ user_s usr;
         IPaddress ip;
         TCPsocket sd;
         if(argc<3){
-            printf("too few args , specify inetaddr and port as args");
+            //printf("too few args , specify inetaddr and port as args");
             exit(1);
         }
 
@@ -38,23 +38,23 @@ user_s usr;
 
 
         if(SDLNet_Init() < 0){
-            printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());
+            //printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());
             exit(1);
         }
 
 
-        printf("Trying to connect...\n");
+        //printf("Trying to connect...\n");
         if(SDLNet_ResolveHost(&ip, argv[1], port) < 0){
-            fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+            f//printf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
             exit(1);
         }
 
         if(!(sd = SDLNet_TCP_Open(&ip))){
-            fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+            f//printf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
             exit(1);
         }
 
-        printf("Connected.\n");
+        //printf("Connected.\n");
         fflush(stdout);
         char *string;
         user_s usr;
@@ -67,7 +67,7 @@ user_s usr;
         masterobj = json_object();
         SDL_CreateThread(readThread, "reader", &sd);
 
-        printf("0: login\n 1: new user\n:");
+        //printf("0: login\n 1: new user\n:");
          fscanf(stdin, "%d", &choice);
          switch(choice){
          case 0:
@@ -84,7 +84,7 @@ user_s usr;
         string_convert(inputUsernameText, usr.username);
         string_convert(inputPasswordText, usr.password);
         send_login(masterobj, &usr, sd);
-        printf("Welcome!\n");
+        //printf("Welcome!\n");
         while(1){
             mainGui(nrRooms, &inputUsernameText, &inputPasswordText);
             user_input(msg.message);
@@ -99,7 +99,7 @@ user_s usr;
     }
 }*/
 
-TCPsocket initClient(bool * createCheck, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
+TCPsocket initClient(audiostruct_t * audiostruct,  bool * createCheck, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
     bool success = true;
     SDL_Thread *thread;
 	TCPsocket sd = NULL;
@@ -111,12 +111,13 @@ TCPsocket initClient(bool * createCheck, bool *loginCheck, json_t * globalUsersI
 	readstruct.messageArr = messageArr;
 	readstruct.messageArrMutex = messageArrMutex;
 	readstruct.createCheck = createCheck;
+	readstruct.audiostruct	= audiostruct;
     //IPaddress ip;
     //TCPsocket sd;
 
     int port=5000;
-    char ipen[20]=("130.237.84.200");
-   //char ipen[20]=("127.0.0.1");
+    //char ipen[20]=("130.237.84.200");
+   char ipen[20]=("127.0.0.1");
 
     printf("%s\n",ipen);
     if(SDLNet_Init() < 0){                                      //SDL Tutorial taken from
@@ -132,11 +133,18 @@ TCPsocket initClient(bool * createCheck, bool *loginCheck, json_t * globalUsersI
                 fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
                 success=false;
             }else{
-				//printf("socket is : %d\n",sd);
+				printf("socket before is : %d\n",sd);
 				readstruct.sd = sd;
 				readstruct.loginCheck = loginCheck;
 				thread=SDL_CreateThread(readThread, "reader", &readstruct);
-
+				//initialize audio ;
+				init_sound(audiostruct);
+				audiothreadstruct_t * audiothreadstruct = (audiothreadstruct_t*) malloc(sizeof(audiothreadstruct_t));
+				audiothreadstruct->audiostruct = audiostruct;
+				audiothreadstruct->socket = sd;
+				audiothreadstruct->loggedInCheck = loginCheck;
+				//start microphone sender thread;
+				thread=SDL_CreateThread(readthread, "audio mic reader", audiothreadstruct);
 				//printf("socket is after thread : %d\n",sd);
 			  if(thread==NULL){
                     printf("SDL_CreateThread: %s\n",SDL_GetError());
@@ -163,6 +171,7 @@ int readThread (void * p){
 	json_t *globalUsersInRoomArr = r->globalUsersInRoomArr;
 	json_t *globalRoomArr=r->globalRoomArr;
 	json_t *messageArr=r->messageArr;
+	audiostruct_t *audiostruct = r->audiostruct;
 	int numBytesRead = 1;
 	SDL_mutex * mesageArrMutex = r->messageArrMutex;
 	json_error_t error;
@@ -171,14 +180,18 @@ int readThread (void * p){
     while(numBytesRead>0){
 
         string = read_from_server(socket, response, &numBytesRead);
-        D(printf("recieved %s\n", response));
+        //D(printf("recieved %s\n", response));
         masterobj = json_loads(string, 0, &error);
         if(masterobj == NULL){
-			printf("jsonerror %s\n",error.text);
+			//printf("jsonerror %s\n",error.text);
             free(string);
         }
         else{
             free(string);
+			
+            if((keycheckobj = json_object_get(masterobj, "audio")) != NULL){
+				playaudio(masterobj,audiostruct->writeBlock, audiostruct->writestream );
+            }
             if((keycheckobj = json_object_get(masterobj, "login")) != NULL){
                 if(json_is_true(keycheckobj)==1){
                     *(loginCheck) = true;
@@ -200,7 +213,7 @@ int readThread (void * p){
            else if((keycheckobj = json_object_get(masterobj, "get users in room")) != NULL){
 				if(json_is_true(keycheckobj)){
 
-					printf("found users arr\n");
+					//printf("found users arr\n");
 					buildingblock= json_object_get(masterobj, "usersArr");
 					json_array_clear(globalUsersInRoomArr);
 					json_array_extend(globalUsersInRoomArr, buildingblock);
@@ -209,9 +222,9 @@ int readThread (void * p){
             }
 
             else if((keycheckobj = json_object_get(masterobj, "get rooms")) != NULL){
-				printf("collect rooms response\n");
+				//printf("collect rooms response\n");
 				if(json_is_true(keycheckobj)){
-					printf("found rooms arr\n");
+					//printf("found rooms arr\n");
 					buildingblock= json_object_get(masterobj, "roomsArr");
 					json_array_clear(globalRoomArr);
 					json_array_extend(globalRoomArr, buildingblock);
@@ -259,7 +272,7 @@ void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string
     //printf("%s\n",inputUsernameText->c_str());
         //printf("%s", usr.username);
         serialize_username(masterobj,&usr);
-        printf("user\n");
+        //printf("user\n");
         fflush(stdout);
         serialize_password(masterobj,&usr);
         //printf("pass\n");
@@ -281,10 +294,10 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
     //printf("%p",json_s);
     //json_s = "hej\0";
     //kryptera
-    //len = strlen(json_s);
-    len=encrypt_Handler(json_s);
+    len = strlen(json_s);
+    //len=encrypt_Handler(json_s);
     //puts(json_s);//kontroll
-    printf("encrypted string: %s\n",json_s);
+    //printf("encrypted string: %s\n",json_s);
     //decrypt_Handler(json_s, len);
     //printf("decrypted string: %s\n",json_s);
     //printf("%s\n",json_s);
@@ -295,21 +308,21 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
     printf( "SDLNet_TCP_Send: %s, result is %d\n", SDLNet_GetError(), result );
     // It may be good to disconnect sock because it is likely invalid now.
 	}
-    printf("SENT %s \n", json_s);
+    //printf("SENT %s \n", json_s);
 }
 
 char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 
     int temp=0,  res;
-	printf("reading\n");
+	//printf("reading\n");
     *numBytesRead = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
-	printf("gonna read %d bytes : %d\n",temp);
+	//printf("gonna read %d bytes : %d\n",temp);
 
     response = (char *)malloc(temp+1);
 	*numBytesRead =SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';
-    decrypt_Handler(response,*numBytesRead);
-    printf("read response : %s\n",response);
+    //decrypt_Handler(response,*numBytesRead);
+    //printf("read response : %s\n",response);
     //dekryptera
 
     return response;
@@ -331,7 +344,7 @@ void message_printer(json_t *masterobj){
         rec_username = json_object_get(masterobj, "username");
         strcpy(string_resp, json_string_value(rec_message));
         strcpy(username, json_string_value(rec_username));
-        printf("%s : %s\n",username, string_resp);
+        //printf("%s : %s\n",username, string_resp);
         fflush(stdout);
     }
 }

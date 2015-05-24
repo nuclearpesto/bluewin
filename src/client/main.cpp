@@ -1495,7 +1495,7 @@ void runingGui(int * refreshCounter, json_t* globalUsersInRoomArr, json_t *globa
     SDL_RenderPresent(gRenderer);
 }
 
-int initGui( bool *createCheck, TCPsocket * sd, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
+int initGui(audiostruct_t *audiostruct, bool *createCheck, TCPsocket * sd, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
     bool test=true;
     //Start up SDL and create window
     if( !init(windowSize) ){
@@ -1508,7 +1508,7 @@ int initGui( bool *createCheck, TCPsocket * sd, bool *loginCheck, json_t * globa
             test=false;
         }else{
             //Connect to server
-            if (!((*sd)=initClient(createCheck, loginCheck,globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex ))) {
+            if (!((*sd)=initClient( audiostruct, createCheck, loginCheck,globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex ))) {
                 printf("Failed to connect to server\n");
                 test=false;
             }
@@ -1560,12 +1560,13 @@ int main(int argc, char *argv[]){
 	json_t *globalRoomArr=json_array();
 	json_t *messageArr=json_array();
 	SDL_mutex *messageArrMutex = SDL_CreateMutex();
+	audiostruct_t audiostruct;
     bool loginCheck = false;
     bool createCheck = true;
 	//set default room at start so that client correctly sends messages
 
     //Start up SDL and create window
-    if( !initGui(&createCheck, &sd, &loginCheck, globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex) ){
+    if( !initGui(&audiostruct, &createCheck, &sd, &loginCheck, globalUsersInRoomArr, globalRoomArr, messageArr, messageArrMutex) ){
         printf( "Failed to initialize!\n" );
     }else{
         //Main loop flag

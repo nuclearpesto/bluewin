@@ -35,6 +35,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_thread.h>
 #include <SDL2/SDL_net.h>
+#include "audio.h"
 #endif
 
 #endif /* defined(__bluewin_gui__main__) */

@@ -1,7 +1,7 @@
 #ifndef CLIENTHANDLER  
 
 #ifndef JSON_MAX_LENGTH
-#define JSON_MAX_LENGTH 1000
+#define JSON_MAX_LENGTH 100000
 #endif
 #define USERNAME_LEN 255
 #define ROOM_NAME_SIZE 255

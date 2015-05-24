@@ -69,12 +69,12 @@ int handle( void *args ){
   D(printf("started handling\n"));
   fflush(stdout);
   while( (messagepointer=read_client_message(client->socket))!=NULL){
-    D(printf("got something "));
+   // D(printf("got something "));
 	  //DEKRYPTERA!!!!
-    D(printf("recieved this:  %s\n", messagepointer));
+    //D(printf("recieved this:  %s\n", messagepointer));
 		fflush(stdout);
 		if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
-		  D(printf("recieved json:  %s\n", messagepointer));
+		  //D(printf("recieved json:  %s\n", messagepointer));
 			fflush(stdout);
 			if((recv_json_cmd= json_object_get(recieved_obj, "cmd"))!=NULL){
 			   if(strcmp("msg", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
@@ -130,13 +130,14 @@ int handle( void *args ){
 			  	  handle_send_file(recieved_obj, client);
 			  	  fflush(stdout);
 			  }
-			  else if(strcmp("call", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
+			  else if(strcmp("add call", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
 			    D(printf("found call\n"));
 			  	  handle_add_call(recieved_obj, client);
 			  	  fflush(stdout);
 			  }
 			}
 		}
+		free(recieved_obj);
 		free(messagepointer);
   }
   handle_logout(client);
@@ -295,16 +296,17 @@ void handle_delete_room(json_t * recieved_obj, clients_t *client){
 }
 void handle_add_call(json_t * recieved_obj, clients_t *client){
 	
-	json_t* aduio, room, call;
+	json_t* audio, *room, *call;
 	char* strroom;
-	room=json_get_obj(recieved_obj, "room");
-	call = json_string("call")
+	room=json_object_get(recieved_obj, "room");
+	call = json_string("audio");
 	if(room!=NULL){
 		strroom = json_string_value(room);
 		json_object_del(recieved_obj, "cmd");
-		json_object_set_new("call", call)
-		SerializedMessage_t sermes = create_serialized_message(json_dumps(recieved_obj));
-		write_to_room(strroom, sermes, client);
+		json_object_set_new(recieved_obj,"call", call);
+		SerializedMessage_t sermes = create_serialized_message(json_dumps(recieved_obj, 0));
+		D(printf("gonna write this %s, n", sermes.jsonstring));
+		write_to_room(strroom, &sermes, client);
 		
 	}
 	
@@ -449,10 +451,14 @@ char* read_client_message( TCPsocket socket){
   if( SDLNet_TCP_Recv(socket, &tmp_buf, sizeof(int))>0){
     if(tmp_buf>0){
       p = (char *) malloc(tmp_buf+1);
-      D(printf("gonna read %d bytes\n", tmp_buf));
+      if(p==NULL){
+		  printf("failed to allocate mamory for p");
+		exit(1);
+	  }
+	  D(printf("gonna read %d bytes\n", tmp_buf));
       tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
       D(printf("read %d bytes\n", tmp_buf));
-      decrypt_Handler(p, tmp_buf);
+      //decrypt_Handler(p, tmp_buf);
       *(p+tmp_buf)='\0';
       return p;
     }
@@ -463,7 +469,7 @@ char* read_client_message( TCPsocket socket){
 }
 
  void write_server_message( SerializedMessage_t *message, TCPsocket socket){
-  encrypt_Handler(message);
+ // encrypt_Handler(message);
 	//inspired by http://stackoverflow.com/questions/21579867/variable-length-message-over-tcp-socket-in-c answer 1 written by user John Dibling
   SDLNet_TCP_Send(socket, &(message->size), sizeof(int));
   SDLNet_TCP_Send(socket, message->jsonstring, message->size);
