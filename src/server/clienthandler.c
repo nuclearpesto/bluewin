@@ -444,12 +444,15 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
 
 char* read_client_message( TCPsocket socket){
 	//inspired by http://stackoverflow.com/questions/21579867/variable-length-message-over-tcp-socket-in-c answer 1 written by user John Dibling
- int tmp_buf=0;
+ int tmp_buf=0, max = JSON_MAX_LENGTH;
   char* p;
   D(printf("reading\n"));
   fflush(stdout);
   if( SDLNet_TCP_Recv(socket, &tmp_buf, sizeof(int))>0){
     if(tmp_buf>0){
+		if(tmp_buf>max){
+			tmp_buf=max;
+		}
       p = (char *) malloc(tmp_buf+1);
       if(p==NULL){
 		  printf("failed to allocate mamory for p");
