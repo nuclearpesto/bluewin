@@ -148,16 +148,17 @@ void handle_message(json_t *recieved_obj, clients_t *client){
 	json_t *recv_json_cmd;
 	SDL_Thread *id;
 	if(recv_json_cmd = json_object_get(recieved_obj, "message")){
-	  SerializableMessage_t response;
-	  response.client = client;
-	  strcpy(response.message, json_string_value(recv_json_cmd));
+	  SerializableMessage_t *response =(SerializableMessage_t *) malloc(sizeof(SerializableMessage_t));
+	  response->client = client;
+	  strcpy(response->message, json_string_value(recv_json_cmd));
 	  D(printf("copied string\n"));
 	  fflush(stdout);
 	  recv_json_cmd=json_object_get(recieved_obj, "room");
-	  strcpy( response.roomname, json_string_value(recv_json_cmd));
+	  strcpy( response->roomname, json_string_value(recv_json_cmd));
 	  //D(printf("room in serializable message is %s\n", response.roomname));
 	  D(printf("creating writethread\n"));
-	  id= SDL_CreateThread(write_to_client,"writer", &response); //create writethread
+	  printf("roomname %s", response->roomname);
+	  id= SDL_CreateThread(write_to_client,"writer", response); //create writethread
 	  SDL_DetachThread(id);
 	}
 }
@@ -393,7 +394,8 @@ int write_to_client(void *args){
 
   SerializableMessage_t *p  = (SerializableMessage_t *)args;
   char roomname[ROOM_NAME_SIZE+1];
-  strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
+ printf("in write_to_client before copy roomname is %s\n", p->roomname); 
+ strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
   //this is a short term solution
   json_int_t x = 1;
   json_t *messageobj = json_object();
@@ -414,6 +416,7 @@ int write_to_client(void *args){
   D(printf("jsonstr size %d\ncontains %s\n", sizeof(json_string), json_string));
   SerializedMessage_t sermes = create_serialized_message(json_string);
   write_to_room(roomname, &sermes, p->client);
+  free(p);
   //write_server_message(&sermes, p->client->socket);
 
 	return 1;
