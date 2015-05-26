@@ -64,8 +64,8 @@ void decrypt(unsigned long k[], unsigned long tmp[])           //den här funktio
     tmp[0]=y;tmp[1]=z;
 }
 
-void decrypt_Handler(char* msg, int size        // likt encrypt_Handler är denna fukntion inspirerad från boken,
-{                                               //distributed systems concepts and design fifth edition.
+void decrypt_Handler(char* msg, int size)        // likt encrypt_Handler är denna fukntion inspirerad från boken,
+{                                               /*distributed systems concepts and design fifth edition.*/
     char tmp[8];
     unsigned long k[4];
     k[0]=11111111111111;
