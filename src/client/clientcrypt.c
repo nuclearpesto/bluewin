@@ -1,11 +1,11 @@
 #include <string.h>
 #include <stdlib.h>
 
-void encrypt_cli(unsigned long k[], unsigned long tmp[])
-{
-    unsigned long y = tmp[0],z = tmp[1];
-    unsigned long delta = 0x9e3779b9, sum = 0;
-    int n;
+void encrypt_cli(unsigned long k[], unsigned long tmp[])       //Den här funktionen är direkt kopierad från boken,
+{                                                              // distributed systems concepts and design fifth edition,
+    unsigned long y = tmp[0],z = tmp[1];                       // författare: George Coulouris, Jean Dollimore, Tim Kindberg och Gordon Blair
+    unsigned long delta = 0x9e3779b9, sum = 0;                 // Publicerad: Maj, 2011
+    int n;                                                     // Krypteringen är designad av: David Wheeler och Roger Needham
     for (n=0;n<32;n++)
     {
         sum += delta;
@@ -15,9 +15,9 @@ void encrypt_cli(unsigned long k[], unsigned long tmp[])
     tmp[0]=y; tmp[1]=z;
 }
 
-int encrypt_Handler(char* msg)
-{
-    unsigned long k[4];
+int encrypt_Handler(char* msg)                                //den här funktionen är ommodifierad men har tagit inspiration från boken,
+{                                                             //  distributed systems concepts and design fifth edition
+    unsigned long k[4];                                       //
     k[0]=11111111111111;
     k[1]=22222222222222;
     k[2]=33333333333333;
@@ -34,8 +34,6 @@ int encrypt_Handler(char* msg)
 
     }
     totalBlock=msgLenght/8;
-    //totalBlock=totalBlock/8;
-   // int i;
     while(numBlock<totalBlock)
     {
         for (i=0;i<8;i++)
@@ -52,7 +50,7 @@ int encrypt_Handler(char* msg)
     return totalBlock*8;
 }
 
-void decrypt(unsigned long k[], unsigned long tmp[])
+void decrypt(unsigned long k[], unsigned long tmp[])           //den här funktionen är också tagen från samma bok som funktionen encrypt.
 {
     unsigned long y = tmp[0],z = tmp[1];
     unsigned long delta = 0x9e3779b9, sum = delta << 5;
@@ -66,8 +64,8 @@ void decrypt(unsigned long k[], unsigned long tmp[])
     tmp[0]=y;tmp[1]=z;
 }
 
-void decrypt_Handler(char* msg, int size)
-{
+void decrypt_Handler(char* msg, int size        // likt encrypt_Handler är denna fukntion inspirerad från boken,
+{                                               //distributed systems concepts and design fifth edition.
     char tmp[8];
     unsigned long k[4];
     k[0]=11111111111111;
