@@ -25,6 +25,10 @@
 #include "audio.h"
 
 
+extern "C"{
+    #include "clientcrypt.h"
+}
+
 #ifdef __APPLE__
 #include <SDL2_net/SDL_net.h>
 #else
@@ -75,6 +79,7 @@ void clear_input();
 void string_convert(std::string s,char msg[20]);
 void collect_rooms(json_t *masterobj, TCPsocket *socket);
 void switch_room(json_t *masterobj, char *room,  TCPsocket *socket);
+void delete_room(json_t *masterobj, char *room, TCPsocket *socket);
 void add_room(json_t *masterobj, char *room, TCPsocket *socket);
 void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket);
 void get_users_in_room(json_t *masterobj, char *room, TCPsocket *socket);

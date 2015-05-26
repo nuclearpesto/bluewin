@@ -12,6 +12,7 @@
 bool writeText = false;
 int field = 0;
 int nrMessages=0;
+const int TOTAL_SPRITE = 2;
 
 //Render text flag
 bool renderText = false;
@@ -104,7 +105,7 @@ public:
     //Set top left position
     void setPosition(int x,int y);
     //Handles mouse event
-    void handleEvent(json_t * messageArr, SDL_mutex *mesageArrMutex, json_t* globalRoomArr,bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL_Event* e, int* screenShow, Button* button, int i,int totalElements,int totalButtons,int totalDelete,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* newRoomNameText,json_t *masterobj);
+    void handleEvent(json_t * messageArr, SDL_mutex *mesageArrMutex, json_t* globalRoomArr,bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL_Event* e, int* screenShow, Button* button, int i,int totalElements,int totalButtons,int totalDelete,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* inputMessageText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* outputMessagetext,std::string* newRoomNameText,json_t *masterobj);
     //Shows button sprite
     void render(int* screenShow, int* element);
 
@@ -183,6 +184,9 @@ LTexture gCreateRoomButtonSpriteSheetTexture;
 SDL_Rect gDeleteRoomSpriteClips[BUTTON_SPRITE_TOTAL];
 LTexture gDeleteRoomButtonSpriteSheetTexture;
 
+SDL_Rect gSendSpriteClips[BUTTON_SPRITE_TOTAL];
+LTexture gSendButtonSpriteSheetTexture;
+
 //Buttons objects
 LButton gLoginButtons[TOTAL_BUTTONS];
 LButton gLogoutButton[TOTAL_BUTTONS];
@@ -192,6 +196,7 @@ LButton gMessageFieldButton[1];
 LButton gCreateRoomButton[1];
 LButton gCreateRoomNameFieldButton[1];
 LButton gDeleteRoomButton[ROOM_BUTTON_TOTAL];
+LButton gSendButton[1];
 
 void clear_messages(json_t *messageArr, SDL_mutex *mesageArrMutex){
 	SDL_LockMutex(mesageArrMutex);
@@ -366,6 +371,18 @@ std::string getInfoJsonRoom(json_t *roomArr,int i){
     return info;
 }
 
+void append_messageArr(json_t* messageArr, user_s * usr, std::string *text, SDL_mutex *mesageArrMutex){
+    json_t * buildingblock, *current;
+    buildingblock = json_object();
+    current = json_string(usr->username);
+    json_object_set_new(buildingblock, "username" ,current);
+    current = json_string(text->c_str());
+    json_object_set_new(buildingblock, "message" ,current);
+    SDL_LockMutex(mesageArrMutex);
+    json_array_append_new(messageArr, buildingblock);
+    SDL_UnlockMutex(mesageArrMutex);
+}
+
 void sendLogin(int* screenShow,std::string* inputUsernameText,std::string* inputPasswordText,json_t* masterobj,bool* loginCheck,TCPsocket* sd){
     int c=0;
     if (*screenShow==0) {
@@ -412,7 +429,23 @@ void createUser(int* screenShow,std::string* inputUsernameText,std::string* inpu
     }
 }
 
-void LButton::handleEvent(json_t * messageArr, SDL_mutex *mesageArrMutex, json_t *globalRoomArr, bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL_Event* e,int* screenShow, Button* button,int selected,int totalElements,int totalButtons,int totalDelete,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* newRoomNameText,json_t *masterobj){
+void sendMessage(json_t* messageArr,SDL_mutex* mesageArrMutex,std::string* inputMessageText,std::string* outputMessageText,TCPsocket* sd,json_t* masterobj){
+    if (*inputMessageText=="" || *inputMessageText==" ") {
+        printf("Cant send empty message\n");
+    }else{
+        printf("You sent a message!\n");
+        *outputMessageText=*inputMessageText;
+        *inputMessageText=" ";
+        printf("%s\n",outputMessageText->c_str());
+        append_messageArr(messageArr, &clientUsr, outputMessageText, mesageArrMutex);
+        msg.message=(char*)outputMessageText->c_str();
+        msg.room=(char *)clientUsr.room.c_str();
+        write_message(masterobj, &clientUsr, msg, sd);
+    }
+}
+
+void LButton::handleEvent(json_t * messageArr, SDL_mutex *mesageArrMutex, json_t *globalRoomArr, bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL_Event* e,int* screenShow, Button* button,int selected,int totalElements,int totalButtons,int totalDelete,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* inputMessageText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* outputMessagetext,std::string* newRoomNameText,json_t *masterobj){
+    std::string room = "";
     //if mouse event happend
     if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP ) {
         //Get mouse position
@@ -492,8 +525,7 @@ void LButton::handleEvent(json_t * messageArr, SDL_mutex *mesageArrMutex, json_t
                         switch (selected) {
                             case 0://Create account button
                                 printf("Create account button\n");
-                                if (inputPasswordText->compare(*inputRetypePasswordText)==0)
-                                {
+                                if (inputPasswordText->compare(*inputRetypePasswordText)==0){
                                     createUser(screenShow, inputUsernameText, inputPasswordText, masterobj,createCheck, sd);
                                 }
                                 break;
@@ -548,21 +580,30 @@ void LButton::handleEvent(json_t * messageArr, SDL_mutex *mesageArrMutex, json_t
                                 field=4;
                                 break;
 
-                            case 3://Message text field
+                            case 3://Send message button
+                                printf("Send message button\n");
+                                sendMessage(messageArr, mesageArrMutex,inputMessageText, outputMessagetext, sd, masterobj);
+                                break;
+                                
+                            case 4://Message text field
                                 field=2;
 								//collect_rooms(masterobj, sd);
                                 printf("Message text field button\n");
                                 break;
+                                
                             default:
-                                if (selected>3 && selected<totalElements-totalDelete) {
-                                    printf("Room %d button\n", selected -4);
+                                if (selected>4 && selected<totalElements-totalDelete) {
+                                    printf("Room %d button\n", selected -5);
                                     clear_messages(messageArr, mesageArrMutex);
-                                    switch_room(masterobj,(char *)getInfoJsonRoom(globalRoomArr, selected-4).c_str(), sd);
-                                    clientUsr.room=getInfoJsonRoom(globalRoomArr,selected-4);
-                                    clientUsr.currentRoom=selected-4;
+                                    switch_room(masterobj,(char *)getInfoJsonRoom(globalRoomArr, selected-5).c_str(), sd);
+                                    clientUsr.room=getInfoJsonRoom(globalRoomArr,selected-5);
+                                    clientUsr.currentRoom=selected-5;
                                     get_users_in_room(masterobj, (char * )clientUsr.room.c_str(), sd);
                                 }else if(selected>=totalElements-totalDelete){
-                                    printf("Delete button to room: %d\n",selected-4-totalButtons);
+                                    printf("Delete button to room: %d\n",selected-5-totalButtons);
+                                    room=getInfoJsonRoom(globalRoomArr,selected-5-totalButtons);
+                                    delete_room(masterobj,(char*)room.c_str() , sd);
+                                    
                                 }
                                 
 								break;
@@ -588,18 +629,34 @@ void LButton::render(int* screenShow,int *element){
             gLogoutButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gLogoutSpriteClips[mCurrentSprite]);
         }
     }else if (*screenShow == 2){
-        if (*element==0) {
-            //Show current logoff button sprite
-            gLogoutButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gLogoutSpriteClips[mCurrentSprite]);
-        }else if (*element==1){
-            //Show current create room button sprite
-            gCreateRoomButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gCreateRoomSpriteClips[mCurrentSprite]);
-        }else if (*element==2){
-            //Show current room button sprite
-            gRoomButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gRoomSpriteClips[mCurrentSprite]);
-        }else if (*element==3){
-            //Show current delete button sprite
-            gDeleteRoomButtonSpriteSheetTexture.render(mPosition.x ,mPosition.y, &gDeleteRoomSpriteClips[mCurrentSprite]);
+        switch (*element) {
+            case 0:
+                //Show current logoff button sprite
+                gLogoutButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gLogoutSpriteClips[mCurrentSprite]);
+                break;
+                
+            case 1:
+                //Show current create room button sprite
+                gCreateRoomButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gCreateRoomSpriteClips[mCurrentSprite]);
+                break;
+                
+            case 2:
+                //Show current room button sprite
+                gRoomButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gRoomSpriteClips[mCurrentSprite]);
+                break;
+                
+            case 3:
+                //Show current delete button sprite
+                gDeleteRoomButtonSpriteSheetTexture.render(mPosition.x ,mPosition.y, &gDeleteRoomSpriteClips[mCurrentSprite]);
+                break;
+                
+            case 4:
+                //Show current send button sprite
+                gSendButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gSendSpriteClips[mCurrentSprite]);
+                break;
+                
+            default:
+                break;
         }
     }
 }
@@ -890,14 +947,6 @@ bool loadMedia(){
             gDeleteRoomSpriteClips[i].y=i*50;
             gDeleteRoomSpriteClips[i].w=100;
             gDeleteRoomSpriteClips[i].h=50;
-            /*gDeleteRoomSpriteClips[0].x=25;
-            gDeleteRoomSpriteClips[0].y=0;
-            gDeleteRoomSpriteClips[0].w=50;
-            gDeleteRoomSpriteClips[0].h=50;
-            gDeleteRoomSpriteClips[1].x=0;
-            gDeleteRoomSpriteClips[1].y=5;
-            gDeleteRoomSpriteClips[1].w=100;
-            gDeleteRoomSpriteClips[1].h=50;*/
         }
     }
     
@@ -905,6 +954,19 @@ bool loadMedia(){
     if (!gChattroomTexture.loadFromFile("bluewinimg/chatroom.png")) {
         printf("Failed to load chatroom texture\n");
         success=false;
+    }
+    
+    if (!gSendButtonSpriteSheetTexture.loadFromFile("bluewinimg/sendbutton.png")) {
+        printf("Failed to load send button texture\n");
+        success=false;
+    }else{
+        //Set sprites
+        for (int i = 0; i < TOTAL_SPRITE; i++) {
+            gSendSpriteClips[i].x=0;
+            gSendSpriteClips[i].y=0;
+            gSendSpriteClips[i].w=50;
+            gSendSpriteClips[i].h=35;
+        }
     }
 
     //Open the font
@@ -935,6 +997,7 @@ void close(){
     gRoomButtonSpriteSheetTexture.free();
     gCreateRoomButtonSpriteSheetTexture.free();
     gDeleteRoomButtonSpriteSheetTexture.free();
+    gSendButtonSpriteSheetTexture.free();
     gFooTexture.free();
     gBackgroundTexture.free();
     gMainTexture.free();
@@ -987,19 +1050,7 @@ SDL_Texture* loadTexture(std::string path){
     return newTexture;
 }
 
-void append_messageArr(json_t* messageArr, user_s * usr, std::string *text, SDL_mutex *mesageArrMutex){
-	json_t * buildingblock, *current;
-	buildingblock = json_object();
-	current = json_string(usr->username);
-	json_object_set_new(buildingblock, "username" ,current);
-	current = json_string(text->c_str());
-	json_object_set_new(buildingblock, "message" ,current);
-	SDL_LockMutex(mesageArrMutex);
-	json_array_append_new(messageArr, buildingblock);
-	SDL_UnlockMutex(mesageArrMutex);
-}
-
-void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesageArrMutex, bool *loginCheck,bool* createCheck, TCPsocket *sd, int* screenShow,int totalButtons,int totalDelete, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText,std::string* newRoomNameText ,SDL_Event e, json_t *masterobj){
+void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesageArrMutex, bool *loginCheck,bool* createCheck, TCPsocket *sd, int* screenShow,int totalButtons,int totalDelete, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,Button sendButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText,std::string* newRoomNameText ,SDL_Event e, json_t *masterobj){
     //Event handler
     //SDL_Event e;
     int totalElements = totalButtons + totalFields;
@@ -1017,9 +1068,9 @@ void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesage
             //Generate all elements in login screen
             for (int i = 0; i< totalElements; i++) {
                 if (i<totalButtons) {
-                    gLoginButtons[i].handleEvent(messageArr, mesageArrMutex,globalRoomArr, loginCheck,createCheck, sd, &e,screenShow,&buttonTypeSmall,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gLoginButtons[i].handleEvent(messageArr, mesageArrMutex,globalRoomArr, loginCheck,createCheck, sd, &e,screenShow,&buttonTypeSmall,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText,inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText,masterobj);
                 }else if(i<totalButtons+totalFields){
-                    gFieldButtons[i-totalButtons].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck,createCheck, sd, &e, screenShow, &fieldButton,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gFieldButtons[i-totalButtons].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck,createCheck, sd, &e, screenShow, &fieldButton,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText,inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText,masterobj);
                 }
             }
             //Get user input text
@@ -1053,11 +1104,11 @@ void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesage
             //Generate all elements in login screen
             for (int i = 0; i< totalElements; i++) {
                 if (i<1) {
-                    gLoginButtons[i].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e,screenShow,&buttonTypeSmall,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gLoginButtons[i].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e,screenShow,&buttonTypeSmall,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText,masterobj);
                 }else if (i<totalButtons){
-                    gLogoutButton[i].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &logoutButton, i,totalElements,totalButtons,totalDelete, inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText, masterobj);
+                    gLogoutButton[i].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &logoutButton, i,totalElements,totalButtons,totalDelete, inputUsernameText,inputPasswordText, inputRetypePasswordText, inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText, masterobj);
                 }else if(i<totalButtons+totalFields){
-                    gFieldButtons[i-totalButtons].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &fieldButton,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gFieldButtons[i-totalButtons].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &fieldButton,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText,masterobj);
                 }
             }
 
@@ -1096,17 +1147,19 @@ void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesage
             //Generate all elements in main screen
             for (int i =0; i<totalElements; i++) {
                 if (i<1) {
-                    gLogoutButton[i].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &logoutButton, i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
+                    gLogoutButton[i].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow, &logoutButton, i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText,masterobj);
                 }else if(i<2){
-                    gCreateRoomButton[i-1].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck, createCheck, sd, &e, screenShow,&createRoomButton , i,totalElements,totalButtons,totalDelete, inputUsernameText, inputPasswordText, inputRetypePasswordText, outputPasswordText, outputRetypePasswordText,newRoomNameText, masterobj);
+                    gCreateRoomButton[i-1].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck, createCheck, sd, &e, screenShow,&createRoomButton , i,totalElements,totalButtons,totalDelete, inputUsernameText, inputPasswordText, inputRetypePasswordText, inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText, masterobj);
                 }else if (i<3){
-                    gCreateRoomNameFieldButton[i-2].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck, createCheck, sd, &e, screenShow, &createRoomFieldButton, i,totalElements,totalButtons,totalDelete, inputUsernameText, inputPasswordText, inputRetypePasswordText, outputPasswordText, outputRetypePasswordText,newRoomNameText, masterobj);
-                }else if(i<2+totalFields){
-                    gMessageFieldButton[i-3].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck,sd,&e, screenShow, &messageButton, i,totalElements,totalButtons,totalDelete, inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText, masterobj);
-                }else if (i<2+totalFields+totalButtons){
-                    gRoomButtons[i-2-totalFields].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,newRoomNameText,masterobj);
-                }else if (i<2+totalFields+totalButtons+totalDelete){
-                    gDeleteRoomButton[i-2-totalFields-totalButtons].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck, createCheck, sd, &e, screenShow, &deleteButton, i,totalElements,totalButtons,totalDelete, inputUsernameText, inputPasswordText, inputRetypePasswordText,outputPasswordText, outputRetypePasswordText, newRoomNameText, masterobj);
+                    gCreateRoomNameFieldButton[i-2].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck, createCheck, sd, &e, screenShow, &createRoomFieldButton, i,totalElements,totalButtons,totalDelete, inputUsernameText, inputPasswordText, inputRetypePasswordText, inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText, masterobj);
+                }else if(i<4){
+                    gSendButton[i-3].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck, createCheck, sd, &e, screenShow, &sendButton, i, totalElements, totalButtons, totalDelete, inputUsernameText, inputPasswordText, inputRetypePasswordText, inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText, newRoomNameText, masterobj);
+                }else if (i<3+totalFields){
+                    gMessageFieldButton[i-4].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck,sd,&e, screenShow, &messageButton, i,totalElements,totalButtons,totalDelete, inputUsernameText,inputPasswordText, inputRetypePasswordText,inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText, masterobj);
+                }else if (i<3+totalFields+totalButtons){
+                    gRoomButtons[i-3-totalFields].handleEvent(messageArr, mesageArrMutex, globalRoomArr,loginCheck,createCheck, sd, &e, screenShow,&buttonTypeWide,i,totalElements,totalButtons,totalDelete,inputUsernameText,inputPasswordText, inputRetypePasswordText, inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText,newRoomNameText,masterobj);
+                }else if (i<3+totalFields+totalButtons+totalDelete){
+                    gDeleteRoomButton[i-3-totalFields-totalButtons].handleEvent(messageArr, mesageArrMutex, globalRoomArr, loginCheck, createCheck, sd, &e, screenShow, &deleteButton, i,totalElements,totalButtons,totalDelete, inputUsernameText, inputPasswordText, inputRetypePasswordText,inputMessageText, outputPasswordText,outputRetypePasswordText,outputMessageText, newRoomNameText, masterobj);
                 }
             }
             if (writeText) {
@@ -1121,18 +1174,7 @@ void eventHandler(json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesage
                 switch( e.key.keysym.sym ){
                     case SDLK_RETURN:
                         if (field==2) {
-                            if (*inputMessageText=="" || *inputMessageText==" ") {
-                                printf("Cant send empty message\n");
-                            }else{
-                                printf("You sent a message!\n");
-                                *outputMessageText=*inputMessageText;
-                                *inputMessageText=" ";
-                                printf("%s\n",outputMessageText->c_str());
-                                append_messageArr(messageArr, &clientUsr, outputMessageText, mesageArrMutex);
-                                msg.message=(char*)outputMessageText->c_str();
-                                msg.room=(char *)clientUsr.room.c_str();
-                                write_message(masterobj, &clientUsr, msg, sd);
-                            }
+                            sendMessage(messageArr,mesageArrMutex,inputMessageText,outputMessageText,sd,masterobj);
                         }else if (field==4){
                             printf("This aint working yet\n");
                         }
@@ -1301,11 +1343,11 @@ void createAccountScreen(int* totalButtons, int* totalFields,int* screenShow,Scr
 
 }
 
-void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *messageArr,int* totalButtons,int* totalDelete, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText){
+void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *messageArr,int* totalButtons,int* totalDelete, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,Button sendButton,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText){
     int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530,userInRoom=json_array_size(globalUsersInRoomArr),originSizeWidth=0,originSizeHeight=0,currentRoom=clientUsr.currentRoom;
 	nrRooms = json_array_size(globalRoomArr);
     *totalDelete=nrRooms+1;
-    *totalButtons=1+nrRooms+1+1+1;
+    *totalButtons=1+nrRooms+1+1+1+1;
     *totalFields=1+1;
     //clientUsr.username="Hejsan";
     char* cmd;
@@ -1405,7 +1447,17 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
     }else{
         gMessageTextTexture.render(messageButton.x, messageButton.y);
     }
-
+    
+    if (*inputMessageText=="" || *inputMessageText==" ") {
+        element=4;
+        gSendButton[0].render(screenShow, &element);
+        gSendButton[0].setPosition(5000, 5000);
+    }else{
+        element=4;
+        gSendButton[0].render(screenShow, &element);
+        gSendButton[0].setPosition(970, 710);
+    }
+    
     //When user send message
     /*if (*outputMessageText=="" || *outputMessageText==" ") {
         //printf("There are no user messages\n");
@@ -1463,10 +1515,10 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
     }
 }
 
-void runingGui(int * refreshCounter, json_t* globalUsersInRoomArr, json_t *globalRoomArr, SDL_mutex *mesageArrMutex, json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket* sd,int* screenShow,int* totalButtons,int* totalDelete, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText,SDL_Event* e, json_t *masterobj){
+void runingGui(int * refreshCounter, json_t* globalUsersInRoomArr, json_t *globalRoomArr, SDL_mutex *mesageArrMutex, json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket* sd,int* screenShow,int* totalButtons,int* totalDelete, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,Button sendButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText,SDL_Event* e, json_t *masterobj){
 
     while( SDL_PollEvent( e ) != 0 ){
-        eventHandler(globalRoomArr, messageArr, mesageArrMutex, loginCheck,createCheck, sd, screenShow, *totalButtons,*totalDelete, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton,createRoomButton,createRoomFieldButton,deleteButton, inputUsernameText, inputPasswordText,inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,inputMessageText,outputMessageText,newRoomNameText,*e,masterobj);
+        eventHandler(globalRoomArr, messageArr, mesageArrMutex, loginCheck,createCheck, sd, screenShow, *totalButtons,*totalDelete, *totalFields, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton,createRoomButton,createRoomFieldButton,deleteButton,sendButton, inputUsernameText, inputPasswordText,inputRetypePasswordText, outputPasswordText,outputRetypePasswordText,inputMessageText,outputMessageText,newRoomNameText,*e,masterobj);
     }
 
     //Clear screen
@@ -1488,7 +1540,7 @@ void runingGui(int * refreshCounter, json_t* globalUsersInRoomArr, json_t *globa
 			get_users_in_room(masterobj, (char *)clientUsr.room.c_str(), sd);
 			*refreshCounter=0;
 		}
-		mainScreen(globalRoomArr, globalUsersInRoomArr, messageArr,totalButtons,totalDelete, totalFields, nrRooms, screenShow, windowSize, logoutButton, buttonTypeWide,messageButton,createRoomButton,createRoomFieldButton,deleteButton,inputMessageText,outputMessageText,outputMessageOtherText,newRoomNameText);
+		mainScreen(globalRoomArr, globalUsersInRoomArr, messageArr,totalButtons,totalDelete, totalFields, nrRooms, screenShow, windowSize, logoutButton, buttonTypeWide,messageButton,createRoomButton,createRoomFieldButton,deleteButton,sendButton,inputMessageText,outputMessageText,outputMessageOtherText,newRoomNameText);
 	}
 
     //Update screen
@@ -1526,7 +1578,7 @@ int main(int argc, char *argv[]){
     windowSize.h=800;
     //screenShow=2;
 
-    Button buttonTypeSmall,buttonTypeWide,fieldButton,loginButton,logoutButton,createRoomButton,messageButton,createRoomFieldButton,deleteButton;
+    Button buttonTypeSmall,buttonTypeWide,fieldButton,loginButton,logoutButton,createRoomButton,messageButton,createRoomFieldButton,deleteButton, sendButton;
     buttonTypeSmall.w=200;
     buttonTypeSmall.h=75;
     buttonTypeWide.w=300;
@@ -1554,6 +1606,10 @@ int main(int argc, char *argv[]){
     createRoomFieldButton.y=140;
     deleteButton.w=100;
     deleteButton.h=50;
+    sendButton.w=50;
+    sendButton.h=35;
+    sendButton.x=970;
+    sendButton.y=710;
 
     json_t *masterobj = json_object();
 	json_t *globalUsersInRoomArr =json_array();
@@ -1590,7 +1646,7 @@ int main(int argc, char *argv[]){
 
         //While application is running
         while( !quit ){
-            runingGui(&refreshCounter,globalUsersInRoomArr, globalRoomArr,messageArrMutex,messageArr,&loginCheck,&createCheck, &sd, &screenShow, &totalButtons,&totalDelete, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton,createRoomButton,createRoomFieldButton,deleteButton, &inputUsernameText, &inputPasswordText, &inputRetypePasswordText, &outputPasswordText,&outputRetypePasswordText,&inputMessageText,&outputMessageText,&outputMessageOtherText,&newRoomNameText, &e, masterobj);
+            runingGui(&refreshCounter,globalUsersInRoomArr, globalRoomArr,messageArrMutex,messageArr,&loginCheck,&createCheck, &sd, &screenShow, &totalButtons,&totalDelete, &totalFields, nrRooms, windowSize, loginButton, fieldButton, logoutButton, buttonTypeWide, buttonTypeSmall,messageButton,createRoomButton,createRoomFieldButton,deleteButton,sendButton, &inputUsernameText, &inputPasswordText, &inputRetypePasswordText, &outputPasswordText,&outputRetypePasswordText,&inputMessageText,&outputMessageText,&outputMessageOtherText,&newRoomNameText, &e, masterobj);
         }
         //Disable text input
         SDL_StopTextInput();

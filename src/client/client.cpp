@@ -7,8 +7,6 @@
 //
 
 #include "client.h"
-#include "clientcrypt.h"
-
 
 #define READ_BUF_SIZE 1000
 
@@ -99,7 +97,7 @@ user_s usr;
     }
 }*/
 
-TCPsocket initClient(audiostruct_t * audiostruct,  bool * createCheck, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
+TCPsocket initClient(audiostruct_t * audiostruct, bool * createCheck, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
     bool success = true;
     SDL_Thread *thread;
 	TCPsocket sd = NULL;
@@ -116,8 +114,8 @@ TCPsocket initClient(audiostruct_t * audiostruct,  bool * createCheck, bool *log
     //TCPsocket sd;
 
     int port=5000;
-    //char ipen[20]=("130.237.84.200");
-   char ipen[20]=("127.0.0.1");
+    char ipen[20]=("130.237.84.200");
+    //char ipen[20]=("127.0.0.1");
 
     printf("%s\n",ipen);
     if(SDLNet_Init() < 0){                                      //SDL Tutorial taken from
@@ -294,11 +292,11 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
     //printf("%p",json_s);
     //json_s = "hej\0";
     //kryptera
-    len = strlen(json_s);
-    //len=encrypt_Handler(json_s);
+    //len = strlen(json_s);
+    len=encrypt_Handler(json_s);
     //puts(json_s);//kontroll
     //printf("encrypted string: %s\n",json_s);
-    //decrypt_Handler(json_s, len);
+    decrypt_Handler(json_s, len);
     //printf("decrypted string: %s\n",json_s);
     //printf("%s\n",json_s);
     //len = strlen(json_s);
