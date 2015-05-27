@@ -186,7 +186,7 @@ int readThread (void * p){
         }
         else{
             free(string);
-			
+
             if((keycheckobj = json_object_get(masterobj, "audio")) != NULL){
 				playaudio(masterobj,audiostruct->writeBlock, audiostruct->writestream );
             }
@@ -292,11 +292,11 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
     //printf("%p",json_s);
     //json_s = "hej\0";
     //kryptera
-    //len = strlen(json_s);
-    len=encrypt_Handler(json_s);
+    len = strlen(json_s);
+    //len=encrypt_Handler(json_s);
     //puts(json_s);//kontroll
     //printf("encrypted string: %s\n",json_s);
-    decrypt_Handler(json_s, len);
+    //decrypt_Handler(json_s, len);
     //printf("decrypted string: %s\n",json_s);
     //printf("%s\n",json_s);
     //len = strlen(json_s);
@@ -315,7 +315,9 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 	//printf("reading\n");
     *numBytesRead = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
 	//printf("gonna read %d bytes : %d\n",temp);
-
+    if(temp > 10000){
+        temp = 10000;
+    }
     response = (char *)malloc(temp+1);
 	*numBytesRead =SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';
