@@ -19,7 +19,7 @@
 clients_t clientsArr[THREAD_COUNT];
 room_t roomsArr[MAX_ROOMS];
 stack availableClientNr, availableRoomNr;
-SDL_mutex *clientsStackMutex, *roomsStackMutex, *UsersDbMutex;
+SDL_mutex *clientsStackMutex, *roomsStackMutex, *UsersDbMutex, *writeMutex;
 SDL_Thread *threadIds;
 
 int main(int argc, char **argv){
@@ -58,6 +58,7 @@ int main(int argc, char **argv){
   clientsStackMutex = SDL_CreateMutex();
   UsersDbMutex= SDL_CreateMutex();
   roomsStackMutex = SDL_CreateMutex();
+  writeMutex = SDL_CreateMutex();
   D(printf("initialized mutexes\n"));
   fflush(stdout);
   init_rooms(roomsArr, MAX_ROOMS);

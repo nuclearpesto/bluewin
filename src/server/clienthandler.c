@@ -160,6 +160,7 @@ void handle_message(json_t *recieved_obj, clients_t *client){
 	  printf("roomname %s", response->roomname);
 	  id= SDL_CreateThread(write_to_client,"writer", response); //create writethread
 	  SDL_DetachThread(id);
+	/*UNNECECARY TO CREATE NEW THREAD EVERY TIME, TODO make it run write to server from here*/
 	}
 }
 
@@ -190,7 +191,7 @@ void handle_login(json_t * recieved_obj, clients_t *client){
 	strcpy(sermes.jsonstring,jsonString);
 	sermes.size = strlen(jsonString);
 	write_server_message(&sermes, client->socket);
-
+	free(writeobj);
 
 
 
@@ -206,7 +207,7 @@ void handle_switch_room(json_t * recieved_obj, clients_t *client){
 	  strroom = json_string_value(room);
 	  switch_room( strroom, client);
 	}
-	writeobj = json_object();
+	//writeobj = json_object();
 	//TODO RETURN SOMETHING TO CLIENT TO LET THEM KNOW IT WORKED
 }
 
@@ -241,7 +242,7 @@ void handle_get_users_in_room(json_t * recieved_obj, clients_t *client){
   write_server_message(&sermes, client->socket);
    D(printf("wrote\n "));
     fflush(stdout);
-
+	free(writeobj);
 }
 
 
@@ -264,7 +265,8 @@ void handle_get_rooms(json_t * recieved_obj, clients_t *client){
   char * jsonstr = json_dumps(writeobj, 0);
   SerializedMessage_t sermes = create_serialized_message(jsonstr);
   write_server_message(&sermes, client->socket);
-}
+	free(writeobj);
+ }
 
 
 
@@ -342,14 +344,14 @@ void handle_add_user(json_t *recieved_obj, clients_t *client){
 	D(printf("gonnar write tis response to client:%s\n", jsonString));
 	SerializedMessage_t sermes = create_serialized_message(jsonString);
 	write_server_message(&sermes, client->socket);
-
+	free(writeobj);
 
 }
 
 void handle_del_user(json_t *recieved_obj, clients_t *client){
 	json_t *writeobj, *password, *username, *json_deleted_val;
 	char * strpass, *strusn;
-	bool success;
+	bool success=false;
 	username = json_object_get(recieved_obj, "username");
 	password = json_object_get(recieved_obj,"password");
 	//printf("username befor login func is:  %s \n", strusn);
@@ -365,6 +367,7 @@ void handle_del_user(json_t *recieved_obj, clients_t *client){
 	char * jsonString = json_dumps(writeobj, 0);
 	SerializedMessage_t sermes = create_serialized_message(jsonString);
 	write_server_message(&sermes, client->socket);
+	free(writeobj);
 
 }
 
@@ -477,7 +480,8 @@ char* read_client_message( TCPsocket socket){
  void write_server_message( SerializedMessage_t *message, TCPsocket socket){
  // encrypt_Handler(message);
 	//inspired by http://stackoverflow.com/questions/21579867/variable-length-message-over-tcp-socket-in-c answer 1 written by user John Dibling
+ SDL_LockMutex(writeMutex);
   SDLNet_TCP_Send(socket, &(message->size), sizeof(int));
   SDLNet_TCP_Send(socket, message->jsonstring, message->size);
-
+SDL_UnlockMutex(writeMutex);
  }
