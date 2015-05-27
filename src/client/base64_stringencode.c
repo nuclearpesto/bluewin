@@ -91,7 +91,7 @@ void b64_encode(char *clrstr, char *b64dst, int numbytes) {
 	  }
       else{
 		in[i] = 0;
-		printf("adding zerobytes at j=%d\n", j);
+		//printf("adding zerobytes at j=%d\n", j);
 		} 
 	  j++;
     }

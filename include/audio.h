@@ -46,7 +46,7 @@
  #ifndef AUDIO
  #define AUDIO
  /* #define SAMPLE_RATE  (17932) // Test failure to open with this value. */
- #define SAMPLE_RATE  (16000)
+ #define SAMPLE_RATE  (8000)
  #define FRAMES_PER_BUFFER (1024)
  #define NUM_CHANNELS    (2)
  #define NUM_SECONDS     (15)
@@ -66,14 +66,14 @@
  #define SAMPLE_SILENCE  (0.0f)
  #define CLEAR(a) memset( (a), 0, FRAMES_PER_BUFFER * NUM_CHANNELS * SAMPLE_SIZE )
  #define PRINTF_S_FORMAT "%.8f"
- #elif 0
+ #elif 1
  #define PA_SAMPLE_TYPE  paInt16
  #define PA_SAMPLE_TYPE_PRINTABLE  "paint 16"
  #define SAMPLE_SIZE (2)
  #define SAMPLE_SILENCE  (0)
  #define CLEAR(a) memset( (a), 0,  FRAMES_PER_BUFFER * NUM_CHANNELS * SAMPLE_SIZE )
  #define PRINTF_S_FORMAT "%d"
- #elif 1
+ #elif 0
  #define PA_SAMPLE_TYPE  paInt24
  #define PA_SAMPLE_TYPE_PRINTABLE  "paint 24"
  #define SAMPLE_SIZE (3)

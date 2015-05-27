@@ -114,8 +114,8 @@ TCPsocket initClient( audiostruct_t * audiostruct, bool * createCheck, bool *log
     //TCPsocket sd;
 
     int port=5000;
-    //char ipen[20]=("130.237.84.200");
-    char ipen[20]=("127.0.0.1");
+    char ipen[20]=("130.237.84.200");
+    //char ipen[20]=("127.0.0.1");
 
     printf("%s\n",ipen);
     if(SDLNet_Init() < 0){                                      //SDL Tutorial taken from
@@ -134,13 +134,15 @@ TCPsocket initClient( audiostruct_t * audiostruct, bool * createCheck, bool *log
 				printf("socket before is : %d\n",sd);
 				Readstruct *readstruct = (Readstruct*) malloc(sizeof(readstruct));
 				readstruct->globalUsersInRoomArr = globalUsersInRoomArr;
-				readstruct->messageArr = globalUsersInRoomArr;
+				readstruct->messageArr = messageArr;
 				readstruct->globalRoomArr = globalRoomArr;
 				readstruct->sd = sd;
 				readstruct->loginCheck = loginCheck;
 				readstruct->messageArrMutex = messageArrMutex;
 				readstruct->audiostruct = audiostruct;
+				readstruct->createCheck = createCheck;
 				thread=SDL_CreateThread(readThread, "reader", readstruct);
+				
 				//initialize audio ;
 				init_sound(audiostruct);
 				audiothreadstruct_t * audiothreadstruct = (audiothreadstruct_t*) malloc(sizeof(audiothreadstruct_t));
@@ -205,6 +207,7 @@ int readThread (void * p){
 
            else if((keycheckobj = json_object_get(masterobj, "message")) != NULL){
                 //add mesage to global message arr
+				//printf("found message---------------------------------------------------------------------------\n\n\n");
 				buildingblock = json_object();
 				current = json_object_get(masterobj, "username");
 				json_object_set_new(buildingblock, "username" ,current);
@@ -322,7 +325,7 @@ void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
 char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 
     int temp=0,  res;
-	printf("reading\n");
+	//printf("reading\n");
     *numBytesRead = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
 	//printf("gonna read %d bytes : %d\n",temp);
 	if(temp > 10000){
