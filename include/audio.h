@@ -47,7 +47,7 @@
  #define AUDIO
  /* #define SAMPLE_RATE  (17932) // Test failure to open with this value. */
  #define SAMPLE_RATE  (8000)
- #define FRAMES_PER_BUFFER (1024)
+ #define FRAMES_PER_BUFFER (256)
  #define NUM_CHANNELS    (2)
  #define NUM_SECONDS     (15)
  /* #define DITHER_FLAG     (paDitherOff)  */
