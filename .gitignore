@@ -6,3 +6,5 @@ src/server/clienthandler.o
 *.db
 
 *.orig
+*.db
+src/server/users.db

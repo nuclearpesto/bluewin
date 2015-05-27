@@ -68,18 +68,27 @@ bool add_user(char *UserName, char *pw){
 	    D(printf(" read db\n"));
 	    fflush(stdout);
 	    fclose(fp);
+		dbstr[jsonlen]='\0';
 	    masterObj= json_loads(dbstr, JSON_REJECT_DUPLICATES, &error);
-	    if(json_object_get(masterObj,UserName)==NULL){
-	      /*TODO encrypt pass*/
-	      D( printf("no duplicate\n"));
-	      UserPass=json_string(pw);
-	      json_object_set(masterObj, UserName, UserPass);
-	      dbstr = json_dumps(masterObj, 0);
-	      fp = fopen(USERS_DB_FILE, "w");
-	      fprintf(fp,"%d", strlen(dbstr) );
-	      fprintf(fp,"%s", dbstr );
-	      success=true;
-	      fclose(fp);
+	    free(dbstr);
+		if(masterObj!=NULL){
+			if(json_object_get(masterObj,UserName)==NULL){
+			  /*TODO encrypt pass*/
+			  D( printf("no duplicate\n"));
+			  UserPass=json_string(pw);
+			  json_object_set(masterObj, UserName, UserPass);
+			  dbstr = json_dumps(masterObj, 0);
+			  if(dbstr != NULL){
+				fp = fopen(USERS_DB_FILE, "w");
+				fprintf(fp,"%d", strlen(dbstr) );
+				fprintf(fp,"%s", dbstr );
+				success=true;
+				fclose(fp);
+			  }
+		  }
+		  else{
+			 D(printf("CANT WRITE DATABASE TO DISK JSON ERROR:%s\n",error.text));
+		  }
 	    }
 	  }
 	}
@@ -103,7 +112,7 @@ bool del_user(char * UserName, char* pw){ //verify password of the user being de
 		if(fscanf(fp, "%d", &jsonlen)){
 		  D(printf("read int from file\n"));
 			fflush(stdout);
-			if(fread(dbstr, jsonlen , 1, fp)>0){
+			if(fgets(dbstr, jsonlen+1, fp)>0){
 				masterObj= json_loads(dbstr, JSON_REJECT_DUPLICATES, &error);
 				/*TODO encrypt pass*/
 				json_object_del(masterObj, UserName);
@@ -173,6 +182,7 @@ bool users_init(){
 		fprintf(fp,"%s", dbstr );
 		D(printf("wrote file"));
 		fclose(fp);
+		success = true;
 	}
 	D(printf("returning %d\n", success));
 	return success;

@@ -394,7 +394,7 @@ int write_to_client(void *args){
 
   D(printf("gonna write\n"));
 
-
+	//printf("got message");
   SerializableMessage_t *p  = (SerializableMessage_t *)args;
   char roomname[ROOM_NAME_SIZE+1];
  printf("in write_to_client before copy roomname is %s\n", p->roomname); 
@@ -419,6 +419,7 @@ int write_to_client(void *args){
   D(printf("jsonstr size %d\ncontains %s\n", sizeof(json_string), json_string));
   SerializedMessage_t sermes = create_serialized_message(json_string);
   write_to_room(roomname, &sermes, p->client);
+  printf("wrote %s\n", sermes.jsonstring);
   free(p);
   //write_server_message(&sermes, p->client->socket);
 
@@ -435,8 +436,8 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
     SDL_LockMutex(roomsStackMutex);
     for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
       if(roomsArr[index].connected[i]!=sender){
-	D(printf("%p and %p are not same", sender, roomsArr[index].connected[i]));
-	write_server_message(sermes,roomsArr[index].connected[i]->socket ); //ändra sermes till krypterad text variabel
+		D(printf("%p and %p are not same", sender, roomsArr[index].connected[i]));
+		write_server_message(sermes,roomsArr[index].connected[i]->socket ); //ändra sermes till krypterad text variabel
       }
       else{
 	D(printf("same as sendere\n"));
@@ -480,8 +481,11 @@ char* read_client_message( TCPsocket socket){
  void write_server_message( SerializedMessage_t *message, TCPsocket socket){
  // encrypt_Handler(message);
 	//inspired by http://stackoverflow.com/questions/21579867/variable-length-message-over-tcp-socket-in-c answer 1 written by user John Dibling
- SDL_LockMutex(writeMutex);
+	//printf("trying to lock mutex\n");
+	SDL_LockMutex(writeMutex);
+	//printf("locked mutex\n");
+	//printf("gonna write, size of message = %d,  %s\n", message->size,message->jsonstring);
   SDLNet_TCP_Send(socket, &(message->size), sizeof(int));
   SDLNet_TCP_Send(socket, message->jsonstring, message->size);
-SDL_UnlockMutex(writeMutex);
+	SDL_UnlockMutex(writeMutex);
  }
