@@ -22,11 +22,10 @@ void decodeblock(unsigned char in[], char *clrstr, int index) {
   out[1] = in[1] << 4 | in[2] >> 2;
   out[2] = in[2] << 6 | in[3] >> 0;
   out[3] = '\0';
- /* below is modified to make the base64 decoding work wihtout depending on stringfunctions which incorrectly assumes 
-	a byt with value 0 is an end byte
+ /* below is modified to make the base64 decoding work wihtout depending on string functions which incorrectly assumes 
+	a byte with value 0 is an end byte
  */
-	//printf("decoded characters %c%c%c%c\n", out[0],out[1],out[2],out[3]);
-	  //like this the last 3 bytes will be corupted;
+ //like this the last 3 bytes will be corupted;
 	int rounds = index/4 -1;
 	for( i=0; i<3; i++){
 		clrstr[index-j-rounds]=out[i];
@@ -74,6 +73,7 @@ void encodeblock( unsigned char in[], char b64str[], int len ) {
 }
 
 /* encode - base64 encode a stream, adding padding if needed */
+
 /* changed this to run for exact number of bytes instead of ending at a byte with value 0 */
 
 void b64_encode(char *clrstr, char *b64dst, int numbytes) {
@@ -87,7 +87,6 @@ void b64_encode(char *clrstr, char *b64dst, int numbytes) {
      in[i] = (unsigned char) clrstr[j];
      if(j<numbytes) {
         len++; 
-		//printf("j = %d\n", j);
 		fflush(stdout);
 	  }
       else{
@@ -100,6 +99,5 @@ void b64_encode(char *clrstr, char *b64dst, int numbytes) {
       encodeblock( in, b64dst, len );
     }
   }
-  //printf("exiting encode at j=%d", j);
 }
 /*removed main function from example code*/

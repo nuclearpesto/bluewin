@@ -97,7 +97,7 @@ user_s usr;
     }
 }*/
 
-TCPsocket initClient(audiostruct_t * audiostruct, bool * createCheck, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
+TCPsocket initClient( audiostruct_t * audiostruct, bool * createCheck, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex, SDL_mutex * writeMutex){
     bool success = true;
     SDL_Thread *thread;
 	TCPsocket sd = NULL;
@@ -114,8 +114,8 @@ TCPsocket initClient(audiostruct_t * audiostruct, bool * createCheck, bool *logi
     //TCPsocket sd;
 
     int port=5000;
-    char ipen[20]=("130.237.84.200");
-    //char ipen[20]=("127.0.0.1");
+    //char ipen[20]=("130.237.84.200");
+    char ipen[20]=("127.0.0.1");
 
     printf("%s\n",ipen);
     if(SDLNet_Init() < 0){                                      //SDL Tutorial taken from
@@ -132,15 +132,22 @@ TCPsocket initClient(audiostruct_t * audiostruct, bool * createCheck, bool *logi
                 success=false;
             }else{
 				printf("socket before is : %d\n",sd);
-				readstruct.sd = sd;
-				readstruct.loginCheck = loginCheck;
-				thread=SDL_CreateThread(readThread, "reader", &readstruct);
+				Readstruct *readstruct = (Readstruct*) malloc(sizeof(readstruct));
+				readstruct->globalUsersInRoomArr = globalUsersInRoomArr;
+				readstruct->messageArr = globalUsersInRoomArr;
+				readstruct->globalRoomArr = globalRoomArr;
+				readstruct->sd = sd;
+				readstruct->loginCheck = loginCheck;
+				readstruct->messageArrMutex = messageArrMutex;
+				readstruct->audiostruct = audiostruct;
+				thread=SDL_CreateThread(readThread, "reader", readstruct);
 				//initialize audio ;
 				init_sound(audiostruct);
 				audiothreadstruct_t * audiothreadstruct = (audiothreadstruct_t*) malloc(sizeof(audiothreadstruct_t));
 				audiothreadstruct->audiostruct = audiostruct;
 				audiothreadstruct->socket = sd;
 				audiothreadstruct->loggedInCheck = loginCheck;
+				audiothreadstruct->writeMutex = writeMutex;
 				//start microphone sender thread;
 				thread=SDL_CreateThread(readthread, "audio mic reader", audiothreadstruct);
 				//printf("socket is after thread : %d\n",sd);
@@ -241,6 +248,7 @@ int readThread (void * p){
         //printf("gonna free");
         //printf("freed\n");
     }
+	printf("disconnecting\n");
 	//disconnected
 	SDLNet_TCP_Close(socket);
 	return 1;
@@ -263,7 +271,7 @@ void clear_input(){
 }
 
 
-void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string* inputPasswordText, TCPsocket *sd){
+void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string* inputPasswordText, TCPsocket *sd, SDL_mutex *writeMutex){
     json_t *masterobj = json_object();
     usr.username=(char*)inputUsernameText->c_str();
     usr.password=(char*)inputPasswordText->c_str();
@@ -278,30 +286,32 @@ void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string
         serialize_cmd(masterobj, "login");
         //printf("sd: %d\n", sd);
         fflush(stdout);
-        write_to_server(masterobj,sd);
+        write_to_server(masterobj,sd ,writeMutex);
 
 
 }
 
 
 
-void write_to_server(json_t *masterobj,TCPsocket *socket){
+void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
     char *json_s;
 	int len, result=0;
     json_s = json_dumps(masterobj, 0);
-    //printf("%p",json_s);
+    //printf("%d\n",*socket);
     //json_s = "hej\0";
     //kryptera
-    //len = strlen(json_s);
-    len=encrypt_Handler(json_s);
+    len = strlen(json_s);
+    //len=encrypt_Handler(json_s);
     //puts(json_s);//kontroll
     //printf("encrypted string: %s\n",json_s);
-    decrypt_Handler(json_s, len);
+    //decrypt_Handler(json_s, len);
     //printf("decrypted string: %s\n",json_s);
     //printf("%s\n",json_s);
     //len = strlen(json_s);
-    SDLNet_TCP_Send(*socket, &len, sizeof(int));
+    SDL_LockMutex(writeMutex);
+	SDLNet_TCP_Send(*socket, &len, sizeof(int));
     result= SDLNet_TCP_Send(*socket, json_s, len);
+	SDL_UnlockMutex(writeMutex);
 	if( result < len ) {
     printf( "SDLNet_TCP_Send: %s, result is %d\n", SDLNet_GetError(), result );
     // It may be good to disconnect sock because it is likely invalid now.
@@ -312,10 +322,12 @@ void write_to_server(json_t *masterobj,TCPsocket *socket){
 char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 
     int temp=0,  res;
-	//printf("reading\n");
+	printf("reading\n");
     *numBytesRead = SDLNet_TCP_Recv(socket, &temp, sizeof(int));
 	//printf("gonna read %d bytes : %d\n",temp);
-
+	if(temp > 10000){
+	temp = 10000;
+	}
     response = (char *)malloc(temp+1);
 	*numBytesRead =SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';
@@ -386,52 +398,59 @@ void serialize_message(json_t *masterobj, Message_s msg){
     json_object_set_new(masterobj, "message", string);
 }
 
-void collect_rooms(json_t *masterobj, TCPsocket *socket){
+void collect_rooms(json_t *masterobj, TCPsocket *socket, SDL_mutex *writeMutex){
     serialize_cmd(masterobj, "get rooms");
-    write_to_server(masterobj, socket);
+	write_to_server(masterobj, socket, writeMutex);
+	json_object_clear(masterobj);
 }
 
-void logout(json_t *masterobj, TCPsocket *socket){
+void logout(json_t *masterobj, TCPsocket *socket, SDL_mutex *writeMutex){
     serialize_cmd(masterobj, "logout");
-    write_to_server(masterobj, socket);
+	write_to_server(masterobj, socket, writeMutex);
+	json_object_clear(masterobj);
 }
 
-void get_users_in_room(json_t *masterobj, char *room, TCPsocket *socket){
+void get_users_in_room(json_t *masterobj, char *room, TCPsocket *socket, SDL_mutex *writeMutex){
     serialize_cmd(masterobj, "get users in room");
     serialize_room(masterobj, room);
-	write_to_server(masterobj, socket);
+	write_to_server(masterobj, socket, writeMutex);
+	json_object_clear(masterobj);
 }
 
-void add_room(json_t *masterobj, char *room, TCPsocket *socket){
+void add_room(json_t *masterobj, char *room, TCPsocket *socket, SDL_mutex *writeMutex){
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "add room");
-    write_to_server(masterobj, socket);
+	write_to_server(masterobj, socket, writeMutex);
+	json_object_clear(masterobj);
 }
 
-void delete_room(json_t *masterobj, char *room, TCPsocket *socket){
+void delete_room(json_t *masterobj, char *room, TCPsocket *socket, SDL_mutex *writeMutex){
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "delete room");
-    write_to_server(masterobj, socket);
+	write_to_server(masterobj, socket, writeMutex);
+	json_object_clear(masterobj);
 }
 
-void switch_room(json_t *masterobj, char *room ,TCPsocket *socket){
+void switch_room(json_t *masterobj, char *room ,TCPsocket *socket, SDL_mutex *writeMutex){
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "switch room");
-    write_to_server(masterobj, socket);
+	write_to_server(masterobj, socket, writeMutex);
+	json_object_clear(masterobj);
 }
 
-void add_user(json_t * masterobj, user_s *usr, TCPsocket *sd){
+void add_user(json_t * masterobj, user_s *usr, TCPsocket *sd, SDL_mutex *writeMutex){
     serialize_username(masterobj,usr);
     serialize_password(masterobj,usr);
     serialize_cmd(masterobj, "add user");
-    write_to_server(masterobj, sd);
+	write_to_server(masterobj, sd, writeMutex);
+	json_object_clear(masterobj);
 }
 
-void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket){
+void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket, SDL_mutex *writeMutex){
 	serialize_username(masterobj, usr);
 	serialize_room(masterobj, msg.room);
 	serialize_message(masterobj, msg);
     serialize_cmd(masterobj, "msg");
-	write_to_server(masterobj, socket);
+	write_to_server(masterobj, socket, writeMutex);
 	json_object_clear(masterobj);
 }

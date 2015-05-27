@@ -153,13 +153,14 @@ void init_sound( audiostruct_t *audiostruct )
      
  }
 
-//threadreadaudio
+//threadreadaudio read audio from microphone and send to server
 int  readthread(void*data){
   audiothreadstruct *p = (audiothreadstruct * ) data;
   PaStream *stream = p->audiostruct->readstream;
   char *sampleBlock = p->audiostruct->readBlock;
   TCPsocket socket = p->socket;
   PaError err;
+  SDL_mutex *writeMutex = p->writeMutex;
   char *b64encoded;
   int i, j;
   int numBytes;
@@ -195,8 +196,9 @@ int  readthread(void*data){
 		 jsonstring = json_dumps(obj, 0);
 		 test = strlen(jsonstring);
 		 //printf("sending %s\n", jsonstring);
-		 SDLNet_TCP_Send(socket, &test, sizeof(int));
-		 SDLNet_TCP_Send(socket, jsonstring, test); 
+		 /*SDLNet_TCP_Send(socket, &test, sizeof(int));
+			SDLNet_TCP_Send(socket, jsonstring, test); */
+			write_to_server(obj, &socket, writeMutex);
 			fflush(stdout);
 		  if( err && CHECK_UNDERFLOW ){ 
 			xrun(stream, sampleBlock, err); 
