@@ -193,7 +193,7 @@ int readThread (void * p){
         }
         else{
             free(string);
-			
+
             if((keycheckobj = json_object_get(masterobj, "audio")) != NULL){
 				playaudio(masterobj,audiostruct->writeBlock, audiostruct->writestream );
             }
@@ -328,6 +328,7 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 	if(temp > 10000){
 	temp = 10000;
 	}
+
     response = (char *)malloc(temp+1);
 	*numBytesRead =SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';

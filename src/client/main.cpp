@@ -43,7 +43,7 @@ const int TOTAL_BUTTONS = 1;
 
 //Room button constants
 const int ROOM_BUTTON_WIDTH = 400;
-const int ROOM_BUTTON_HEIGHT = 75;
+const int ROOM_BUTTON_HEIGHT = 80;
 const int ROOM_BUTTON_TOTAL = 100;
 
 enum LButtonSprite{
@@ -150,6 +150,8 @@ TTF_Font* gFont = NULL;
 TTF_Font* gDefaultFont = NULL;
 TTF_Font* gLargeBoldFont = NULL;
 TTF_Font* gLargeFont = NULL;
+TTF_Font* gMessageFont = NULL;
+TTF_Font* gMessageUserFont = NULL;
 
 //Rendered texture
 LTexture gTextTexture;
@@ -976,13 +978,23 @@ bool loadMedia(){
         success = false;
     }
     gLargeBoldFont = TTF_OpenFont("fonts/quicksand/quicksand-bold.otf", 34);
-    if (gDefaultFont == NULL) {
+    if (gLargeBoldFont == NULL) {
         printf("Failed to load quicksand large bold font! SDL_ttf Error: %s\n",TTF_GetError());
         success = false;
     }
     gLargeFont = TTF_OpenFont("fonts/quicksand/quicksand-regular.otf", 34);
-    if (gDefaultFont == NULL) {
+    if (gLargeFont == NULL) {
         printf("Failed to load quicksand large font! SDL_ttf Error: %s\n",TTF_GetError());
+        success = false;
+    }
+    gMessageFont = TTF_OpenFont("fonts/quicksand/quicksand-regular.otf", 24);
+    if (gMessageFont == NULL) {
+        printf("Failed to load quicksand message font! SDL_ttf Error: %s\n",TTF_GetError());
+        success = false;
+    }
+    gMessageUserFont = TTF_OpenFont("fonts/quicksand/quicksand-italic.otf", 24);
+    if (gMessageUserFont == NULL) {
+        printf("Failed to load quicksand message user font! SDL_ttf Error: %s\n",TTF_GetError());
         success = false;
     }
 
@@ -1014,9 +1026,11 @@ void close(){
     TTF_CloseFont(gDefaultFont);
     TTF_CloseFont(gLargeBoldFont);
     TTF_CloseFont(gLargeFont);
+    TTF_CloseFont(gMessageFont);
     gDefaultFont = NULL;
     gLargeBoldFont = NULL;
     gLargeFont = NULL;
+    gMessageFont = NULL;
 
     //Destroy window
     SDL_DestroyRenderer(gRenderer);
@@ -1268,13 +1282,11 @@ void loginScreen( int* totalButtons, int* totalFields,int* screenShow,Screen win
     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,250);
     getText("Password",gLargeBoldFont);
     gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,370);
-    getText("Lost password",gDefaultFont);
-    gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 30));
     gFieldButtons[2].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - gTextTexture.getHeight()));
     //printf("%d\n",gTextTexture.getHeight());
     getText("Create account",gDefaultFont);
-    gFieldButtons[3].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - gTextTexture.getHeight())-60);
-    gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 60));
+    gFieldButtons[3].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - gTextTexture.getHeight())-30);
+    gTextTexture.render((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - 30));
     //gLoginButtons[2].setPosition((windowSize.w - gTextTexture.getWidth())/2,(windowSize.h - gTextTexture.getHeight())-60);
     //printf("%d\n",gTextTexture.getHeight());
 }
@@ -1346,7 +1358,7 @@ void createAccountScreen(int* totalButtons, int* totalFields,int* screenShow,Scr
 void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *messageArr,int* totalButtons,int* totalDelete, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,Button sendButton,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText){
     int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530,userInRoom=json_array_size(globalUsersInRoomArr),originSizeWidth=0,originSizeHeight=0,currentRoom=clientUsr.currentRoom;
 	nrRooms = json_array_size(globalRoomArr);
-    *totalDelete=nrRooms+1;
+    *totalDelete=nrRooms+1+1;
     *totalButtons=1+nrRooms+1+1+1+1;
     *totalFields=1+1;
     //clientUsr.username="Hejsan";
@@ -1363,7 +1375,7 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
 
     //Render Username
     std::string user(clientUsr.username);
-    getText(user, gDefaultFont);
+    getText(user, gLargeFont);
     gTextTexture.render(10, 10);
 
     //Render and positionate logoff button
@@ -1478,9 +1490,9 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
         *outputMessageOtherText=" ";
         otherUser=" ";
     }else{
-        getText(*outputMessageOtherText, gLargeFont);
+        getText(*outputMessageOtherText, gMessageFont);
         box+=gTextTexture.getHeight();
-        getText(otherUser, gDefaultFont);
+        getText(otherUser, gMessageUserFont);
         box+=gTextTexture.getHeight();
         if ((box+space)<=messageAreaSize) {
             space+=box;
@@ -1497,14 +1509,14 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
                 otherUser=" ";
             }else{
                 if (clientUsr.username==otherUser) {
-                    getText(*outputMessageOtherText, gLargeFont);
+                    getText(*outputMessageOtherText, gMessageFont);
                     gTextTexture.render(windowSize.w+400, ((windowSize.h-100)-gTextTexture.getHeight())-(space));
-                    getText(clientUsr.username, gDefaultFont);
+                    getText(clientUsr.username, gMessageUserFont);
                     gTextTexture.render(windowSize.w+400, ((windowSize.h-100)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-space);
                 }else{
-                    getText(*outputMessageOtherText, gLargeFont);
+                    getText(*outputMessageOtherText, gMessageFont);
                     gTextTexture.render(windowSize.w+3, ((windowSize.h-100)-gTextTexture.getHeight())-(space));
-                    getText(otherUser, gDefaultFont);
+                    getText(otherUser, gMessageUserFont);
                     gTextTexture.render(windowSize.w+3, ((windowSize.h-100)-gTextTexture.getHeight()+(box+gTextTexture.getHeight())-(box*2))-space);
                 }
                 space+=box;
