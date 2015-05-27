@@ -170,7 +170,7 @@ bool users_init(){
 	else{
 	  D(printf("no file found, creating file"));
 		fflush(stdout);
-		fclose(fp);
+		//fclose(fp);
 		char *dbstr;
 		masterObj= json_object();
 		UserPass=json_string("root");
