@@ -23,15 +23,16 @@
 #include <portaudio.h>
 #include "debug.h"
 #include "audio.h"
-#include "clientcrypt.h"
-
 
 
 #ifdef __APPLE__
 #include <SDL2_net/SDL_net.h>
-
+extern "C"{
+    #include "clientcrypt.h"
+}
 #else
 #include <SDL2/SDL_net.h>
+#include "clientcrypt.h"
 #endif
 #define PASSWORDSIZE 250
 
