@@ -1,11 +1,12 @@
 //
-//  gui.cpp
+//  main.cpp
 //  bluewin_gui
 //
 //  Created by Rasmus Jansson on 05/05/15.
 //  Copyright (c) 2015 Rasmus Jansson. All rights reserved.
 //
-//  
+//  This code would never have worked if it wassent for lazyfoo's tutorials about SDL, so big thanks too those guys
+//  Every function or code that is marked with 'I' is inspired from lazyfoo and every function that is marked with 'C' is taken from lazyfoo
 //
 #include "main.h"
 
@@ -22,10 +23,12 @@ bool renderText = false;
 //Main loop flag
 bool quit = false;
 
+//A struct that contains the size of the window
 typedef struct screen{
     int w,h;
 }Screen;
 
+//A struct that contains information about a button
 typedef struct button{
     int x,y,w,h;
 }Button;
@@ -48,13 +51,17 @@ const int ROOM_BUTTON_WIDTH = 400;
 const int ROOM_BUTTON_HEIGHT = 80;
 const int ROOM_BUTTON_TOTAL = 100;
 
+//'C'
+//Tells which sprite part to use
 enum LButtonSprite{
     BUTTON_SPRITE_MOUSE_DEFAULT = 0,
     BUTTON_SPRITE_MOUSE_PRESS = 1,
     BUTTON_SPRITE_TOTAL = 2
 };
 
+//'C', except the 'loadFromRenderedText', did not have all the variables from begining
 //Texture wrapper class
+//This class containes everything that is required from a texture
 class LTexture{
 public:
     //Initialize variables
@@ -66,10 +73,8 @@ public:
     //Loads image at specified path
     bool loadFromFile(std::string path);
 
-#ifdef _SDL_TTF_H
     //Creates image from font string
     bool loadFromRenderedText( std::string textureText, SDL_Color textColor ,TTF_Font* gFont);
-#endif
 
     //Deallocates texture
     void free();
@@ -99,7 +104,9 @@ private:
     int mHeight;
 };
 
+//'C', except the 'handleEvent', a lot of varibles have been added. The 'focustext' is own creation
 //The mouse button
+//This class contains everything that is required from a button
 class LButton{
 public:
     //initialize internal varibles
@@ -116,7 +123,7 @@ private:
     SDL_Point mPosition;
     //Currently used global sprite
     LButtonSprite mCurrentSprite;
-    //If button has focus
+    //If button has focus or not
     bool focusText;
 };
 
@@ -129,6 +136,8 @@ bool loadMedia();
 //Frees media and shuts down SDL
 void close();
 
+
+//'I' on how the varibles should be named
 //Loads individual image as texture
 SDL_Texture* loadTexture(std::string path);
 
@@ -157,8 +166,6 @@ TTF_Font* gMessageUserFont = NULL;
 
 //Rendered texture
 LTexture gTextTexture;
-
-//Scene textures
 LTexture gFooTexture;
 LTexture gBackgroundTexture;
 LTexture gMainTexture;
@@ -202,16 +209,16 @@ LButton gCreateRoomNameFieldButton[1];
 LButton gDeleteRoomButton[ROOM_BUTTON_TOTAL];
 LButton gSendButton[1];
 
+
+//Clears everything in json array 'messageArr'
 void clear_messages(json_t *messageArr, SDL_mutex *mesageArrMutex){
 	SDL_LockMutex(mesageArrMutex);
 	json_array_clear(messageArr);
 	SDL_UnlockMutex(mesageArrMutex);
 }
 
-
-
-
-
+//'C'
+//Initiaizating of the texture
 LTexture::LTexture(){
     //Initialize
     mTexture = NULL;
@@ -219,11 +226,16 @@ LTexture::LTexture(){
     mHeight = 0;
 }
 
+//'C'
+//Deallocating memory from the texture
 LTexture::~LTexture(){
     //Deallocate
     free();
 }
 
+
+//'C'
+//Takes the path to the picture as in parameter and makes it to a surface, the convert it to a texture and returns it
 bool LTexture::loadFromFile( std::string path ){
     //Get rid of preexisting texture
     free();
@@ -258,7 +270,8 @@ bool LTexture::loadFromFile( std::string path ){
     return mTexture != NULL;
 }
 
-#ifdef _SDL_TTF_H
+//'C'
+//Takes a string and makes it a surface and then convert's it to a texture and returns it
 bool LTexture::loadFromRenderedText( std::string textureText, SDL_Color textColor , TTF_Font* gFont){
     //Get rid of preexisting texture
     free();
@@ -291,8 +304,9 @@ bool LTexture::loadFromRenderedText( std::string textureText, SDL_Color textColo
     //Return success
     return mTexture != NULL;
 }
-#endif
 
+//'C'
+//Deallocates and removes the texture from the program
 void LTexture::free(){
     //Free texture if it exists
     if( mTexture != NULL ){
@@ -303,21 +317,29 @@ void LTexture::free(){
     }
 }
 
+//'C'
+//Sets the color to texture
 void LTexture::setColor( Uint8 red, Uint8 green, Uint8 blue ){
     //Modulate texture rgb
     SDL_SetTextureColorMod( mTexture, red, green, blue );
 }
 
+//'C'
+//Sets the blending to texture
 void LTexture::setBlendMode( SDL_BlendMode blending ){
     //Set blending function
     SDL_SetTextureBlendMode( mTexture, blending );
 }
 
+//'C'
+//Sets the alpha value
 void LTexture::setAlpha( Uint8 alpha ){
     //Modulate texture alpha
     SDL_SetTextureAlphaMod( mTexture, alpha );
 }
 
+//'C'
+//Render the texture
 void LTexture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip ){
     //Set rendering space and render to screen
     SDL_Rect renderQuad = { x, y, mWidth, mHeight };
@@ -332,14 +354,20 @@ void LTexture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* cen
     SDL_RenderCopyEx( gRenderer, mTexture, clip, &renderQuad, angle, center, flip );
 }
 
+//'C'
+//Returns the width of a texture
 int LTexture::getWidth(){
     return mWidth;
 }
 
+//'C'
+//Returns the height of a texture
 int LTexture::getHeight(){
     return mHeight;
 }
 
+//'C'
+//Set the default values of a button
 LButton::LButton(){
     mPosition.x = 0;
     mPosition.y = 0;
@@ -347,25 +375,28 @@ LButton::LButton(){
     mCurrentSprite = BUTTON_SPRITE_MOUSE_DEFAULT;
 }
 
+//'C'
+//Set the position of a button on window
 void LButton::setPosition(int x, int y){
     mPosition.x = x;
     mPosition.y = y;
 }
+
+//Gets information from a location in the json array and returns the information in a string
 std::string getInfoJsonRoom(json_t *roomArr,int i){
     //Försöka få användarnamnet
     std::string info=" ";
-    const char* hej;
-    const json_t* stuffInfo;
-    json_t* stuff;
-    int size;
+    const char* tmpText;
+    json_t* locationInfo;
+    unsigned long int size;
     size=json_array_size(roomArr);
     //printf("%d\n",size);
-    stuff=json_array_get(roomArr, i);
-	hej = json_string_value(stuff);
+    locationInfo=json_array_get(roomArr, i);
+	tmpText = json_string_value(locationInfo);
     //printf("kan vara här\n");
     //printf("%s\n",hej);
-    if (hej!=NULL) {
-        std::string tmp(hej);
+    if (tmpText!=NULL) {
+        std::string tmp(tmpText);
         info=tmp;
         //printf("Username: %s\n",info.c_str());
     }else{
@@ -375,6 +406,7 @@ std::string getInfoJsonRoom(json_t *roomArr,int i){
     return info;
 }
 
+//Append the message the user writes to the messageArr
 void append_messageArr(json_t* messageArr, user_s * usr, std::string *text, SDL_mutex *mesageArrMutex){
     json_t * buildingblock, *current;
     buildingblock = json_object();
@@ -387,13 +419,14 @@ void append_messageArr(json_t* messageArr, user_s * usr, std::string *text, SDL_
     SDL_UnlockMutex(mesageArrMutex);
 }
 
+//Send the login request to server
 void sendLogin(SDL_mutex *writeMutex,int* screenShow,std::string* inputUsernameText,std::string* inputPasswordText,json_t* masterobj,bool* loginCheck,TCPsocket* sd){
     int c=0;
     if (*screenShow==0) {
         send_login(masterobj,inputUsernameText,inputPasswordText,sd, writeMutex);
     }
     while(!*loginCheck && c<20){
-        system("sleep(1)");
+        SDL_Delay(1000);
         c++;
         printf("%d\n", c);
         if(*loginCheck){
@@ -411,6 +444,7 @@ void sendLogin(SDL_mutex *writeMutex,int* screenShow,std::string* inputUsernameT
     }
 }
 
+//Send the create user request to server
 void createUser(int* screenShow,std::string* inputUsernameText,std::string* inputPasswordText,json_t* masterobj,bool* createCheck,TCPsocket* sd, SDL_mutex * writeMutex){
     int c=0;
     user_s usr;
@@ -421,7 +455,7 @@ void createUser(int* screenShow,std::string* inputUsernameText,std::string* inpu
         add_user(masterobj,&usr,sd, writeMutex);
     }
     while(!*createCheck && c<20){
-        system("sleep(1)");
+        SDL_Delay(1000);
         c++;
         printf("%d\n", c);
         if(*createCheck){
@@ -433,6 +467,7 @@ void createUser(int* screenShow,std::string* inputUsernameText,std::string* inpu
     }
 }
 
+//Sends the message to the server
 void sendMessage(json_t* messageArr,SDL_mutex* mesageArrMutex,std::string* inputMessageText,std::string* outputMessageText,TCPsocket* sd,json_t* masterobj, SDL_mutex *writeMutex){
     if (*inputMessageText=="" || *inputMessageText==" ") {
         printf("Cant send empty message\n");
@@ -448,6 +483,8 @@ void sendMessage(json_t* messageArr,SDL_mutex* mesageArrMutex,std::string* input
     }
 }
 
+//'I', is basicly the same function except for whats happen when mouse is inside button.
+//Checks if the mouse is on an button and if a button is pressed
 void LButton::handleEvent(SDL_mutex *writeMutex, json_t *messageArr, SDL_mutex *mesageArrMutex, json_t *globalRoomArr, bool *loginCheck,bool* createCheck, TCPsocket *sd, SDL_Event* e,int* screenShow, Button* button,int selected,int totalElements,int totalButtons,int totalDelete,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* inputMessageText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* outputMessagetext,std::string* newRoomNameText,json_t *masterobj){
     std::string room = "";
     //if mouse event happend
@@ -620,6 +657,8 @@ void LButton::handleEvent(SDL_mutex *writeMutex, json_t *messageArr, SDL_mutex *
     }
 }
 
+//'I'
+//Renders all the buttons to the screen
 void LButton::render(int* screenShow,int *element){
     if (*screenShow == 0) {
         //show current login button sprite
@@ -665,6 +704,7 @@ void LButton::render(int* screenShow,int *element){
     }
 }
 
+//Takes a string and font and sends it to 'loadFromRenderedText'
 void getText(std::string text, TTF_Font* gFont){
     //Get text
     SDL_Color textColor = {0,0,0};
@@ -673,6 +713,7 @@ void getText(std::string text, TTF_Font* gFont){
     }
 }
 
+//Takes the prompt text and makes a texture thru 'loadFromRenderedText'
 void getPromptText(std::string text, TTF_Font* gFont, int select){
     if (select==0) {
         //Get prompt text
@@ -707,6 +748,8 @@ void getPromptText(std::string text, TTF_Font* gFont, int select){
     }
 }
 
+//'I'
+//Takes a keyboard input and puts the character in a string and then render the text on screen
 void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std::string* password){
     //Render text flag
     //bool renderText = false;
@@ -804,6 +847,8 @@ void getTextString(std::string* inputText, SDL_Event e, SDL_Color textColor,std:
     }
 }
 
+//'C'
+//initialize they basic functions and subsystems from SDL libary that the program will use
 bool init(Screen windowSize){
     //Initialization flag
     bool success = true;
@@ -852,6 +897,8 @@ bool init(Screen windowSize){
     return success;
 }
 
+//'I', same structure as lazyfoo
+//Takes a picture and creates a texture from it
 bool loadMedia(){
     //Loading success flag
     bool success = true;
@@ -1003,6 +1050,8 @@ bool loadMedia(){
     return success;
 }
 
+//'I'
+//Household work, deallocat's all allocatde varibles and quits the SDL subsystems
 void close(){
     //Free loaded image
     SDL_DestroyTexture(gTexture);
@@ -1046,6 +1095,8 @@ void close(){
     SDL_Quit();
 }
 
+//'C'
+//Creates a texture from a loaded surface and returns the new texture
 SDL_Texture* loadTexture(std::string path){
     //The final texture
     SDL_Texture* newTexture = NULL;
@@ -1066,6 +1117,7 @@ SDL_Texture* loadTexture(std::string path){
     return newTexture;
 }
 
+//All the events that can happen this function handle
 void eventHandler(SDL_mutex *writeMutex, json_t * globalRoomArr, json_t * messageArr ,SDL_mutex *mesageArrMutex, bool *loginCheck,bool* createCheck, TCPsocket *sd, int* screenShow,int totalButtons,int totalDelete, int totalFields, Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,Button sendButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText,std::string* newRoomNameText ,SDL_Event e, json_t *masterobj){
     //Event handler
     //SDL_Event e;
@@ -1203,7 +1255,7 @@ void eventHandler(SDL_mutex *writeMutex, json_t * globalRoomArr, json_t * messag
         }
 }
 
-
+//Get a specific piece of information from the json array 'messageArr'
 std::string getInfoJson(json_t *messageArr,char* cmd,int i){
     //Försöka få användarnamnet
     std::string info=" ";
@@ -1229,6 +1281,7 @@ std::string getInfoJson(json_t *messageArr,char* cmd,int i){
     return info;
 }
 
+//Fills the message array with messeges from the server
 void fill_message_arr(std::string messages[],std::string newMessage){
     std::string tmp;
 
@@ -1240,6 +1293,7 @@ void fill_message_arr(std::string messages[],std::string newMessage){
     messages[0]=newMessage;
 }
 
+//Handel's everything that should be shown at the login screen
 void loginScreen( int* totalButtons, int* totalFields,int* screenShow,Screen windowSize,Button loginButton, Button fieldButton,std::string inputUsernameText, std::string inputPasswordText){
     *totalButtons=1;
     *totalFields=4;
@@ -1293,6 +1347,7 @@ void loginScreen( int* totalButtons, int* totalFields,int* screenShow,Screen win
     //printf("%d\n",gTextTexture.getHeight());
 }
 
+//Handel's everything that should be shown at the create account screen
 void createAccountScreen(int* totalButtons, int* totalFields,int* screenShow,Screen windowSize,Button loginButton, Button fieldButton,Button logoutButton,std::string inputUsernameText, std::string inputPasswordText,std::string inputRetypePasswordText){
     *totalButtons=2;
     *totalFields=3;
@@ -1357,6 +1412,7 @@ void createAccountScreen(int* totalButtons, int* totalFields,int* screenShow,Scr
 
 }
 
+//Handel's everything that should be shown at the main screen
 void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *messageArr,int* totalButtons,int* totalDelete, int* totalFields,int nrRooms,int* screenShow,Screen windowSize,Button logoutButton,Button buttonTypeWide,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,Button sendButton,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText){
     int buttX=0,buttY=200,element,space=0,box=0,messageAreaSize=530,userInRoom=json_array_size(globalUsersInRoomArr),originSizeWidth=0,originSizeHeight=0,currentRoom=clientUsr.currentRoom;
 	nrRooms = json_array_size(globalRoomArr);
@@ -1529,6 +1585,7 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
     }
 }
 
+//Tells in what order the program whould work and send's the correct information to the function function that needs it
 void runingGui(SDL_mutex *writeMutex, int * refreshCounter, json_t* globalUsersInRoomArr, json_t *globalRoomArr, SDL_mutex *mesageArrMutex, json_t *messageArr,bool* loginCheck,bool* createCheck, TCPsocket* sd,int* screenShow,int* totalButtons,int* totalDelete, int* totalFields,int nrRooms,Screen windowSize,Button loginButton ,Button fieldButton, Button logoutButton,Button buttonTypeWide,Button buttonTypeSmall,Button messageButton,Button createRoomButton,Button createRoomFieldButton,Button deleteButton,Button sendButton,std::string* inputUsernameText,std::string* inputPasswordText,std::string* inputRetypePasswordText,std::string* outputPasswordText,std::string* outputRetypePasswordText,std::string* inputMessageText,std::string* outputMessageText ,std::string* outputMessageOtherText,std::string* newRoomNameText,SDL_Event* e, json_t *masterobj){
 
     while( SDL_PollEvent( e ) != 0 ){
@@ -1561,6 +1618,7 @@ void runingGui(SDL_mutex *writeMutex, int * refreshCounter, json_t* globalUsersI
     SDL_RenderPresent(gRenderer);
 }
 
+//Initialize everything that the program needs
 int initGui(SDL_mutex *writeMutex, audiostruct_t *audiostruct, bool *createCheck, TCPsocket * sd, bool *loginCheck, json_t * globalUsersInRoomArr, json_t *globalRoomArr, json_t *messageArr, SDL_mutex *messageArrMutex){
     bool test=true;
     //Start up SDL and create window
@@ -1583,6 +1641,7 @@ int initGui(SDL_mutex *writeMutex, audiostruct_t *audiostruct, bool *createCheck
     return test;
 }
 
+//Initilize of important varibles
 int main(int argc, char *argv[]){
     //Initialize varibles
 	TCPsocket sd;
