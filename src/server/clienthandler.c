@@ -69,12 +69,12 @@ int handle( void *args ){
   D(printf("started handling\n"));
   fflush(stdout);
   while( (messagepointer=read_client_message(client->socket))!=NULL){
-   // D(printf("got something "));
+    D(printf("got something \n"));
 	  //DEKRYPTERA!!!!
-    //D(printf("recieved this:  %s\n", messagepointer));
+    D(printf("recieved this:  %s\n", messagepointer));
 		fflush(stdout);
 		if((recieved_obj = json_loads(messagepointer,0, &jsonError))!=NULL){
-		  //D(printf("recieved json:  %s\n", messagepointer));
+		  D(printf("recieved json:  %s\n", messagepointer));
 			fflush(stdout);
 			if((recv_json_cmd= json_object_get(recieved_obj, "cmd"))!=NULL){
 			   if(strcmp("msg", json_string_value(recv_json_cmd)) == 0 && client->loggin == true){
@@ -432,15 +432,17 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
   D(printf("found room index %d\n", index));
   if(index>-1){
     int i =0;
-    D(printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns));
+    printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns);
     SDL_LockMutex(roomsStackMutex);
     for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
+		
+	  SerializableMessage_t notenc = *(sermes);
       if(roomsArr[index].connected[i]!=sender){
 		D(printf("%p and %p are not same", sender, roomsArr[index].connected[i]));
-		write_server_message(sermes,roomsArr[index].connected[i]->socket ); //ändra sermes till krypterad text variabel
+		write_server_message(&notenc,roomsArr[index].connected[i]->socket ); //
       }
       else{
-	D(printf("same as sendere\n"));
+		D(printf("same as sendere\n"));
       }
     }
     SDL_UnlockMutex(roomsStackMutex);
