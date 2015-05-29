@@ -436,7 +436,7 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
     SDL_LockMutex(roomsStackMutex);
     for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
 		
-	  SerializableMessage_t notenc = *(sermes);
+	  SerializedMessage_t notenc = *(sermes);
       if(roomsArr[index].connected[i]!=sender){
 		D(printf("%p and %p are not same", sender, roomsArr[index].connected[i]));
 		write_server_message(&notenc,roomsArr[index].connected[i]->socket ); //
