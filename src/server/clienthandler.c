@@ -298,7 +298,7 @@ void handle_delete_room(json_t * recieved_obj, clients_t *client){
 
 }
 void handle_add_call(json_t * recieved_obj, clients_t *client){
-	
+
 	json_t* audio, *room, *call;
 	char* strroom;
 	room=json_object_get(recieved_obj, "room");
@@ -310,10 +310,10 @@ void handle_add_call(json_t * recieved_obj, clients_t *client){
 		SerializedMessage_t sermes = create_serialized_message(json_dumps(recieved_obj, 0));
 		D(printf("gonna write this %s, n", sermes.jsonstring));
 		write_to_room(strroom, &sermes, client);
-		
+
 	}
-	
-	
+
+
 
 }
 
@@ -397,7 +397,7 @@ int write_to_client(void *args){
 	//printf("got message");
   SerializableMessage_t *p  = (SerializableMessage_t *)args;
   char roomname[ROOM_NAME_SIZE+1];
- printf("in write_to_client before copy roomname is %s\n", p->roomname); 
+ printf("in write_to_client before copy roomname is %s\n", p->roomname);
  strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
   //this is a short term solution
   json_int_t x = 1;
@@ -468,7 +468,7 @@ char* read_client_message( TCPsocket socket){
 	  D(printf("gonna read %d bytes\n", tmp_buf));
       tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
       D(printf("read %d bytes\n", tmp_buf));
-      //decrypt_Handler(p, tmp_buf);
+      decrypt_Handler(p, tmp_buf);
       *(p+tmp_buf)='\0';
       return p;
     }
@@ -479,7 +479,7 @@ char* read_client_message( TCPsocket socket){
 }
 
  void write_server_message( SerializedMessage_t *message, TCPsocket socket){
- // encrypt_Handler(message);
+  encrypt_Handler(message);
 	//inspired by http://stackoverflow.com/questions/21579867/variable-length-message-over-tcp-socket-in-c answer 1 written by user John Dibling
 	//printf("trying to lock mutex\n");
 	SDL_LockMutex(writeMutex);

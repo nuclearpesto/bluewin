@@ -142,7 +142,7 @@ TCPsocket initClient( audiostruct_t * audiostruct, bool * createCheck, bool *log
 				readstruct->audiostruct = audiostruct;
 				readstruct->createCheck = createCheck;
 				thread=SDL_CreateThread(readThread, "reader", readstruct);
-				
+
 				//initialize audio ;
 				init_sound(audiostruct);
 				audiothreadstruct_t * audiothreadstruct = (audiothreadstruct_t*) malloc(sizeof(audiothreadstruct_t));
@@ -303,8 +303,8 @@ void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
     //printf("%d\n",*socket);
     //json_s = "hej\0";
     //kryptera
-    len = strlen(json_s);
-    //len=encrypt_Handler(json_s);
+    //len = strlen(json_s);
+    len=encrypt_Handler(json_s);
     //puts(json_s);//kontroll
     //printf("encrypted string: %s\n",json_s);
     //decrypt_Handler(json_s, len);
@@ -340,8 +340,8 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
     response = (char *)malloc(temp+1);
 	*numBytesRead =SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';
-    //decrypt_Handler(response,*numBytesRead);
-    printf("read response : %s\n",response);
+    decrypt_Handler(response,*numBytesRead);
+    //printf("read response : %s\n",response);
     //dekryptera
 
     return response;
