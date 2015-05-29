@@ -184,7 +184,7 @@ int readThread (void * p){
 	json_error_t error;
     masterobj = json_object();
 	//printf("socket is %d", *sd);
-    while(numBytesRead>0){
+    while(numBytesRead>-1){
 
         string = read_from_server(socket, response, &numBytesRead);
         //D(printf("recieved %s\n", response));
@@ -306,6 +306,7 @@ void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
     //len = strlen(json_s);
     //printf("before encryption: %s\n",json_s);
     len=encrypt_Handler(json_s);
+
     //printf("sending byte %d",len);
     //puts(json_s);//kontroll
     //printf("encrypted string: %s\n",json_s);
@@ -313,10 +314,13 @@ void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
     //printf("decrypted string: %s\n",json_s);
     //printf("%s\n",json_s);
     //len = strlen(json_s);
+    if (len>0){
     SDL_LockMutex(writeMutex);
 	SDLNet_TCP_Send(*socket, &len, sizeof(int));
+
     result= SDLNet_TCP_Send(*socket, json_s, len);
 	SDL_UnlockMutex(writeMutex);
+    }
 	if( result < len ) {
     printf( "SDLNet_TCP_Send: %s, result is %d\n", SDLNet_GetError(), result );
     // It may be good to disconnect sock because it is likely invalid now.
@@ -340,8 +344,13 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 	}
 
     response = (char *)malloc(temp+1);
+    if (response)
+    {
 	*numBytesRead =SDLNet_TCP_Recv(socket,response, temp );
-    response[temp] = '\0';
+
+
+        response[temp]= '\0';
+    }
     decrypt_Handler(response,*numBytesRead);
     //printf("read response : %s\n",response);
     //dekryptera
