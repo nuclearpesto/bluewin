@@ -1,11 +1,21 @@
-#include <string.h>                    //Kod skriven av Manjinder Singh
+//
+//Written  Manjinder Singh
+//
+// "Distributed systems concepts and design fifth edition"
+// Written by George Coulouris, Jean Dollimore, Tim Kindberg och Gordon Blair
+// Published: May, 2011
+// the encryption is designed by: David Wheeler and Roger Needham
+//
+
+
+#include <string.h>
 #include <stdlib.h>
 
-void encrypt_cli(unsigned long k[], unsigned long tmp[])       //<----This function is copied from a book called,
-{                                                              // distributed systems concepts and design fifth edition.
-    unsigned long y = tmp[0],z = tmp[1];                       // Written by George Coulouris, Jean Dollimore, Tim Kindberg och Gordon Blair
-    unsigned long delta = 0x9e3779b9, sum = 0;                 // Published: May, 2011
-    int n;                                                     // the encryption is designed by: David Wheeler and Roger Needham
+void encrypt_cli(unsigned long k[], unsigned long tmp[])       //<----This function is copied from the referensed book
+{
+    unsigned long y = tmp[0],z = tmp[1];
+    unsigned long delta = 0x9e3779b9, sum = 0;
+    int n;
     for (n=0;n<32;n++)
     {
         sum += delta;
@@ -15,7 +25,7 @@ void encrypt_cli(unsigned long k[], unsigned long tmp[])       //<----This funct
     tmp[0]=y; tmp[1]=z;
 }
 
-int encrypt_Handler(char* msg)                                //<------ this function is ispiried by the book that i mention in the function above.
+unsigned long int encrypt_Handler(char* msg)                                //<------ this function is ispiried by the referensed book
 {
     unsigned long k[4];
     k[0]=11111111111111;
@@ -23,11 +33,11 @@ int encrypt_Handler(char* msg)                                //<------ this fun
     k[2]=33333333333333;
     k[3]=44444444444444;
     char tmp[8];
-    int numBlock=0,totalBlock=strlen(msg);  //totalblock is the size of the string
-    int msgLenght=strlen(msg)+1,pad=msgLenght%8; //we need to pad so the string is devided by 8 without rest
+    unsigned long int numBlock=0,totalBlock=strlen(msg);  //totalblock is the size of the string
+    unsigned long int msgLenght=strlen(msg)+1,pad=msgLenght%8; //we need to pad so the string is devided by 8 without rest
     msgLenght=msgLenght+8-pad;
     realloc(msg, msgLenght); // need to allocate more space to this string.
-    int i;
+    unsigned long int i;
     for (i=totalBlock;i<msgLenght;i++)
     {
         msg[i]=' ';     // padding with spaces
@@ -50,7 +60,7 @@ int encrypt_Handler(char* msg)                                //<------ this fun
     return totalBlock*8;
 }
 
-void decrypt(unsigned long k[], unsigned long tmp[])           //<--- This function is also copied from the same book as the function encrypt.
+void decrypt(unsigned long k[], unsigned long tmp[])           //<--- This function is also copied from the referensed book
 {
     unsigned long y = tmp[0],z = tmp[1];
     unsigned long delta = 0x9e3779b9, sum = delta << 5;
@@ -64,7 +74,7 @@ void decrypt(unsigned long k[], unsigned long tmp[])           //<--- This funct
     tmp[0]=y;tmp[1]=z;
 }
 
-void decrypt_Handler(char* msg, int size)        // <--- as encrypt_Handler, is this fumction inspired by the book that i mention earlier.
+void decrypt_Handler(char* msg, int size)        // <--- as encrypt_Handler, is this fumction inspired by the referensed book.
 {
     char tmp[8];
     unsigned long k[4];

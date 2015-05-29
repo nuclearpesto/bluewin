@@ -8,6 +8,7 @@
 //  This code would never have worked if it wassent for lazyfoo's tutorials about SDL, so big thanks too those guys
 //  Every function or code that is marked with 'I' is inspired from lazyfoo and every function that is marked with 'C' is taken from lazyfoo
 //
+
 #include "main.h"
 
 #define MAXMESSAGES 100
@@ -81,7 +82,7 @@ public:
 
     //Set color modulation
     void setColor(Uint8 red, Uint8 green, Uint8 blue);
-
+    
     //Set blending
     void setBlendMode(SDL_BlendMode blending);
 
@@ -1248,9 +1249,24 @@ void eventHandler(SDL_mutex *writeMutex, json_t * globalRoomArr, json_t * messag
                             printf("This aint working yet\n");
                         }
                         break;
-
+                        
+                    case SDLK_LCTRL:
+                        //boolen = true;
+                        break;
+                        
                     default:
                         break;
+                }
+                
+                if (e.type == SDL_KEYUP) {
+                    switch (e.key.keysym.sym) {
+                        case SDLK_LCTRL:
+                            //boolen = false;
+                            break;
+                            
+                        default:
+                            break;
+                    }
                 }
             }
         }
