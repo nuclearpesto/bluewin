@@ -319,7 +319,12 @@ void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
     printf( "SDLNet_TCP_Send: %s, result is %d\n", SDLNet_GetError(), result );
     // It may be good to disconnect sock because it is likely invalid now.
 	}
-    printf("SENT %s \n", json_s);
+    if(!strstr(json_s, "audio")){
+	printf("SENT %s \n", json_s);
+	}
+	else{
+		printf("sent audio\n");
+	}
 }
 
 char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
