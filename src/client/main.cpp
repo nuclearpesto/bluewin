@@ -520,7 +520,7 @@ void LButton::handleEvent(SDL_mutex *writeMutex, json_t *messageArr, SDL_mutex *
                         mCurrentSprite = BUTTON_SPRITE_MOUSE_PRESS;
                     }
                     break;
-                    
+
                 case SDL_MOUSEBUTTONDOWN:
                     mCurrentSprite = BUTTON_SPRITE_MOUSE_PRESS;
                     break;
@@ -625,13 +625,13 @@ void LButton::handleEvent(SDL_mutex *writeMutex, json_t *messageArr, SDL_mutex *
                                 printf("Send message button\n");
                                 sendMessage(messageArr, mesageArrMutex,inputMessageText, outputMessagetext, sd, masterobj, writeMutex);
                                 break;
-                                
+
                             case 4://Message text field
                                 field=2;
 								//collect_rooms(masterobj, sd);
                                 printf("Message text field button\n");
                                 break;
-                                
+
                             default:
                                 if (selected>4 && selected<totalElements-totalDelete) {
                                     printf("Room %d button\n", selected -5);
@@ -644,9 +644,9 @@ void LButton::handleEvent(SDL_mutex *writeMutex, json_t *messageArr, SDL_mutex *
                                     printf("Delete button to room: %d\n",selected-5-totalButtons);
                                     room=getInfoJsonRoom(globalRoomArr,selected-5-totalButtons);
                                     delete_room(masterobj,(char*)room.c_str() , sd, writeMutex);
-                                    
+
                                 }
-                                
+
 								break;
                         }
                     }
@@ -677,27 +677,27 @@ void LButton::render(int* screenShow,int *element){
                 //Show current logoff button sprite
                 gLogoutButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gLogoutSpriteClips[mCurrentSprite]);
                 break;
-                
+
             case 1:
                 //Show current create room button sprite
                 gCreateRoomButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gCreateRoomSpriteClips[mCurrentSprite]);
                 break;
-                
+
             case 2:
                 //Show current room button sprite
                 gRoomButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gRoomSpriteClips[mCurrentSprite]);
                 break;
-                
+
             case 3:
                 //Show current delete button sprite
                 gDeleteRoomButtonSpriteSheetTexture.render(mPosition.x ,mPosition.y, &gDeleteRoomSpriteClips[mCurrentSprite]);
                 break;
-                
+
             case 4:
                 //Show current send button sprite
                 gSendButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gSendSpriteClips[mCurrentSprite]);
                 break;
-                
+
             default:
                 break;
         }
@@ -982,12 +982,12 @@ bool loadMedia(){
             gCreateRoomSpriteClips[i].h=50;
         }
     }
-    
+
     if (!gCurrentRoomTexture.loadFromFile("bluewinimg/currentroom.png")){
         printf("Failed to load current room texture");
         success=false;
     }
-    
+
     if (!gDeleteRoomButtonSpriteSheetTexture.loadFromFile("bluewinimg/deletebutton.png")) {
         printf("Failed to load delete room button sprite texture");
         success=false;
@@ -1000,13 +1000,14 @@ bool loadMedia(){
             gDeleteRoomSpriteClips[i].h=50;
         }
     }
-    
+
     //Get all the images that should be on the chatt screen
     if (!gChattroomTexture.loadFromFile("bluewinimg/chatroom.png")) {
         printf("Failed to load chatroom texture\n");
         success=false;
     }
-    
+
+    //This picture is taken from http://galleryhip.com/envelope-icon-png.html and dont claim any rights
     if (!gSendButtonSpriteSheetTexture.loadFromFile("bluewinimg/sendbutton.png")) {
         printf("Failed to load send button texture\n");
         success=false;
@@ -1476,14 +1477,14 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
 
         //Show in what room the user is in
         gCurrentRoomTexture.render(20 , (buttY+((buttonTypeWide.h - (gTextTexture.getHeight() - 20))/2)+(buttonTypeWide.h*currentRoom)));
-        
+
         element=3;
         //Render the delete button
         gDeleteRoomButton[i].render(screenShow, &element);
         //gDeleteRoomButton[i].setPosition(200, 500);
         gDeleteRoomButton[i].setPosition((windowSize.w-deleteButton.w), (buttY+((buttonTypeWide.h - gTextTexture.getHeight())/2)+(buttonTypeWide.h*i)));
     }
-    
+
     //Everything on the chattroom side(right)
     //Render chattroom background
     gChattroomTexture.render(windowSize.w, 0);
@@ -1517,7 +1518,7 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
     }else{
         gMessageTextTexture.render(messageButton.x, messageButton.y);
     }
-    
+
     if (*inputMessageText=="" || *inputMessageText==" ") {
         element=4;
         gSendButton[0].render(screenShow, &element);
@@ -1527,7 +1528,7 @@ void mainScreen(json_t* globalRoomArr, json_t *globalUsersInRoomArr, json_t *mes
         gSendButton[0].render(screenShow, &element);
         gSendButton[0].setPosition(970, 710);
     }
-    
+
     //When user send message
     /*if (*outputMessageText=="" || *outputMessageText==" ") {
         //printf("There are no user messages\n");
