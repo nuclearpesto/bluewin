@@ -304,7 +304,9 @@ void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
     //json_s = "hej\0";
     //kryptera
     //len = strlen(json_s);
+    //printf("before encryption: %s\n",json_s);
     len=encrypt_Handler(json_s);
+    //printf("sending byte %d",len);
     //puts(json_s);//kontroll
     //printf("encrypted string: %s\n",json_s);
     //decrypt_Handler(json_s, len);
@@ -320,7 +322,7 @@ void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
     // It may be good to disconnect sock because it is likely invalid now.
 	}
     if(!strstr(json_s, "audio")){
-	printf("SENT %s \n", json_s);
+	//printf("SENT %s \n", json_s);
 	}
 	else{
 		printf("sent audio\n");
