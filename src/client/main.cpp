@@ -14,6 +14,7 @@
 #define MAXMESSAGES 100
 #define REFRESHTIME 200
 bool writeText = false;
+bool listen = false;
 int field = 0;
 int nrMessages=0;
 const int TOTAL_SPRITE = 2;
@@ -1256,25 +1257,21 @@ void eventHandler(bool *talkPushed, SDL_mutex *writeMutex, json_t * globalRoomAr
                         break;
                         
                     case SDLK_LCTRL:
-                        *(talkPushed) = true;
+                        if (!listen) {
+                            listen=true;
+							*(talkPushed) = true;
+                        }else{
+                            listen=false;
+							*(talkPushed) = false;
+                        }
                         break;
                         
                     default:
                         break;
                 }
-                
-                if (e.type == SDL_KEYUP) {
-                    switch (e.key.keysym.sym) {
-                        case SDLK_LCTRL:
-                            *(talkPushed) = false;
-                            break;
-                            
-                        default:
-                            break;
-                    }
-                }
-            }
+
         }
+	}
 }
 
 //Get a specific piece of information from the json array 'messageArr'
