@@ -159,6 +159,7 @@ int  readthread(void*data){
   PaStream *stream = p->audiostruct->readstream;
   char *sampleBlock = p->audiostruct->readBlock;
   TCPsocket socket = p->socket;
+  bool * talkPushed = p->audiostruct->talkPushed;
   PaError err;
   SDL_mutex *writeMutex = p->writeMutex;
   char *b64encoded;
@@ -186,24 +187,25 @@ int  readthread(void*data){
      while(1)
      {
 		 //printf("reading frm mic");
-		 err = Pa_ReadStream( stream, sampleBlock, FRAMES_PER_BUFFER );
-		 b64_encode(sampleBlock, b64encoded, numBytes);
-		 audio64 = json_string(b64encoded);
-		 if(!audio64){
-			 printf("ADUIO JSON STRING DOES NOT WORK\n");
+		 if(*talkPushed){
+			 err = Pa_ReadStream( stream, sampleBlock, FRAMES_PER_BUFFER );
+			 b64_encode(sampleBlock, b64encoded, numBytes);
+			 audio64 = json_string(b64encoded);
+			 if(!audio64){
+				 printf("ADUIO JSON STRING DOES NOT WORK\n");
+			 }
+			 json_object_set_new(obj,"audio", audio64 );
+			 jsonstring = json_dumps(obj, 0);
+			 test = strlen(jsonstring);
+			 //printf("sending %s\n", jsonstring);
+			 /*SDLNet_TCP_Send(socket, &test, sizeof(int));
+				SDLNet_TCP_Send(socket, jsonstring, test); */
+				write_to_server(obj, &socket, writeMutex);
+				fflush(stdout);
+			  if( err && CHECK_UNDERFLOW ){ 
+				xrun(stream, sampleBlock, err); 
+			 } 
 		 }
-		 json_object_set_new(obj,"audio", audio64 );
-		 jsonstring = json_dumps(obj, 0);
-		 test = strlen(jsonstring);
-		 //printf("sending %s\n", jsonstring);
-		 /*SDLNet_TCP_Send(socket, &test, sizeof(int));
-			SDLNet_TCP_Send(socket, jsonstring, test); */
-			write_to_server(obj, &socket, writeMutex);
-			fflush(stdout);
-		  if( err && CHECK_UNDERFLOW ){ 
-			xrun(stream, sampleBlock, err); 
-		 } 
-		 
      }
      if( err && CHECK_OVERFLOW ){
        xrun(stream, sampleBlock, err);

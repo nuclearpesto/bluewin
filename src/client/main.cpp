@@ -427,7 +427,7 @@ void sendLogin(SDL_mutex *writeMutex,int* screenShow,std::string* inputUsernameT
         send_login(masterobj,inputUsernameText,inputPasswordText,sd, writeMutex);
     }
     while(!*loginCheck && c<20){
-        SDL_Delay(1000);
+        //SDL_Delay(1000);
         c++;
         printf("%d\n", c);
         if(*loginCheck){
@@ -456,7 +456,7 @@ void createUser(int* screenShow,std::string* inputUsernameText,std::string* inpu
         add_user(masterobj,&usr,sd, writeMutex);
     }
     while(!*createCheck && c<20){
-        SDL_Delay(1000);
+        //SDL_Delay(1000);
         c++;
         printf("%d\n", c);
         if(*createCheck){
@@ -1710,6 +1710,8 @@ int main(int argc, char *argv[]){
 	audiostruct_t audiostruct;
     bool loginCheck = false;
     bool createCheck = true;
+	bool talkPushed = false;
+	audiostruct.talkPushed=&talkPushed;
 	//set default room at start so that client correctly sends messages
 
     //Start up SDL and create window

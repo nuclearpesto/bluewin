@@ -319,7 +319,7 @@ void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
     printf( "SDLNet_TCP_Send: %s, result is %d\n", SDLNet_GetError(), result );
     // It may be good to disconnect sock because it is likely invalid now.
 	}
-    //printf("SENT %s \n", json_s);
+    printf("SENT %s \n", json_s);
 }
 
 char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
@@ -336,7 +336,7 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
 	*numBytesRead =SDLNet_TCP_Recv(socket,response, temp );
     response[temp] = '\0';
     //decrypt_Handler(response,*numBytesRead);
-    //printf("read response : %s\n",response);
+    printf("read response : %s\n",response);
     //dekryptera
 
     return response;

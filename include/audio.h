@@ -104,11 +104,13 @@
 #include <portaudio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
+#include <stdbool.h>
 
 struct audiostruct{
   
   PaStream *readstream, *writestream;
   char * writeBlock, *readBlock;
+  bool *talkPushed;
   
 };typedef struct audiostruct audiostruct_t;
 
