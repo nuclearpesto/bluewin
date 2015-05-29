@@ -479,7 +479,7 @@ char* read_client_message( TCPsocket socket){
 }
 
  void write_server_message( SerializedMessage_t *message, TCPsocket socket){
-  encrypt_Handler(message);
+    encrypt_Handler(message);
 	//inspired by http://stackoverflow.com/questions/21579867/variable-length-message-over-tcp-socket-in-c answer 1 written by user John Dibling
 	//printf("trying to lock mutex\n");
 	SDL_LockMutex(writeMutex);
