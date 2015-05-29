@@ -14,6 +14,7 @@
 #define MAXMESSAGES 100
 #define REFRESHTIME 200
 bool writeText = false;
+bool listen = false;
 int field = 0;
 int nrMessages=0;
 const int TOTAL_SPRITE = 2;
@@ -1251,22 +1252,16 @@ void eventHandler(SDL_mutex *writeMutex, json_t * globalRoomArr, json_t * messag
                         break;
                         
                     case SDLK_LCTRL:
-                        //boolen = true;
+                        if (!listen) {
+                            listen=true;
+                            //boolen = true;
+                        }else{
+                            listen=false;
+                        }
                         break;
                         
                     default:
                         break;
-                }
-                
-                if (e.type == SDL_KEYUP) {
-                    switch (e.key.keysym.sym) {
-                        case SDLK_LCTRL:
-                            //boolen = false;
-                            break;
-                            
-                        default:
-                            break;
-                    }
                 }
             }
         }
