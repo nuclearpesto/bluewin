@@ -60,10 +60,14 @@ void leave_room(clients_t * client){
 	}
 	if(found){
 		roomsArr[index].connected[i]=roomsArr[index].connected[i+1];
+		
 	}
 
    }
-  roomsArr[index].nrOfCurrentConns--;
+  if(found)
+	{ 
+		roomsArr[index].nrOfCurrentConns--;
+	}
   SDL_UnlockMutex(roomsStackMutex);
 
 }
