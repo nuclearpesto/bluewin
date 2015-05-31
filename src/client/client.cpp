@@ -225,7 +225,8 @@ int readThread (void * p){
 					buildingblock= json_object_get(masterobj, "usersArr");
 					json_array_clear(globalUsersInRoomArr);
 					json_array_extend(globalUsersInRoomArr, buildingblock);
-					free(buildingblock);
+					json_decref(buildingblock);
+					//free(buildingblock);
 					}
             }
 
@@ -236,7 +237,8 @@ int readThread (void * p){
 					buildingblock= json_object_get(masterobj, "roomsArr");
 					json_array_clear(globalRoomArr);
 					json_array_extend(globalRoomArr, buildingblock);
-					free (buildingblock);
+					json_decref(buildingblock);
+					//free (buildingblock);
 				}
             }
 

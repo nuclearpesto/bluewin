@@ -1260,18 +1260,33 @@ void eventHandler(bool *talkPushed, SDL_mutex *writeMutex, json_t * globalRoomAr
                         if (!listen) {
                             listen=true;
 							*(talkPushed) = true;
-                        }else{
+                        }/*else{
                             listen=false;
 							*(talkPushed) = false;
-                        }
+                        }*/
                         break;
                         
                     default:
                         break;
                 }
 
-        }
-	}
+			}else if(e.type == SDL_KEYUP){
+				switch( e.key.keysym.sym ){
+					case SDLK_LCTRL:
+                        //if (!listen) {
+                            //listen=true;
+							//*(talkPushed) = true;
+                        //}else{
+                            listen=false;
+							*(talkPushed) = false;
+                        //}
+                        break;
+						
+					default:
+						break;
+				}
+			}
+		}
 }
 
 //Get a specific piece of information from the json array 'messageArr'
