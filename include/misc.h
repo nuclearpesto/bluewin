@@ -1,6 +1,8 @@
 /*
 Author David Boeryd, Jonathan Aspenbom
 */
+#ifndef MISC
+#define MISC
 struct Stack
 {
 int size;
@@ -15,4 +17,4 @@ void createstack(stack *s, int capacity);
 int push(stack *s, int nr);
 
 int pop(stack *s);
-
+#endif
