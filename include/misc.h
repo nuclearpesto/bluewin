@@ -1,4 +1,6 @@
-
+/*
+Author David Boeryd
+*/
 struct Stack
 {
 int size;

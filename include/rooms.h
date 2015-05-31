@@ -1,3 +1,6 @@
+/*
+Author David Boeryd
+*/
 #ifndef ROOMS
 #define ROOMS
 #define MAX_CLIENTS_PER_ROOM 100

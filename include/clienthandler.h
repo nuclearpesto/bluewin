@@ -1,3 +1,4 @@
+/*Author David Boeryd*/
 #ifndef CLIENTHANDLER  
 
 #ifndef JSON_MAX_LENGTH

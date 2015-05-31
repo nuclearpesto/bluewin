@@ -1,5 +1,6 @@
-/*created by David Boeryd*/
-
+/*
+Author David Boeryd
+*/
 #ifndef USERS
 #define USERS
 #define USERPASS_LEN 255

@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#author David Boeryd
 if [ -f /tmp/bluewin.pid ]
   then
       PID=$(cat /tmp/bluewin.pid)

@@ -1,3 +1,4 @@
+/* Author Jonathan Aspenbom*/
 #include <stdlib.h>
 #include <stdio.h>
 #include "misc.h"
