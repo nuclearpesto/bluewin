@@ -397,7 +397,7 @@ int write_to_client(void *args){
 	//printf("got message");
   SerializableMessage_t *p  = (SerializableMessage_t *)args;
   char roomname[ROOM_NAME_SIZE+1];
-// printf("in write_to_client before copy roomname is %s\n", p->roomname);
+ printf("in write_to_client before copy roomname is %s\n", p->roomname);
  strcpy(roomname, p->roomname); //for some reason when the roomname json pointer is created p->roomname is emptied
   //this is a short term solution
   json_int_t x = 1;
@@ -405,7 +405,7 @@ int write_to_client(void *args){
   json_t *usn = json_string((p->client->username));
   json_t *mes = json_string((p->message));
   json_t *chrom = json_string(p->roomname);
- // printf("in write_to_client before json roomname is %s\n", roomname);
+  printf("in write_to_client before json roomname is %s\n", roomname);
 
   json_object_set_new(messageobj,"username", usn );
   json_object_set_new(messageobj, "chroom", chrom );
@@ -419,7 +419,7 @@ int write_to_client(void *args){
   D(printf("jsonstr size %d\ncontains %s\n", sizeof(json_string), json_string));
   SerializedMessage_t sermes = create_serialized_message(json_string);
   write_to_room(roomname, &sermes, p->client);
-  //printf("wrote %s\n", sermes.jsonstring);
+  printf("wrote %s\n", sermes.jsonstring);
   free(p);
   //write_server_message(&sermes, p->client->socket);
 

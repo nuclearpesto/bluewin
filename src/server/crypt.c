@@ -10,10 +10,10 @@
 
 
 
-void encrypt(unsigned int k[], unsigned int tmp[])   // <----This function is copied from a book called,
+void encrypt(unsigned long k[], unsigned long tmp[])   // <----This function is copied from a book called,
 {                                                      // distributed systems concepts and design fifth edition.
-    unsigned int y = tmp[0],z = tmp[1];               // Written by George Coulouris, Jean Dollimore, Tim Kindberg och Gordon Blair
-    unsigned int delta = 0x9e3779b9, sum = 0;         // Published: May, 2011
+    unsigned long y = tmp[0],z = tmp[1];               // Written by George Coulouris, Jean Dollimore, Tim Kindberg och Gordon Blair
+    unsigned long delta = 0x9e3779b9, sum = 0;         // Published: May, 2011
     int n;                                             // the encryption is designed by: David Wheeler and Roger Needham
     for (n=0;n<32;n++)
     {
@@ -26,7 +26,7 @@ void encrypt(unsigned int k[], unsigned int tmp[])   // <----This function is co
 
 void encrypt_Handler(SerializedMessage_t * Message)    // <------ this function is ispiried by the book that i mention in the function above.
 {
-    unsigned int k[4];        //
+    unsigned long k[4];        //
     k[0]=11111111111111;       //This is a hardcoded key
     k[1]=22222222222222;       //
     k[2]=33333333333333;
@@ -36,7 +36,7 @@ void encrypt_Handler(SerializedMessage_t * Message)    // <------ this function 
     int pad=8-(totalBlock%8);  //we need to pad so the string is devided by 8 without rest
     int msgLenght=totalBlock+pad;
     Message->size=msgLenght;  // need to allocate more space to this string.
-    //realloc(Message->jsonstring,msgLenght);
+    realloc(Message->jsonstring,msgLenght);
     int i;
     for (i=totalBlock;i<msgLenght;i++)
     {
@@ -49,7 +49,7 @@ void encrypt_Handler(SerializedMessage_t * Message)    // <------ this function 
         {
             tmp[i]=Message->jsonstring[i+(numBlock*8)];      // move every block to temporary string and encrypt, then move it back to the message string.
         }
-        encrypt(k,(unsigned int *)tmp);
+        encrypt(k,(unsigned long *)tmp);
         for (i=0;i<8;i++)
         {
             Message->jsonstring[i+(numBlock*8)]=tmp[i];
@@ -58,10 +58,10 @@ void encrypt_Handler(SerializedMessage_t * Message)    // <------ this function 
     }
 }
 
-void decrypt(unsigned int k[], unsigned int tmp[])                      // <--- This function is also copied from the same book as the function encrypt.
+void decrypt(unsigned long k[], unsigned long tmp[])                      // <--- This function is also copied from the same book as the function encrypt.
 {
-    unsigned int y = tmp[0],z = tmp[1];
-    unsigned int delta = 0x9e3779b9, sum = delta << 5;
+    unsigned long y = tmp[0],z = tmp[1];
+    unsigned long delta = 0x9e3779b9, sum = delta << 5;
     int n;
     for (n=0;n<32;n++)
     {
@@ -74,8 +74,8 @@ void decrypt(unsigned int k[], unsigned int tmp[])                      // <--- 
 
 void decrypt_Handler(char* msg, int size)               //  as encrypt_Handler, is this fumction inspired by the book that i mention earlier.
 {
-    char tmp[9];
-    unsigned int k[4];    // same key as in encryption_Handler.
+    char tmp[8];
+    unsigned long k[4];    // same key as in encryption_Handler.
     k[0]=11111111111111;
     k[1]=22222222222222;
     k[2]=33333333333333;
@@ -89,7 +89,7 @@ void decrypt_Handler(char* msg, int size)               //  as encrypt_Handler, 
         {
             tmp[i]=msg[i+(numBlock*8)];       // move every block to temporary string and decrypt, then move it back to the message string
         }
-        decrypt (k,(unsigned int *)tmp);
+        decrypt (k,(unsigned long *)tmp);
         for (i=0;i<8;i++)
         {
             msg[i+(numBlock*8)]=tmp[i];
