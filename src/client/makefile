@@ -43,3 +43,6 @@ audio.o: audio.c
 
 base64_stringencode.o: base64_stringencode.c
 	$(CC) base64_stringencode.c  $(CFLAGS) $(INC_DIR) $(LIBPATHS) $(LIBS)
+	
+install:
+	mv client.exe ../../resources/
