@@ -1,5 +1,5 @@
 /*
-Author David Boeryd
+Author David Boeryd, Jonathan Aspenbom
 */
 struct Stack
 {
