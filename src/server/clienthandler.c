@@ -460,22 +460,24 @@ char* read_client_message( TCPsocket socket){
   D(printf("reading\n"));
   fflush(stdout);
   if( SDLNet_TCP_Recv(socket, &tmp_buf, sizeof(int))>0){
-    if(tmp_buf>0){
 		if(tmp_buf>max){
 			tmp_buf=max;
+		}
+		else if(tmp<=0){
+			tmp_buf = max;
 		}
       p = (char *) malloc(tmp_buf+1);
       if(p==NULL){
 		  printf("failed to allocate mamory for p");
 		exit(1);
 	  }
+	  
 	  D(printf("gonna read %d bytes\n", tmp_buf));
       tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
       D(printf("read %d bytes\n", tmp_buf));
       decrypt_Handler(p, tmp_buf);
       *(p+tmp_buf)='\0';
       return p;
-    }
   }
   D(printf("returning null\n"));
   fflush(stdout);
