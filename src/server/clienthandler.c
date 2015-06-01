@@ -463,7 +463,7 @@ char* read_client_message( TCPsocket socket){
 		if(tmp_buf>max){
 			tmp_buf=max;
 		}
-		else if(tmp<=0){
+		else if(tmp_buf<=0){
 			tmp_buf = max;
 		}
       p = (char *) malloc(tmp_buf+1);
