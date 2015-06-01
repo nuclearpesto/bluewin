@@ -118,10 +118,10 @@ TCPsocket initClient( audiostruct_t * audiostruct, bool * createCheck, bool *log
     //char ipen[20]=("127.0.0.1");
 
     printf("%s\n",ipen);
-    if(SDLNet_Init() < 0){                                      //SDL Tutorial taken from
-        printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError()); //http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
-        success=false;
-    }else{
+    if(SDLNet_Init() < 0){                                        //SDL Tutorial taken from
+        printf("stderr, SDLNet_Init: %s\n", SDLNet_GetError());  //http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
+        success=false;                                          //Pubished by SDL
+    }else{                                                     //Tries to connect to the server through SDL socket
         printf("Trying to connect...\n");
         if(SDLNet_ResolveHost(&ip, ipen, port) < 0){
             fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
@@ -165,30 +165,6 @@ TCPsocket initClient( audiostruct_t * audiostruct, bool * createCheck, bool *log
 }
 
 int readThread (void * p){
-   Readstruct *r = (Readstruct *) p;
-    TCPsocket socket = r->sd;
-	bool *loginCheck = r->loginCheck;
-	bool *createCheck = r->createCheck;
-	char *response;
-    char *string;
-    json_t *masterobj;
-    json_t *keycheckobj;
-	json_t *current;
-	json_t *buildingblock;
-	json_t *globalUsersInRoomArr = r->globalUsersInRoomArr;
-	json_t *globalRoomArr=r->globalRoomArr;
-	json_t *messageArr=r->messageArr;
-	audiostruct_t *audiostruct = r->audiostruct;
-	int numBytesRead = 1;
-	SDL_mutex * mesageArrMutex = r->messageArrMutex;
-	json_error_t error;
-    masterobj = json_object();
-	//printf("socket is %d", *sd);
-    while(numBytesRead>-1){
-
-        string = read_from_server(socket, response, &numBytesRead);
-        //D(printf("recieved %s\n", response));
-        masterobj = json_loads(string, 0, &error);
         if(masterobj == NULL){
 			//printf("jsonerror %s\n",error.text);
             free(string);
@@ -197,7 +173,7 @@ int readThread (void * p){
             free(string);
 
             if((keycheckobj = json_object_get(masterobj, "audio")) != NULL){
-				playaudio(masterobj,audiostruct->writeBlock, audiostruct->writestream );
+				playaudio(masterobj,audiostruct->writeBlock, audiostruct->writestream ); //Plays the audio
             }
             if((keycheckobj = json_object_get(masterobj, "login")) != NULL){
                 if(json_is_true(keycheckobj)==1){
@@ -205,7 +181,7 @@ int readThread (void * p){
                 }
             }
 
-           else if((keycheckobj = json_object_get(masterobj, "message")) != NULL){
+           else if((keycheckobj = json_object_get(masterobj, "message")) != NULL){ //Reads a message sent by a user and print it out in the room
                 //add mesage to global message arr
 				//printf("found message---------------------------------------------------------------------------\n\n\n");
 				buildingblock = json_object();
@@ -218,7 +194,7 @@ int readThread (void * p){
 				SDL_UnlockMutex(mesageArrMutex);
             }
 
-           else if((keycheckobj = json_object_get(masterobj, "get users in room")) != NULL){
+           else if((keycheckobj = json_object_get(masterobj, "get users in room")) != NULL){ //Reads the users online in a room
 				if(json_is_true(keycheckobj)){
 
 					//printf("found users arr\n");
@@ -230,7 +206,7 @@ int readThread (void * p){
 					}
             }
 
-            else if((keycheckobj = json_object_get(masterobj, "get rooms")) != NULL){
+            else if((keycheckobj = json_object_get(masterobj, "get rooms")) != NULL){ //Read how many rooms available
 				//printf("collect rooms response\n");
 				if(json_is_true(keycheckobj)){
 					//printf("found rooms arr\n");
@@ -242,7 +218,7 @@ int readThread (void * p){
 				}
             }
 
-            else if((keycheckobj = json_object_get(masterobj, "add user")) != NULL){
+            else if((keycheckobj = json_object_get(masterobj, "add user")) != NULL){ //Creates a new user
 			if(json_is_true(keycheckobj)){
 					*createCheck = true;
 				}
@@ -261,7 +237,7 @@ int readThread (void * p){
 
 
 
-void clear_str(char *str, int size){
+void clear_str(char *str, int size){ //Clears the string, replace it with 0.
     int i;
     for(i=0; i<size; i++){
         str[i]=0;
@@ -276,8 +252,8 @@ void clear_input(){
 }
 
 
-void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string* inputPasswordText, TCPsocket *sd, SDL_mutex *writeMutex){
-    json_t *masterobj = json_object();
+void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string* inputPasswordText, TCPsocket *sd, SDL_mutex *writeMutex){ //Serialize the username and the password
+    json_t *masterobj = json_object();                                                                                                     //to json and encrypt it and sends it to the server.
     usr.username=(char*)inputUsernameText->c_str();
     usr.password=(char*)inputPasswordText->c_str();
     //printf("%s\n",inputUsernameText->c_str());
@@ -298,7 +274,7 @@ void send_login(json_t *masterobj_old,std::string* inputUsernameText,std::string
 
 
 
-void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
+void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){ //Sends encrypted JSON object to the server.
     char *json_s;
 	int len, result=0;
     json_s = json_dumps(masterobj, 0);
@@ -335,7 +311,7 @@ void write_to_server(json_t *masterobj,TCPsocket *socket,SDL_mutex *writeMutex){
 	}
 }
 
-char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
+char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){ //reads from the server through the SDL socket and decrypt it.
 
     int temp=0,  res;
 	//printf("reading\n");
@@ -360,7 +336,7 @@ char* read_from_server( TCPsocket socket, char *response, int *numBytesRead){
     return response;
 }
 
-void user_input(char* msg){
+void user_input(char* msg){ //Creates a string
     fgets(msg, 254, stdin);
     msg[strlen(msg)-1]='\0';
     //printf("%s", msg);
@@ -368,7 +344,7 @@ void user_input(char* msg){
 }
 
 
-void message_printer(json_t *masterobj){
+void message_printer(json_t *masterobj){ //recieve the message and the name of the user who wrote it
     json_t *rec_message, *rec_username;
     char string_resp[1000];
     char username[255];
@@ -381,19 +357,19 @@ void message_printer(json_t *masterobj){
     }
 }
 
-void serialize_username(json_t *masterobj,user_s *usr ){
+void serialize_username(json_t *masterobj,user_s *usr ){ //Serialize Username as a json object.
     //printf("tudili\n");
     json_t *string;
     string = json_string(usr->username);
     //printf("json string\n");
-    json_object_set_new(masterobj, "username", string);
+    json_object_set_new(masterobj, "username", string); .
 }
 
-void serialize_password(json_t *masterobj,user_s *usr ){
+void serialize_password(json_t *masterobj,user_s *usr ){//Serialize the Password as a json object
     json_t *string;
     char tmpPassword[PASSWORDSIZE]={'\0'};
     strcpy(tmpPassword,usr->password);
-    printf("copied password : %s\n",tmpPassword);
+    //printf("copied password : %s\n",tmpPassword);
     //int len=encrypt_Handler(tmpPassword);
     //printf("encrypted password : %s\n",tmpPassword);
     //decrypt_Handler(tmpPassword,len);
@@ -402,65 +378,65 @@ void serialize_password(json_t *masterobj,user_s *usr ){
     json_object_set_new(masterobj, "password", string);
 }
 
-void serialize_cmd(json_t *masterobj, char *cmd ){
+void serialize_cmd(json_t *masterobj, char *cmd ){ //Serialize the cmd as a json object
     json_t *string;
     string = json_string(cmd);
     json_object_set_new(masterobj, "cmd", string);
 }
 
-void serialize_room(json_t *masterobj, char* room){
+void serialize_room(json_t *masterobj, char* room){ //Serialize the room as a json object
 	json_t *string;
     string = json_string(room);
     json_object_set_new(masterobj, "room", string);
 }
 
-void serialize_message(json_t *masterobj, Message_s msg){
+void serialize_message(json_t *masterobj, Message_s msg){ //Serialize the message as a json object
     json_t *string;
     string = json_string(msg.message);
     json_object_set_new(masterobj, "message", string);
 }
 
-void collect_rooms(json_t *masterobj, TCPsocket *socket, SDL_mutex *writeMutex){
+void collect_rooms(json_t *masterobj, TCPsocket *socket, SDL_mutex *writeMutex){ //Collect the rooms available
     serialize_cmd(masterobj, "get rooms");
 	write_to_server(masterobj, socket, writeMutex);
 	json_object_clear(masterobj);
 }
 
-void logout(json_t *masterobj, TCPsocket *socket, SDL_mutex *writeMutex){
+void logout(json_t *masterobj, TCPsocket *socket, SDL_mutex *writeMutex){ //Logout from the server
     serialize_cmd(masterobj, "logout");
 	write_to_server(masterobj, socket, writeMutex);
 	json_object_clear(masterobj);
 }
 
-void get_users_in_room(json_t *masterobj, char *room, TCPsocket *socket, SDL_mutex *writeMutex){
+void get_users_in_room(json_t *masterobj, char *room, TCPsocket *socket, SDL_mutex *writeMutex){ //Collect the users in the room
     serialize_cmd(masterobj, "get users in room");
     serialize_room(masterobj, room);
 	write_to_server(masterobj, socket, writeMutex);
 	json_object_clear(masterobj);
 }
 
-void add_room(json_t *masterobj, char *room, TCPsocket *socket, SDL_mutex *writeMutex){
+void add_room(json_t *masterobj, char *room, TCPsocket *socket, SDL_mutex *writeMutex){ //create a new room
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "add room");
 	write_to_server(masterobj, socket, writeMutex);
 	json_object_clear(masterobj);
 }
 
-void delete_room(json_t *masterobj, char *room, TCPsocket *socket, SDL_mutex *writeMutex){
+void delete_room(json_t *masterobj, char *room, TCPsocket *socket, SDL_mutex *writeMutex){ //Delete a room
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "delete room");
 	write_to_server(masterobj, socket, writeMutex);
 	json_object_clear(masterobj);
 }
 
-void switch_room(json_t *masterobj, char *room ,TCPsocket *socket, SDL_mutex *writeMutex){
+void switch_room(json_t *masterobj, char *room ,TCPsocket *socket, SDL_mutex *writeMutex){ //Switch to another available room
     serialize_room(masterobj, room);
     serialize_cmd(masterobj, "switch room");
 	write_to_server(masterobj, socket, writeMutex);
 	json_object_clear(masterobj);
 }
 
-void add_user(json_t * masterobj, user_s *usr, TCPsocket *sd, SDL_mutex *writeMutex){
+void add_user(json_t * masterobj, user_s *usr, TCPsocket *sd, SDL_mutex *writeMutex){ //Create a new user
     serialize_username(masterobj,usr);
     serialize_password(masterobj,usr);
     serialize_cmd(masterobj, "add user");
@@ -468,7 +444,7 @@ void add_user(json_t * masterobj, user_s *usr, TCPsocket *sd, SDL_mutex *writeMu
 	json_object_clear(masterobj);
 }
 
-void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket, SDL_mutex *writeMutex){
+void write_message(json_t *masterobj, user_s *usr, Message_s msg, TCPsocket *socket, SDL_mutex *writeMutex){ //Write a message to someone in a specific room
 	serialize_username(masterobj, usr);
 	serialize_room(masterobj, msg.room);
 	serialize_message(masterobj, msg);
