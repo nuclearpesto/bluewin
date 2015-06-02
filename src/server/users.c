@@ -21,16 +21,20 @@ bool login(char *username, char *pw){
 	json_error_t error;
 	bool success = false;
 	int jsonlen;
+	//read stringversion of the number of bytes to read
 	if(fscanf(fp,"%d",&jsonlen)>0){
 	  D(printf("read size of json it is %d\n", jsonlen));
 		jsonstr = (char *)malloc(jsonlen+1);
 		int reads = 0;
+		//read them bytes
 		if((reads = fread(jsonstr, jsonlen, 1, fp))>0){
 		  D(printf("read json %s\n",jsonstr));
 			jsonstr[jsonlen]='\0';
+			//is it JSON?
 			if((masterObj=json_loads(jsonstr, JSON_REJECT_DUPLICATES,&error ))!=NULL){
 			  D(printf("loaded db string\n"));
 			  D(printf("username is %s\n", username));
+				//is there already a user with that name?
 				if((currentObj=json_object_get(masterObj, username))!=NULL){
 					encpass =json_string_value(currentObj);
 					/*TODO ENCRYPT RECIEVED PASSWORD
@@ -90,7 +94,7 @@ bool add_user(char *UserName, char *pw){
 			  }
 		  }
 		  else{
-			 D(printf("CANT WRITE DATABASE TO DISK JSON ERROR:%s\n",error.text));
+			 D(printf("CANT WRITE DATABASE TO DISK, JSON ERROR:%s\n",error.text));
 		  }
 	    }
 	  }
@@ -142,7 +146,7 @@ bool users_init(){
 	json_t *masterObj,*UserPass;
 	char UserName[] ={"root"};
 	bool success = false;
-		
+	//is there a file?	
 	if(fp!=NULL){
 	  D(printf("found file\n"));
 		char *jsonstr;
