@@ -5,8 +5,8 @@
 #include "debug.h"
 //Toturial taken from here
 //http://www.thelearningpoint.net/computer-science/data-structures-stacks--with-c-program-source-code
-
-void createstack(stack *s,int capacity)
+//Published by: www.thelearningpoint.net
+void createstack(stack *s,int capacity)//create a new stack
 {
     s->current_place = (int *)malloc(sizeof(int )*capacity);
     s->capacity = capacity;
@@ -18,7 +18,7 @@ int push(stack *s, int nr)
 
     if(s->size == s->capacity)
     {
-      D( printf("Stack overflow"));
+      D( printf("Stack overflow"));//check if stack is full
         return 1;
     }
 
@@ -29,7 +29,7 @@ int push(stack *s, int nr)
     return 0;
 }
 
-int pop(stack *s)
+int pop(stack *s)//pop next number from stack
 {
     if(s->size == 0)
     {
@@ -41,7 +41,7 @@ int pop(stack *s)
     D(printf("popping %d from stack\n", nr));
     return nr;
 }
-void fill_int_stack(stack *s, int size){
+void fill_int_stack(stack *s, int size){//fill the stack with all numbers from size -1 to 0, putting 0 on top of stack
 int i;
   for(i=size;i>0;i--)
     {
