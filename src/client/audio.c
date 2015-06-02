@@ -52,7 +52,7 @@
  #include "audio.h"
 #include "client.h"
 
-
+extern user_s clientUsr;
 
 //void errorHappened(PaStream * stream,char *sampleBlock, PaError er);		  
 
@@ -76,7 +76,7 @@ void init_sound( audiostruct_t *audiostruct )
        //errorHappened(readstream, sampleBlock, err);
      }
 
-    
+    //allocate our recording and play buffers
      numBytes = FRAMES_PER_BUFFER * NUM_CHANNELS * SAMPLE_SIZE ;
      readBlock = (char *) malloc( numBytes );
      if( readBlock == NULL )
@@ -181,15 +181,19 @@ int  readthread(void*data){
 	 //prepare json msg
     // json cmd for this thread will always be "add call"" 
 		serialize_cmd(obj,"add call");
-		serialize_room(obj,"default");
+		
      int test;
-	 //send audio while we are logged in
      while(1)
      {
 		 //printf("reading frm mic");
+		 //only record if user pressed the talk button
 		 if(*talkPushed){
-			 err = Pa_ReadStream( stream, sampleBlock, FRAMES_PER_BUFFER );
+			 //record
+			serialize_room(obj,(char *)clientUsr.room.c_str());
+			err = Pa_ReadStream( stream, sampleBlock, FRAMES_PER_BUFFER );
+			//encode
 			 b64_encode(sampleBlock, b64encoded, numBytes);
+			//as json
 			 audio64 = json_string(b64encoded);
 			 if(!audio64){
 				 printf("ADUIO JSON STRING DOES NOT WORK\n");
@@ -198,15 +202,16 @@ int  readthread(void*data){
 			 jsonstring = json_dumps(obj, 0);
 			 test = strlen(jsonstring);
 			 //printf("sending %s\n", jsonstring);
-			 /*SDLNet_TCP_Send(socket, &test, sizeof(int));
-				SDLNet_TCP_Send(socket, jsonstring, test); */
+				//send it
 				write_to_server(obj, &socket, writeMutex);
 				fflush(stdout);
+				//SDL_Delay(10);
 			  if( err && CHECK_UNDERFLOW ){ 
 				xrun(stream, sampleBlock, err); 
 			 } 
 		 }
-     }
+     } 
+	 //below unnesecary?
      if( err && CHECK_OVERFLOW ){
        xrun(stream, sampleBlock, err);
      }
@@ -234,30 +239,24 @@ int  playaudio(json_t *obj, char* sampleBlock, PaStream *stream ){
   int i, j, len;
   int numBytes;
   int numtorecieve;
-
+	
      numBytes = FRAMES_PER_BUFFER * NUM_CHANNELS * SAMPLE_SIZE ;
-   
+		//get encoded json
     	jsonencoded = json_object_get(obj,"audio");
 		b64encoded= json_string_value(jsonencoded);
 		len = strlen(b64encoded);
+		//decode
 		b64_decode(b64encoded, sampleBlock, len );
+		//play
 		err = Pa_WriteStream(stream, sampleBlock, FRAMES_PER_BUFFER );
+		//clear sound block so we dont accedentaly play same sound all the time
 		CLEAR(sampleBlock);
 	 
      if( err && CHECK_OVERFLOW ){
        xrun(stream, sampleBlock, err);
      }
-    // err = Pa_StopStream( stream );
-     //if( err != paNoError ){
-      // errorHappened(stream, sampleBlock, err);
-    // }
-     
-     //CLEAR( sampleBlock );
-     
-    // free( sampleBlock );
 
-          
-     return 1;
+    return 1;
 
      
 
