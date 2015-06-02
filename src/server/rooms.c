@@ -59,23 +59,24 @@ void switch_room(char *roomName, clients_t * client ){
 void leave_room(clients_t * client){
   int index = find_index_of_room(client->currentRoom,MAX_ROOMS);
    int i, found=0;
-  SDL_LockMutex(roomsStackMutex);
-   for(i=0; i<roomsArr[index].nrOfCurrentConns; i++){
-	if(client ==roomsArr[index].connected[i]){
-		found = 1;
-	}
-	if(found){
-		roomsArr[index].connected[i]=roomsArr[index].connected[i+1];
-		
-	}
+   if(index >-1){
+	  SDL_LockMutex(roomsStackMutex);
+	   for(i=0; i<roomsArr[index].nrOfCurrentConns; i++){
+			if(client ==roomsArr[index].connected[i]){
+				found = 1;
+			}
+			if(found){
+				roomsArr[index].connected[i]=roomsArr[index].connected[i+1];
+				
+			}
 
-   }
-  if(found)
-	{ 
-		roomsArr[index].nrOfCurrentConns--;
+	   }
+	  if(found)
+		{ 
+			roomsArr[index].nrOfCurrentConns--;
+		}
+	  SDL_UnlockMutex(roomsStackMutex);
 	}
-  SDL_UnlockMutex(roomsStackMutex);
-
 }
 
 int find_index_of_room(char *roomName, int arrLen){
