@@ -90,7 +90,7 @@ int main(int argc, char **argv){
 	}
 	
 	SDLNet_TCP_AddSocket(set, servsock);
-	//print pid to file forrt killscript
+	//print pid to file for killscript
 	pid=getpid();
 	fp = fopen(PIDFILELOC, "w");
 	fprintf(fp, "%d", pid);
