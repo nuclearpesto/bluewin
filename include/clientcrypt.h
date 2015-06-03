@@ -1,8 +1,8 @@
 #ifndef CLIENTCRYPT
 #define CLIENTCRYPT
-    void encrypt(unsigned long k[], unsigned long tmp[]);
-    unsigned long int encrypt_Handler(char* msg);
-    void decrypt(unsigned long k[], unsigned long tmp[]);
+    void encrypt(unsigned int k[], unsigned int tmp[]);
+    unsigned int encrypt_Handler(char* msg);
+    void decrypt(unsigned int k[], unsigned int tmp[]);
     void decrypt_Handler(char* msg, int size);
 
 #endif // CRYPT
