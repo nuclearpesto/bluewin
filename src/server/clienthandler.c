@@ -437,7 +437,7 @@ void write_to_room(char* roomname, SerializedMessage_t * sermes, clients_t * sen
     printf("currentCons of room %d is %d\n", index, roomsArr[index].nrOfCurrentConns);
     SDL_LockMutex(roomsStackMutex);
     for(i =0; i<roomsArr[index].nrOfCurrentConns; i++){
-		
+
 	  SerializedMessage_t notenc = *(sermes);
       if(roomsArr[index].connected[i]!=sender){
 		D(printf("%p and %p are not same", sender, roomsArr[index].connected[i]));
@@ -463,7 +463,7 @@ char* read_client_message( TCPsocket socket){
 		if(tmp_buf>max){
 			tmp_buf=max;
 		}
-		else if(tmp_buf<=0){
+		else if(tmp_buf<0){
 			tmp_buf = max;
 		}
       p = (char *) malloc(tmp_buf+1);
@@ -471,7 +471,7 @@ char* read_client_message( TCPsocket socket){
 		  printf("failed to allocate mamory for p");
 		exit(1);
 	  }
-	  
+
 	  D(printf("gonna read %d bytes\n", tmp_buf));
       tmp_buf = SDLNet_TCP_Recv(socket, p, tmp_buf);
       D(printf("read %d bytes\n", tmp_buf));
