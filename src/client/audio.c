@@ -24,23 +24,23 @@
   * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
   * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   */
- 
+
  /*
-  * The text above constitutes the entire PortAudio license; however, 
+  * The text above constitutes the entire PortAudio license; however,
   * the PortAudio community also makes the following non-binding requests:
   *
   * Any person wishing to distribute modifications to the Software is
   * requested to send the modifications to the original developer so that
-  * they can be incorporated into the canonical version. It is also 
-  * requested that these non-binding requests be included along with the 
+  * they can be incorporated into the canonical version. It is also
+  * requested that these non-binding requests be included along with the
   * license above.
   */
-  
-  
+
+  //original file source http://portaudio.com/docs/v19-doxydocs/paex__read__write__wire_8c_source.html
   /*change by David Boeryd to allow for separate threads doing the reading and writing to the streams
 	also serialize it as json and send it over the network
   */
- 
+
  #include <stdio.h>
  #include <stdlib.h>
  #include <string.h>
@@ -54,7 +54,7 @@
 
 extern user_s clientUsr;
 
-//void errorHappened(PaStream * stream,char *sampleBlock, PaError er);		  
+//void errorHappened(PaStream * stream,char *sampleBlock, PaError er);
 
 //void xrun(PaStream * stream,char *sampleBlock, PaError err);
 
@@ -69,7 +69,7 @@ void init_sound( audiostruct_t *audiostruct )
 	int i;
 	int numBytes;
 	printf("SAMPLETYPE %s\n", PA_SAMPLE_TYPE_PRINTABLE);
- 
+
 	//initialize audio streams
 	    err = Pa_Initialize();
      if( err != paNoError ){
@@ -92,8 +92,8 @@ void init_sound( audiostruct_t *audiostruct )
          exit(1);
      }
      CLEAR( writeBlock );
-  
-  
+
+
      outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
      printf( "Output device # %d.\n", outputParameters.device );
      printf( "Output LL: %g s\n", Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency );
@@ -102,7 +102,7 @@ void init_sound( audiostruct_t *audiostruct )
      outputParameters.sampleFormat = PA_SAMPLE_TYPE;
      outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultHighOutputLatency;
      outputParameters.hostApiSpecificStreamInfo = NULL;
-     
+
 	 inputParameters.device = Pa_GetDefaultInputDevice(); /* default input device */
      printf( "Input device # %d.\n", inputParameters.device );
      printf( "Input LL: %g s\n", Pa_GetDeviceInfo( inputParameters.device )->defaultLowInputLatency );
@@ -111,7 +111,7 @@ void init_sound( audiostruct_t *audiostruct )
      inputParameters.sampleFormat = PA_SAMPLE_TYPE;
      inputParameters.suggestedLatency = Pa_GetDeviceInfo( inputParameters.device )->defaultHighInputLatency ;
      inputParameters.hostApiSpecificStreamInfo = NULL;
-     
+
 	     err = Pa_OpenStream(
 			 &writestream,
 			 NULL,//output only stream;
@@ -122,8 +122,8 @@ void init_sound( audiostruct_t *audiostruct )
 			 NULL, /* no callback, use blocking API */
                NULL ); /* no callback, so no callback userData */
 
-	 
-	 
+
+
       err = Pa_OpenStream(
 			 &readstream,
 			 &inputParameters,//input only stream;
@@ -133,13 +133,13 @@ void init_sound( audiostruct_t *audiostruct )
 			 paClipOff,      /* we won't output out of range samples so don't bother clipping them */
 			 NULL, /* no callback, use blocking API */
                NULL ); /* no callback, so no callback userData */
-	
-	
+
+
 	err = Pa_StartStream( readstream );
      if( err != paNoError ){
        errorHappened(readstream, readBlock, err);
      }
-	 
+
 	err = Pa_StartStream( writestream );
      if( err != paNoError ){
        errorHappened(writestream, writeBlock, err);
@@ -148,9 +148,9 @@ void init_sound( audiostruct_t *audiostruct )
 		audiostruct->writestream = writestream;
 		audiostruct->readBlock = readBlock;
 		audiostruct-> writeBlock = writeBlock;
-     
-     
-     
+
+
+
  }
 
 //threadreadaudio read audio from microphone and send to server
@@ -179,9 +179,9 @@ int  readthread(void*data){
      }
      CLEAR( sampleBlock );
 	 //prepare json msg
-    // json cmd for this thread will always be "add call"" 
+    // json cmd for this thread will always be "add call""
 		serialize_cmd(obj,"add call");
-		
+
      int test;
      while(1)
      {
@@ -206,11 +206,11 @@ int  readthread(void*data){
 				write_to_server(obj, &socket, writeMutex);
 				fflush(stdout);
 				//SDL_Delay(10);
-			  if( err && CHECK_UNDERFLOW ){ 
-				xrun(stream, sampleBlock, err); 
-			 } 
+			  if( err && CHECK_UNDERFLOW ){
+				xrun(stream, sampleBlock, err);
+			 }
 		 }
-     } 
+     }
 	 //below unnesecary?
      if( err && CHECK_OVERFLOW ){
        xrun(stream, sampleBlock, err);
@@ -219,15 +219,15 @@ int  readthread(void*data){
      if( err != paNoError ){
        errorHappened(stream, sampleBlock, err);
      }
-     
-	
+
+
      CLEAR( sampleBlock );
-     
+
      free( sampleBlock );
-     
-     return 1;     
- 
-     
+
+     return 1;
+
+
 }
 
 // write audio to the speakers
@@ -239,7 +239,7 @@ int  playaudio(json_t *obj, char* sampleBlock, PaStream *stream ){
   int i, j, len;
   int numBytes;
   int numtorecieve;
-	
+
      numBytes = FRAMES_PER_BUFFER * NUM_CHANNELS * SAMPLE_SIZE ;
 		//get encoded json
     	jsonencoded = json_object_get(obj,"audio");
@@ -251,14 +251,14 @@ int  playaudio(json_t *obj, char* sampleBlock, PaStream *stream ){
 		err = Pa_WriteStream(stream, sampleBlock, FRAMES_PER_BUFFER );
 		//clear sound block so we dont accedentaly play same sound all the time
 		CLEAR(sampleBlock);
-	 
+
      if( err && CHECK_OVERFLOW ){
        xrun(stream, sampleBlock, err);
      }
 
     return 1;
 
-     
+
 
 }
 

@@ -6,8 +6,10 @@
  * source:      http://base64.sourceforge.net/b64.c for encoding            *
  *              http://en.literateprograms.org/Base64_(C) for decoding      *
  * ------------------------------------------------------------------------ */
+ //original file source http://fm4dd.com/programming/base64/base64_stringencode_c.htm
+
  /*modified by David Boeryd*/
- 
+
 #include <stdio.h>
 #include <string.h>
 #include "base64.h"
@@ -22,7 +24,7 @@ void decodeblock(unsigned char in[], char *clrstr, int index) {
   out[1] = in[1] << 4 | in[2] >> 2;
   out[2] = in[2] << 6 | in[3] >> 0;
   out[3] = '\0';
- /* below is modified to make the base64 decoding work wihtout depending on string functions which incorrectly assumes 
+ /* below is modified to make the base64 decoding work wihtout depending on string functions which incorrectly assumes
 	a byte with value 0 is an end byte
  */
  //like this the last 3 bytes will be corupted;
@@ -44,7 +46,7 @@ void b64_decode(const char *b64src, char *clrdst, int nrbytes) {
   while(i<nrbytes) {
     c = (int) b64src[i];
     if(c == '=') {
-      decodeblock(in, clrdst, i); 
+      decodeblock(in, clrdst, i);
       break;
     }
     p = strchr(b64, c);
@@ -86,13 +88,13 @@ void b64_encode(char *clrstr, char *b64dst, int numbytes) {
     for(i=0; i<3; i++) {
      in[i] = (unsigned char) clrstr[j];
      if(j<numbytes) {
-        len++; 
+        len++;
 		fflush(stdout);
 	  }
       else{
 		in[i] = 0;
 		//printf("adding zerobytes at j=%d\n", j);
-		} 
+		}
 	  j++;
     }
     if( len ) {
